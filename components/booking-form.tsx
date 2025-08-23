@@ -1,0 +1,1039 @@
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft } from "lucide-react"
+import { format, differenceInDays, eachDayOfInterval, isValid } from "date-fns"
+import { cn } from "@/lib/utils"
+import type { User } from "@supabase/supabase-js"
+import { useRouter } from "next/navigation"
+
+interface ContainerType {
+  id: string
+  name: string
+  size: string
+  description: string
+  price_per_day: number
+  available_quantity: number
+  is_hidden?: boolean
+}
+
+interface BookingFormProps {
+  user: User
+}
+
+interface Booking {
+  id: string
+  start_date: string
+  end_date: string
+  container_type_id: string
+  status: string
+}
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+export function BookingForm({ user }: BookingFormProps) {
+  const [containerTypes, setContainerTypes] = useState<ContainerType[]>([])
+  const [existingBookings, setExistingBookings] = useState<Booking[]>([])
+  const [selectedContainer, setSelectedContainer] = useState<string>("")
+  const [startDate, setStartDate] = useState<Date>()
+  const [endDate, setEndDate] = useState<Date>()
+  const [serviceType, setServiceType] = useState<string>("pickup")
+  const [pickupTime, setPickupTime] = useState<string>("09:00")
+  const [streetAddress, setStreetAddress] = useState<string>("")
+  const [city, setCity] = useState<string>("")
+  const [state, setState] = useState<string>("")
+  const [zipCode, setZipCode] = useState<string>("")
+  const [deliveryStreetAddress, setDeliveryStreetAddress] = useState<string>("")
+  const [deliveryCity, setDeliveryCity] = useState<string>("")
+  const [deliveryState, setDeliveryState] = useState<string>("")
+  const [deliveryZipCode, setDeliveryZipCode] = useState<string>("")
+  const [extraTonnage, setExtraTonnage] = useState<number>(0)
+  const [applianceCount, setApplianceCount] = useState<number>(0)
+  const [notes, setNotes] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loadingData, setLoadingData] = useState(true)
+  const [currentStep, setCurrentStep] = useState<number>(1)
+  const totalSteps = 5
+
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        console.log("[v0] Loading container types...")
+
+        // Load container types - explicitly filter out hidden ones
+        const { data: containers, error: containerError } = await supabase
+          .from("container_types")
+          .select("*")
+          .eq("is_hidden", false)
+          .order("price_per_day")
+
+        if (containerError) {
+          console.error("[v0] Container error:", containerError)
+          throw containerError
+        }
+
+        console.log("[v0] Loaded containers:", containers)
+        setContainerTypes(containers || [])
+
+        // Load existing bookings for availability checking
+        const { data: bookings, error: bookingError } = await supabase
+          .from("bookings")
+          .select("id, start_date, end_date, container_type_id, status")
+          .in("status", ["confirmed", "pending"])
+
+        if (bookingError) {
+          console.error("[v0] Booking error:", bookingError)
+          throw bookingError
+        }
+
+        console.log("[v0] Loaded bookings:", bookings)
+        setExistingBookings(bookings || [])
+      } catch (error) {
+        console.error("[v0] Error loading data:", error)
+        setError("Failed to load container types. Please refresh the page.")
+      } finally {
+        setLoadingData(false)
+      }
+    }
+
+    loadData()
+  }, [supabase])
+
+  const isDateUnavailable = (date: Date) => {
+    if (!selectedContainer) return false
+
+    const selectedType = containerTypes.find((ct) => ct.id === selectedContainer)
+    if (!selectedType) return false
+
+    // Count how many containers are booked on this date
+    const bookedCount = existingBookings.filter((booking) => {
+      if (booking.container_type_id !== selectedContainer) return false
+
+      const bookingStart = new Date(booking.start_date)
+      const bookingEnd = new Date(booking.end_date)
+
+      return date >= bookingStart && date <= bookingEnd
+    }).length
+
+    // Date is unavailable if all containers are booked
+    return bookedCount >= selectedType.available_quantity
+  }
+
+  const getDateAvailability = (date: Date) => {
+    if (!selectedContainer) return { available: 0, total: 0 }
+
+    const selectedType = containerTypes.find((ct) => ct.id === selectedContainer)
+    if (!selectedType) return { available: 0, total: 0 }
+
+    const bookedCount = existingBookings.filter((booking) => {
+      if (booking.container_type_id !== selectedContainer) return false
+
+      const bookingStart = new Date(booking.start_date)
+      const bookingEnd = new Date(booking.end_date)
+
+      return date >= bookingStart && date <= bookingEnd
+    }).length
+
+    return {
+      available: Math.max(0, selectedType.available_quantity - bookedCount),
+      total: selectedType.available_quantity,
+    }
+  }
+
+  const isDateRangeAvailable = (startDate: Date, endDate: Date) => {
+    if (!selectedContainer) return false
+
+    const selectedType = containerTypes.find((ct) => ct.id === selectedContainer)
+    if (!selectedType) return false
+
+    const daysInRange = eachDayOfInterval({ start: startDate, end: endDate })
+
+    return daysInRange.every((date) => {
+      const bookedCount = existingBookings.filter((booking) => {
+        if (booking.container_type_id !== selectedContainer) return false
+
+        const bookingStart = new Date(booking.start_date)
+        const bookingEnd = new Date(booking.end_date)
+
+        return date >= bookingStart && date <= bookingEnd
+      }).length
+
+      return bookedCount < selectedType.available_quantity
+    })
+  }
+
+  const totalDays =
+    startDate && endDate && isValid(startDate) && isValid(endDate)
+      ? Math.max(1, differenceInDays(endDate, startDate) + 1)
+      : 1
+
+  const selectedContainerType = containerTypes.find((ct) => ct.id === selectedContainer)
+  const baseAmount = selectedContainerType?.price_per_day || 0
+  const baseTotalAmount = baseAmount * totalDays
+  const extraTonnageAmount = (extraTonnage || 0) * 125
+  const applianceAmount = (applianceCount || 0) * 30
+  const totalAmount = baseTotalAmount + extraTonnageAmount + applianceAmount
+
+  console.log("[v0] Price calculation:", {
+    totalDays,
+    baseAmount,
+    baseTotalAmount,
+    extraTonnageAmount,
+    applianceAmount,
+    totalAmount,
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    // Remove the automatic step check that was causing auto-redirect
+  }
+
+  const handleProceedToPayment = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    if (!selectedContainer || !startDate || !endDate) {
+      setError("Please fill in all required fields")
+      setIsLoading(false)
+      return
+    }
+
+    if (!isDateRangeAvailable(startDate, endDate)) {
+      setError("Selected date range is not available. Please choose different dates.")
+      setIsLoading(false)
+      return
+    }
+
+    if (!streetAddress.trim() || !city.trim() || !state.trim() || !zipCode.trim()) {
+      setError("Please fill in all address fields")
+      setIsLoading(false)
+      return
+    }
+
+    if (
+      serviceType === "delivery" &&
+      (!deliveryStreetAddress.trim() || !deliveryCity.trim() || !deliveryState.trim() || !deliveryZipCode.trim())
+    ) {
+      setError("Please fill in all delivery address fields")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const customerAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`
+      const deliveryAddress =
+        serviceType === "delivery"
+          ? `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`
+          : null
+
+      // Update user profile with phone if available
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser()
+      if (currentUser?.user_metadata?.phone) {
+        await supabase.from("profiles").update({ phone: currentUser.user_metadata.phone }).eq("id", user.id)
+      }
+
+      // Prepare booking data for payment page
+      const bookingData = {
+        user_id: user.id,
+        container_type_id: selectedContainer,
+        start_date: format(startDate, "yyyy-MM-dd"),
+        end_date: format(endDate, "yyyy-MM-dd"),
+        pickup_time: pickupTime,
+        delivery_address: deliveryAddress,
+        customer_address: customerAddress,
+        service_type: serviceType,
+        total_amount: totalAmount,
+        notes: notes.trim() || null,
+        extra_tonnage: extraTonnage,
+        appliance_count: applianceCount,
+      }
+
+      // Store booking data in localStorage and redirect to payment
+      localStorage.setItem("pendingBooking", JSON.stringify(bookingData))
+      router.push("/payment")
+    } catch (error: unknown) {
+      console.error("[v0] Booking preparation error:", error)
+      setError(error instanceof Error ? error.message : "An error occurred")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const canProceedToNextStep = () => {
+    switch (currentStep) {
+      case 1:
+        return selectedContainer !== ""
+      case 2:
+        return startDate && endDate && isDateRangeAvailable(startDate, endDate)
+      case 3:
+        return (
+          serviceType &&
+          pickupTime &&
+          streetAddress &&
+          city &&
+          state &&
+          zipCode &&
+          (serviceType === "pickup" || (deliveryStreetAddress && deliveryCity && deliveryState && deliveryZipCode))
+        )
+      case 4:
+        return true
+      default:
+        return true
+    }
+  }
+
+  if (loadingData) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading container options...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-8">
+        <div className="relative">
+          <div className="flex items-center justify-between">
+            {Array.from({ length: totalSteps }, (_, i) => (
+              <div key={i} className="flex items-center flex-1">
+                <div className="relative flex items-center justify-center">
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-200 z-10 bg-white",
+                      i + 1 <= currentStep
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-400 border-gray-300",
+                    )}
+                  >
+                    {i + 1}
+                  </div>
+                </div>
+                {i < totalSteps - 1 && (
+                  <div className="flex-1 h-0.5 mx-4">
+                    <div
+                      className={cn(
+                        "h-full transition-all duration-200",
+                        i + 1 < currentStep ? "bg-blue-600" : "bg-gray-300",
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-6 text-center">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {currentStep === 1 && "Select Container"}
+            {currentStep === 2 && "Choose Dates"}
+            {currentStep === 3 && "Service & Address"}
+            {currentStep === 4 && "Additional Services"}
+            {currentStep === 5 && "Review & Book"}
+          </h2>
+          <p className="text-gray-600 mt-1">
+            {currentStep === 1 && "Choose the perfect container size for your project"}
+            {currentStep === 2 && "Select your rental dates"}
+            {currentStep === 3 && "Configure service options and addresses"}
+            {currentStep === 4 && "Add optional services"}
+            {currentStep === 5 && "Review and confirm your booking"}
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {currentStep === 1 && (
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl">Select Container Type</CardTitle>
+              <CardDescription className="text-lg">
+                Choose the container size that best fits your project
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {containerTypes.length === 0 ? (
+                <div className="text-center p-8">
+                  <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-2 text-lg">No container types available</p>
+                  <p className="text-gray-400">Please contact support or try refreshing the page.</p>
+                </div>
+              ) : (
+                <RadioGroup value={selectedContainer} onValueChange={setSelectedContainer}>
+                  <div className="grid gap-6">
+                    {containerTypes.map((container) => (
+                      <div key={container.id} className="relative">
+                        <RadioGroupItem value={container.id} id={container.id} className="sr-only" />
+                        <Label
+                          htmlFor={container.id}
+                          className={cn(
+                            "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200 hover:shadow-md",
+                            selectedContainer === container.id
+                              ? "border-blue-600 bg-blue-50 shadow-md"
+                              : "border-gray-200 bg-white hover:border-gray-300",
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div
+                                className={cn(
+                                  "w-12 h-12 rounded-full flex items-center justify-center",
+                                  selectedContainer === container.id
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-100 text-gray-600",
+                                )}
+                              >
+                                <Truck className="w-6 h-6" />
+                              </div>
+                              <div>
+                                <div className="text-xl font-bold text-gray-900">{container.size}</div>
+                                <div className="text-gray-600 mt-1">{container.description}</div>
+                                <div className="flex items-center mt-2 space-x-4">
+                                  <div className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    Available: {container.available_quantity} units
+                                  </div>
+                                  <div className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded">
+                                    Includes 2 tons
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-3xl font-bold text-gray-900">
+                                {formatCurrency(container.price_per_day)}
+                              </div>
+                              <div className="text-sm text-gray-500">per rental</div>
+                            </div>
+                          </div>
+                          {selectedContainer === container.id && (
+                            <div className="absolute top-4 right-4">
+                              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </RadioGroup>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {currentStep === 2 && (
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl">Select Rental Period</CardTitle>
+              <CardDescription className="text-lg">
+                Choose your start and end dates for the container rental
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                    <CalendarIcon className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="text-center mb-4">
+                  <Label className="text-lg font-semibold text-gray-900">Select Date Range</Label>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-14 justify-center text-left font-medium text-lg border-2 hover:border-blue-300 transition-colors",
+                        (!startDate || !endDate) && "text-muted-foreground",
+                        startDate && endDate && "border-blue-600 bg-blue-50 text-blue-900",
+                      )}
+                    >
+                      <CalendarIcon className="mr-3 h-5 w-5" />
+                      {startDate && endDate
+                        ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}`
+                        : "Click to select your rental dates"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="range"
+                      selected={{ from: startDate, to: endDate }}
+                      onSelect={(range) => {
+                        setStartDate(range?.from)
+                        setEndDate(range?.to)
+                      }}
+                      disabled={(date) => date < new Date() || isDateUnavailable(date)}
+                      initialFocus
+                      numberOfMonths={2}
+                      modifiers={{
+                        unavailable: (date) => isDateUnavailable(date),
+                        limited: (date) => {
+                          if (!selectedContainer) return false
+                          const availability = getDateAvailability(date)
+                          return availability.available > 0 && availability.available < availability.total
+                        },
+                      }}
+                      modifiersStyles={{
+                        unavailable: { backgroundColor: "#fee2e2", color: "#dc2626" },
+                        limited: { backgroundColor: "#fef3c7", color: "#d97706" },
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {selectedContainer && (
+                <div className="bg-gray-50 p-6 rounded-xl border">
+                  <h4 className="font-semibold mb-4 text-gray-900 flex items-center">
+                    <AlertCircle className="w-5 h-5 mr-2 text-blue-600" />
+                    Availability Legend
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                      <div className="w-6 h-6 bg-white border-2 border-gray-300 rounded"></div>
+                      <span className="font-medium text-gray-700">Available</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="w-6 h-6 bg-yellow-200 rounded"></div>
+                      <span className="font-medium text-yellow-800">Limited</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                      <div className="w-6 h-6 bg-red-200 rounded"></div>
+                      <span className="font-medium text-red-800">Fully Booked</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {totalDays > 1 && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+                  <div className="text-2xl font-bold text-green-800 mb-1">
+                    {totalDays} Day{totalDays > 1 ? "s" : ""}
+                  </div>
+                  <div className="text-green-600">Selected rental period</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="text-center pb-6">
+                <CardTitle className="text-2xl">Service Options</CardTitle>
+                <CardDescription className="text-lg">Choose how you'd like to handle your container</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup value={serviceType} onValueChange={setServiceType}>
+                  <div className="grid gap-4">
+                    <div className="relative">
+                      <RadioGroupItem value="pickup" id="pickup" className="sr-only" />
+                      <Label
+                        htmlFor="pickup"
+                        className={cn(
+                          "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200 hover:shadow-md",
+                          serviceType === "pickup"
+                            ? "border-blue-600 bg-blue-50 shadow-md"
+                            : "border-gray-200 bg-white hover:border-gray-300",
+                        )}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div
+                            className={cn(
+                              "w-12 h-12 rounded-full flex items-center justify-center",
+                              serviceType === "pickup" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600",
+                            )}
+                          >
+                            <Truck className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xl font-bold text-gray-900">Pickup Service</div>
+                            <div className="text-gray-600 mt-1">You pick up and return the container yourself</div>
+                            <div className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded mt-2 inline-block">
+                              Most economical option
+                            </div>
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+
+                    <div className="relative">
+                      <RadioGroupItem value="delivery" id="delivery" className="sr-only" />
+                      <Label
+                        htmlFor="delivery"
+                        className={cn(
+                          "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200 hover:shadow-md",
+                          serviceType === "delivery"
+                            ? "border-blue-600 bg-blue-50 shadow-md"
+                            : "border-gray-200 bg-white hover:border-gray-300",
+                        )}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div
+                            className={cn(
+                              "w-12 h-12 rounded-full flex items-center justify-center",
+                              serviceType === "delivery" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600",
+                            )}
+                          >
+                            <MapPin className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xl font-bold text-gray-900">Delivery Service</div>
+                            <div className="text-gray-600 mt-1">We deliver and pick up the container for you</div>
+                            <div className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded mt-2 inline-block">
+                              Most convenient option
+                            </div>
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+
+                <div className="mt-6 bg-gray-50 rounded-xl p-6 border">
+                  <Label htmlFor="pickupTime" className="text-lg font-semibold text-gray-900 mb-3 block">
+                    Preferred Time
+                  </Label>
+                  <Input
+                    id="pickupTime"
+                    type="time"
+                    value={pickupTime}
+                    onChange={(e) => setPickupTime(e.target.value)}
+                    className="h-12 text-lg border-2 focus:border-blue-600"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">We'll do our best to accommodate your preferred time</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center">
+                  <MapPin className="w-6 h-6 mr-2 text-blue-600" />
+                  Your Address
+                </CardTitle>
+                <CardDescription className="text-base">Billing and contact address information</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="streetAddress" className="text-base font-medium">
+                    Street Address *
+                  </Label>
+                  <Input
+                    id="streetAddress"
+                    placeholder="123 Main Street"
+                    value={streetAddress}
+                    onChange={(e) => setStreetAddress(e.target.value)}
+                    className="h-12 text-base border-2 focus:border-blue-600"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city" className="text-base font-medium">
+                      City *
+                    </Label>
+                    <Input
+                      id="city"
+                      placeholder="City"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="h-12 text-base border-2 focus:border-blue-600"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="state" className="text-base font-medium">
+                      State *
+                    </Label>
+                    <Input
+                      id="state"
+                      placeholder="State"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      className="h-12 text-base border-2 focus:border-blue-600"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zipCode" className="text-base font-medium">
+                      ZIP Code *
+                    </Label>
+                    <Input
+                      id="zipCode"
+                      placeholder="12345"
+                      value={zipCode}
+                      onChange={(e) => setZipCode(e.target.value)}
+                      className="h-12 text-base border-2 focus:border-blue-600"
+                      required
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {serviceType === "delivery" && (
+              <Card className="border-0 shadow-lg border-l-4 border-l-blue-600">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center">
+                    <Truck className="w-6 h-6 mr-2 text-blue-600" />
+                    Delivery Address
+                  </CardTitle>
+                  <CardDescription className="text-base">Where should we deliver the container?</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="deliveryStreetAddress" className="text-base font-medium">
+                      Street Address *
+                    </Label>
+                    <Input
+                      id="deliveryStreetAddress"
+                      placeholder="123 Main Street"
+                      value={deliveryStreetAddress}
+                      onChange={(e) => setDeliveryStreetAddress(e.target.value)}
+                      className="h-12 text-base border-2 focus:border-blue-600"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="deliveryCity" className="text-base font-medium">
+                        City *
+                      </Label>
+                      <Input
+                        id="deliveryCity"
+                        placeholder="City"
+                        value={deliveryCity}
+                        onChange={(e) => setDeliveryCity(e.target.value)}
+                        className="h-12 text-base border-2 focus:border-blue-600"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deliveryState" className="text-base font-medium">
+                        State *
+                      </Label>
+                      <Input
+                        id="deliveryState"
+                        placeholder="State"
+                        value={deliveryState}
+                        onChange={(e) => setDeliveryState(e.target.value)}
+                        className="h-12 text-base border-2 focus:border-blue-600"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deliveryZipCode" className="text-base font-medium">
+                        ZIP Code *
+                      </Label>
+                      <Input
+                        id="deliveryZipCode"
+                        placeholder="12345"
+                        value={deliveryZipCode}
+                        onChange={(e) => setDeliveryZipCode(e.target.value)}
+                        className="h-12 text-base border-2 focus:border-blue-600"
+                        required
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {currentStep === 4 && (
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl">Additional Services</CardTitle>
+              <CardDescription className="text-lg">Enhance your rental with optional services</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="grid gap-6">
+                <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <Label htmlFor="extraTonnage" className="text-lg font-semibold text-gray-900 block mb-2">
+                        Extra Tonnage
+                      </Label>
+                      <p className="text-gray-600 mb-4">Beyond included 2 tons - {formatCurrency(125)} per ton</p>
+                      <div className="flex items-center space-x-4">
+                        <Input
+                          id="extraTonnage"
+                          type="number"
+                          min="0"
+                          max="10"
+                          value={extraTonnage}
+                          onChange={(e) => setExtraTonnage(Number(e.target.value))}
+                          className="w-24 h-12 text-center text-lg border-2 focus:border-orange-600"
+                        />
+                        <span className="text-gray-600">tons</span>
+                        {extraTonnage > 0 && (
+                          <div className="text-lg font-semibold text-orange-600">
+                            +{formatCurrency(extraTonnage * 125)}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">Each container includes 2 tons of debris</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <Label htmlFor="applianceCount" className="text-lg font-semibold text-gray-900 block mb-2">
+                        Appliance Disposal
+                      </Label>
+                      <p className="text-gray-600 mb-4">{formatCurrency(30)} per appliance</p>
+                      <div className="flex items-center space-x-4">
+                        <Input
+                          id="applianceCount"
+                          type="number"
+                          min="0"
+                          max="20"
+                          value={applianceCount}
+                          onChange={(e) => setApplianceCount(Number(e.target.value))}
+                          className="w-24 h-12 text-center text-lg border-2 focus:border-green-600"
+                        />
+                        <span className="text-gray-600">appliances</span>
+                        {applianceCount > 0 && (
+                          <div className="text-lg font-semibold text-green-600">
+                            +{formatCurrency(applianceCount * 30)}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">Refrigerators, washers, dryers, etc.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6 border">
+                <Label htmlFor="notes" className="text-lg font-semibold text-gray-900 block mb-3">
+                  Additional Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Enter any special instructions, access requirements, or other notes..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="min-h-[120px] text-base border-2 focus:border-blue-600 resize-none"
+                />
+                <p className="text-sm text-gray-500 mt-2">Help us serve you better with any special requirements</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {currentStep === 5 && selectedContainer && totalDays > 0 && (
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl">Order Summary</CardTitle>
+              <CardDescription className="text-lg">Review your booking details before proceeding</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                    <h4 className="text-xl font-bold text-blue-900 mb-4 flex items-center">
+                      <Truck className="w-6 h-6 mr-2" />
+                      Container Details
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Container:</span>
+                        <span className="font-semibold text-gray-900">
+                          {containerTypes.find((ct) => ct.id === selectedContainer)?.size}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Rental Period:</span>
+                        <span className="font-semibold text-gray-900">
+                          {totalDays} day{totalDays > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Service:</span>
+                        <span className="font-semibold text-gray-900 capitalize">{serviceType}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Preferred Time:</span>
+                        <span className="font-semibold text-gray-900">{pickupTime}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Dates:</span>
+                        <span className="font-semibold text-gray-900">
+                          {startDate && endDate && `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd")}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+                    <h4 className="text-xl font-bold text-green-900 mb-4 flex items-center">
+                      <MapPin className="w-6 h-6 mr-2" />
+                      Address Information
+                    </h4>
+                    <div className="space-y-4">
+                      <div>
+                        <span className="text-sm font-semibold text-green-800 block mb-1">Billing Address:</span>
+                        <div className="text-gray-700">
+                          {streetAddress}
+                          <br />
+                          {city}, {state} {zipCode}
+                        </div>
+                      </div>
+                      {serviceType === "delivery" && (
+                        <div>
+                          <span className="text-sm font-semibold text-green-800 block mb-1">Delivery Address:</span>
+                          <div className="text-gray-700">
+                            {deliveryStreetAddress}
+                            <br />
+                            {deliveryCity}, {deliveryState} {deliveryZipCode}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+                  <h4 className="text-xl font-bold text-gray-900 mb-6 text-center">Pricing Breakdown</h4>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                      <span className="text-lg text-gray-700">
+                        Base Price ({totalDays} day{totalDays > 1 ? "s" : ""}):
+                      </span>
+                      <span className="text-lg font-semibold text-gray-900">{formatCurrency(baseTotalAmount)}</span>
+                    </div>
+                    {extraTonnage > 0 && (
+                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span className="text-gray-700">Extra Tonnage ({extraTonnage} tons):</span>
+                        <span className="font-semibold text-gray-900">{formatCurrency(extraTonnageAmount)}</span>
+                      </div>
+                    )}
+                    {applianceCount > 0 && (
+                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span className="text-gray-700">Appliance Disposal ({applianceCount} items):</span>
+                        <span className="font-semibold text-gray-900">{formatCurrency(applianceAmount)}</span>
+                      </div>
+                    )}
+                    <div className="bg-blue-600 text-white rounded-lg p-4 mt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xl font-bold">Total Amount:</span>
+                        <span className="text-2xl font-bold">{formatCurrency(totalAmount)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {error && <div className="text-red-600 text-sm">{error}</div>}
+
+        <div className="flex justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className="flex items-center bg-transparent"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Previous
+          </Button>
+
+          {currentStep < totalSteps ? (
+            <Button type="button" onClick={nextStep} disabled={!canProceedToNextStep()} className="flex items-center">
+              Next
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              size="lg"
+              disabled={
+                isLoading || !selectedContainer || !startDate || !endDate || !isDateRangeAvailable(startDate, endDate)
+              }
+              className="flex items-center"
+              onClick={handleProceedToPayment}
+            >
+              {isLoading ? "Preparing Payment..." : "Proceed to Payment"}
+            </Button>
+          )}
+        </div>
+      </form>
+    </div>
+  )
+}
