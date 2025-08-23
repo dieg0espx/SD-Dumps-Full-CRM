@@ -52,7 +52,7 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Payment</h1>
             <p className="text-gray-600">Secure payment for your container rental</p>
           </div>
-          <PaymentForm booking={booking} />
+          <PaymentForm bookingData={booking} />
         </div>
       </div>
     </div>

@@ -27,6 +27,8 @@ interface PaymentFormProps {
 }
 
 export function PaymentForm({ bookingData }: PaymentFormProps) {
+  console.log("[v0] PaymentForm received bookingData:", bookingData)
+  
   const [paymentMethod, setPaymentMethod] = useState("credit_card")
   const [cardNumber, setCardNumber] = useState("")
   const [expiryDate, setExpiryDate] = useState("")
@@ -87,48 +89,55 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
     setError(null)
 
     try {
-      console.log("[v0] Creating booking with data:", bookingData)
-
       const {
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) throw new Error("User not authenticated")
 
-      // Update user profile with phone number if provided
-      if (bookingData.phone) {
-        await supabase.from("profiles").update({ phone: bookingData.phone }).eq("id", user.id)
+      let bookingId = bookingData.id
+
+      // If booking doesn't exist yet (from localStorage), create it
+      if (!bookingId) {
+        console.log("[v0] Creating booking with data:", bookingData)
+
+        // Update user profile with phone number if provided
+        if (bookingData.phone) {
+          await supabase.from("profiles").update({ phone: bookingData.phone }).eq("id", user.id)
+        }
+
+        // Create the booking
+        const { data: booking, error: bookingError } = await supabase
+          .from("bookings")
+          .insert({
+            user_id: user.id,
+            container_type_id: bookingData.container_type_id,
+            start_date: bookingData.start_date,
+            end_date: bookingData.end_date,
+            service_type: bookingData.service_type,
+            customer_address: bookingData.customer_address,
+            delivery_address: bookingData.delivery_address,
+            total_amount: bookingData.total_amount,
+            pickup_time: bookingData.pickup_time,
+            notes: bookingData.notes,
+            status: "pending",
+            payment_status: "pending",
+          })
+          .select()
+          .single()
+
+        if (bookingError) throw bookingError
+        bookingId = booking.id
+        console.log("[v0] Booking created:", booking)
+      } else {
+        console.log("[v0] Processing payment for existing booking:", bookingId)
       }
-
-      // Create the booking
-      const { data: booking, error: bookingError } = await supabase
-        .from("bookings")
-        .insert({
-          user_id: user.id,
-          container_type_id: bookingData.container_type_id,
-          start_date: bookingData.start_date,
-          end_date: bookingData.end_date,
-          service_type: bookingData.service_type,
-          customer_address: bookingData.customer_address,
-          delivery_address: bookingData.delivery_address,
-          total_amount: bookingData.total_amount,
-          pickup_time: bookingData.pickup_time,
-          notes: bookingData.notes,
-          status: "pending",
-          payment_status: "pending",
-        })
-        .select()
-        .single()
-
-      if (bookingError) throw bookingError
-
-      console.log("[v0] Booking created:", booking)
 
       // Simulate payment processing
       const paymentResult = await simulatePayment()
 
       // Create payment record
       const { error: paymentError } = await supabase.from("payments").insert({
-        booking_id: booking.id,
+        booking_id: bookingId,
         amount: bookingData.total_amount,
         payment_method: paymentMethod,
         transaction_id: paymentResult.transaction_id,
@@ -145,15 +154,15 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
           status: "confirmed",
           updated_at: new Date().toISOString(),
         })
-        .eq("id", booking.id)
+        .eq("id", bookingId)
 
       if (updateError) throw updateError
 
-      // Clear localStorage
+      // Clear localStorage if it exists
       localStorage.removeItem("pendingBooking")
 
       // Redirect to success page
-      router.push(`/payment/${booking.id}/success`)
+      router.push(`/payment/${bookingId}/success`)
     } catch (error: unknown) {
       console.error("[v0] Payment error:", error)
       setError(error instanceof Error ? error.message : "Payment failed. Please try again.")
@@ -200,7 +209,9 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Container:</span>
-              <span>Container - {bookingData.container_type_id}</span>
+              <span>
+                {bookingData.container_types?.name || `Container - ${bookingData.container_type_id}`}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Rental Period:</span>
@@ -225,7 +236,7 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
             <Separator />
             <div className="flex justify-between font-semibold text-lg">
               <span>Total:</span>
-              <span>{formatCurrency(bookingData.totalAmount)}</span>
+              <span>{formatCurrency(bookingData.total_amount || 0)}</span>
             </div>
           </div>
         </CardContent>
@@ -339,7 +350,7 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
 
             <div className="pt-4">
               <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
-                {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(bookingData.total_amount)}`}
+                {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(bookingData.total_amount || 0)}`}
               </Button>
             </div>
 
