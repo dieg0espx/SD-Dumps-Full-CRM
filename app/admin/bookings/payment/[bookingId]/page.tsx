@@ -4,12 +4,13 @@ import { AdminLayout } from "@/components/admin-layout"
 import { AdminPaymentForm } from "@/components/admin-payment-form"
 
 interface AdminPaymentPageProps {
-  params: {
+  params: Promise<{
     bookingId: string
-  }
+  }>
 }
 
 export default async function AdminPaymentPage({ params }: AdminPaymentPageProps) {
+  const { bookingId } = await params
   const supabase = await createClient()
   const {
     data: { user },
@@ -40,7 +41,7 @@ export default async function AdminPaymentPage({ params }: AdminPaymentPageProps
         phone
       )
     `)
-    .eq("id", params.bookingId)
+    .eq("id", bookingId)
     .single()
 
   if (bookingError || !booking) {
