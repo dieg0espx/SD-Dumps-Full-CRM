@@ -35,9 +35,6 @@ export default async function AdminNewBookingPage() {
       <AdminBookingForm 
         containerTypes={containerTypes || []} 
         users={users || []} 
-        onBookingCreated={(bookingId) => {
-          // This will be handled by the client-side component
-        }}
       />
     </AdminLayout>
   )
