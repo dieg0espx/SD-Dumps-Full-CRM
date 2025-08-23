@@ -13,9 +13,6 @@ export default async function BookingPage() {
     redirect("/auth/login")
   }
 
-  // Fetch available container types
-  const { data: containerTypes } = await supabase.from("container_types").select("*").order("price_per_day")
-
   return (
     <div className="min-h-screen bg-gray-50">
       <AuthHeader user={user} />
@@ -25,7 +22,7 @@ export default async function BookingPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Book a Container</h1>
             <p className="text-gray-600">Choose your container size, dates, and service options</p>
           </div>
-          <BookingForm containerTypes={containerTypes || []} user={user} />
+          <BookingForm user={user} />
         </div>
       </div>
     </div>
