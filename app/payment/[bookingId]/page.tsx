@@ -4,12 +4,13 @@ import { AuthHeader } from "@/components/auth-header"
 import { PaymentForm } from "@/components/payment-form"
 
 interface PaymentPageProps {
-  params: {
+  params: Promise<{
     bookingId: string
-  }
+  }>
 }
 
 export default async function PaymentPage({ params }: PaymentPageProps) {
+  const { bookingId } = await params
   const supabase = await createClient()
   const {
     data: { user },
@@ -30,7 +31,7 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
         description
       )
     `)
-    .eq("id", params.bookingId)
+    .eq("id", bookingId)
     .eq("user_id", user.id)
     .single()
 
@@ -40,7 +41,7 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
 
   // If already paid, redirect to success
   if (booking.payment_status === "paid") {
-    redirect(`/payment/${params.bookingId}/success`)
+    redirect(`/payment/${bookingId}/success`)
   }
 
   return (

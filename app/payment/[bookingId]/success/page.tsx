@@ -17,12 +17,13 @@ const formatCurrency = (amount: number) => {
 }
 
 interface PaymentSuccessPageProps {
-  params: {
+  params: Promise<{
     bookingId: string
-  }
+  }>
 }
 
 export default async function PaymentSuccessPage({ params }: PaymentSuccessPageProps) {
+  const { bookingId } = await params
   const supabase = await createClient()
   const {
     data: { user },
@@ -48,7 +49,7 @@ export default async function PaymentSuccessPage({ params }: PaymentSuccessPageP
         created_at
       )
     `)
-    .eq("id", params.bookingId)
+    .eq("id", bookingId)
     .eq("user_id", user.id)
     .single()
 
