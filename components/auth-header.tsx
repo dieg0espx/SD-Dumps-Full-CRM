@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
-import { LogOut, UserIcon, MessageCircle } from "lucide-react"
+import { LogOut, UserIcon, MessageCircle, CreditCard } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +41,15 @@ export function AuthHeader({ user }: AuthHeaderProps) {
           <Button 
             variant="outline" 
             size="sm" 
+            onClick={() => router.push("/payments")}
+            className="flex items-center gap-2"
+          >
+            <CreditCard className="h-4 w-4" />
+            Payments
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={() => router.push("/booking")}
             className="flex items-center gap-2"
           >
@@ -55,10 +64,17 @@ export function AuthHeader({ user }: AuthHeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push("/booking")}>Dashboard</DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/booking")}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Dashboard
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/payments")}>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Payments
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <UserIcon className="h-4 w-4 mr-2" />
+                Profile
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="text-red-600">

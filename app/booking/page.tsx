@@ -5,11 +5,14 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { BookingForm } from "@/components/booking-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Truck, Clock, MapPin, Users, MessageSquare, User, Plus } from "lucide-react"
+import { Calendar, Truck, Clock, MapPin, Users, MessageSquare, User, Plus, LogOut, CreditCard, Menu, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { ChatInterface } from "@/components/chat-interface"
 import { ProfileForm } from "@/components/profile-form"
+import { ClientPaymentHistory } from "@/components/client-payment-history"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -20,14 +23,16 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-type NavigationItem = 'new-booking' | 'my-bookings' | 'chat' | 'profile'
+type NavigationItem = 'new-booking' | 'my-bookings' | 'payments' | 'chat' | 'profile'
 
 export default function BookingDashboard() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [bookings, setBookings] = useState<any[]>([])
+  const [payments, setPayments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<NavigationItem>('new-booking')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -64,6 +69,23 @@ export default function BookingDashboard() {
 
       setBookings(bookings || [])
 
+      // Fetch user's payments
+      const { data: payments } = await supabase
+        .from("payments")
+        .select(`
+          *,
+          bookings (
+            *,
+            container_types (
+              name,
+              size
+            )
+          )
+        `)
+        .order("created_at", { ascending: false })
+
+      setPayments(payments || [])
+
       setLoading(false)
     }
 
@@ -98,19 +120,50 @@ export default function BookingDashboard() {
     }
   }
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push("/")
+  }
+
+  const NavigationItem = ({ 
+    icon: Icon, 
+    label, 
+    value, 
+    onClick, 
+    isActive 
+  }: { 
+    icon: any, 
+    label: string, 
+    value: NavigationItem, 
+    onClick: () => void, 
+    isActive: boolean 
+  }) => (
+    <button 
+      onClick={onClick}
+      className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+        isActive 
+          ? 'bg-blue-50 border border-blue-200 text-blue-700 font-medium' 
+          : 'text-gray-700 hover:bg-gray-50'
+      }`}
+    >
+      <Icon className="w-5 h-5" />
+      <span>{label}</span>
+    </button>
+  )
+
   const renderContent = () => {
     switch (activeTab) {
       case 'new-booking':
         return (
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             <Card className="border border-gray-200 shadow-sm">
               <CardHeader className="border-b border-gray-200">
-                <CardTitle className="text-xl font-semibold text-gray-900">Create New Booking</CardTitle>
+                <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">Create New Booking</CardTitle>
                 <CardDescription className="text-gray-600">
                   Fill out the form below to book your container
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <BookingForm user={user} />
               </CardContent>
             </Card>
@@ -119,9 +172,9 @@ export default function BookingDashboard() {
 
       case 'my-bookings':
         return (
-          <div className="p-8">
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">My Bookings</h1>
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="mb-6 sm:mb-8">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">My Bookings</h1>
               <p className="text-gray-600">View and manage your container rental bookings</p>
             </div>
 
@@ -138,18 +191,18 @@ export default function BookingDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {bookings.map((booking: any) => (
                   <Card key={booking.id}>
                     <CardHeader>
-                      <div className="flex justify-between items-start">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                         <div>
-                          <CardTitle className="text-lg">
+                          <CardTitle className="text-base sm:text-lg">
                             {booking.container_types.name} - {booking.container_types.size}
                           </CardTitle>
                           <CardDescription>Booking #{booking.id.slice(0, 8)}</CardDescription>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Badge className={getStatusColor(booking.status)}>{booking.status}</Badge>
                           <Badge className={getPaymentStatusColor(booking.payment_status)}>
                             {booking.payment_status}
@@ -158,7 +211,7 @@ export default function BookingDashboard() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         <div>
                           <h4 className="font-medium text-gray-900 mb-2">Rental Details</h4>
                           <div className="space-y-1 text-sm text-gray-600">
@@ -212,18 +265,29 @@ export default function BookingDashboard() {
           </div>
         )
 
+      case 'payments':
+        return (
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="mb-6 sm:mb-8">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Payment History</h1>
+              <p className="text-gray-600">View all your payment transactions</p>
+            </div>
+            <ClientPaymentHistory payments={payments} />
+          </div>
+        )
+
       case 'chat':
         return (
-          <div className="p-4 h-full">
+          <div className="p-2 sm:p-4 h-full">
             <ChatInterface user={user} profile={profile} />
           </div>
         )
 
       case 'profile':
         return (
-          <div className="p-8">
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Profile</h1>
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="mb-6 sm:mb-8">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Profile</h1>
               <p className="text-gray-600">Manage your account information</p>
             </div>
             <ProfileForm profile={profile} />
@@ -241,6 +305,8 @@ export default function BookingDashboard() {
         return { title: 'New Booking', description: 'Create a new container rental booking' }
       case 'my-bookings':
         return { title: 'My Bookings', description: 'View and manage your container rental bookings' }
+      case 'payments':
+        return { title: 'Payment History', description: 'View all your payment transactions' }
       case 'chat':
         return { title: 'Chats', description: 'Communicate with our support team' }
       case 'profile':
@@ -269,81 +335,169 @@ export default function BookingDashboard() {
 
   return (
     <div className="h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6">
+      {/* Mobile Sidebar Overlay */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="w-64 p-0">
+          <div className="h-full bg-white flex flex-col">
+            <div className="p-6 flex-1">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Dashboard</h2>
+              
+              <nav className="space-y-2">
+                <NavigationItem 
+                  icon={Plus} 
+                  label="New Booking" 
+                  value="new-booking" 
+                  onClick={() => {
+                    setActiveTab('new-booking')
+                    setSidebarOpen(false)
+                  }} 
+                  isActive={activeTab === 'new-booking'} 
+                />
+                
+                <NavigationItem 
+                  icon={Calendar} 
+                  label="My Bookings" 
+                  value="my-bookings" 
+                  onClick={() => {
+                    setActiveTab('my-bookings')
+                    setSidebarOpen(false)
+                  }} 
+                  isActive={activeTab === 'my-bookings'} 
+                />
+                
+                <NavigationItem 
+                  icon={CreditCard} 
+                  label="Payments" 
+                  value="payments" 
+                  onClick={() => {
+                    setActiveTab('payments')
+                    setSidebarOpen(false)
+                  }} 
+                  isActive={activeTab === 'payments'} 
+                />
+                
+                <NavigationItem 
+                  icon={MessageSquare} 
+                  label="Chats" 
+                  value="chat" 
+                  onClick={() => {
+                    setActiveTab('chat')
+                    setSidebarOpen(false)
+                  }} 
+                  isActive={activeTab === 'chat'} 
+                />
+                
+                <NavigationItem 
+                  icon={User} 
+                  label="My Account" 
+                  value="profile" 
+                  onClick={() => {
+                    setActiveTab('profile')
+                    setSidebarOpen(false)
+                  }} 
+                  isActive={activeTab === 'profile'} 
+                />
+              </nav>
+            </div>
+            
+            {/* Sign Out Button */}
+            <div className="p-6 border-t border-gray-200">
+              <button 
+                onClick={handleSignOut}
+                className="w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block w-64 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-6 flex-1">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Dashboard</h2>
           
           <nav className="space-y-2">
-            <button 
-              onClick={() => setActiveTab('new-booking')}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                activeTab === 'new-booking' 
-                  ? 'bg-blue-50 border border-blue-200 text-blue-700 font-medium' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Plus className="w-5 h-5" />
-              <span>New Booking</span>
-            </button>
+            <NavigationItem 
+              icon={Plus} 
+              label="New Booking" 
+              value="new-booking" 
+              onClick={() => setActiveTab('new-booking')} 
+              isActive={activeTab === 'new-booking'} 
+            />
             
-            <button 
-              onClick={() => setActiveTab('my-bookings')}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                activeTab === 'my-bookings' 
-                  ? 'bg-blue-50 border border-blue-200 text-blue-700 font-medium' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Calendar className="w-5 h-5" />
-              <span>My Bookings</span>
-            </button>
+            <NavigationItem 
+              icon={Calendar} 
+              label="My Bookings" 
+              value="my-bookings" 
+              onClick={() => setActiveTab('my-bookings')} 
+              isActive={activeTab === 'my-bookings'} 
+            />
             
-            <button 
-              onClick={() => setActiveTab('chat')}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                activeTab === 'chat' 
-                  ? 'bg-blue-50 border border-blue-200 text-blue-700 font-medium' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span>Chats</span>
-            </button>
+            <NavigationItem 
+              icon={CreditCard} 
+              label="Payments" 
+              value="payments" 
+              onClick={() => setActiveTab('payments')} 
+              isActive={activeTab === 'payments'} 
+            />
             
-            <button 
-              onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                activeTab === 'profile' 
-                  ? 'bg-blue-50 border border-blue-200 text-blue-700 font-medium' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <User className="w-5 h-5" />
-              <span>My Account</span>
-            </button>
+            <NavigationItem 
+              icon={MessageSquare} 
+              label="Chats" 
+              value="chat" 
+              onClick={() => setActiveTab('chat')} 
+              isActive={activeTab === 'chat'} 
+            />
+            
+            <NavigationItem 
+              icon={User} 
+              label="My Account" 
+              value="profile" 
+              onClick={() => setActiveTab('profile')} 
+              isActive={activeTab === 'profile'} 
+            />
           </nav>
+        </div>
+        
+        {/* Sign Out Button */}
+        <div className="p-6 border-t border-gray-200">
+          <button 
+            onClick={handleSignOut}
+            className="w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Dashboard Header */}
-        <div className="bg-white border-b border-gray-200 px-8 py-6 flex-shrink-0">
+        {/* Mobile Header */}
+        <div className="lg:hidden bg-white border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-              <p className="text-gray-600 mt-1">{description}</p>
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
+                <p className="text-sm text-gray-600">{description}</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
-              <Calendar className="w-4 h-4" />
-              <span>{new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</span>
-            </div>
+            <button 
+              onClick={handleSignOut}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
 

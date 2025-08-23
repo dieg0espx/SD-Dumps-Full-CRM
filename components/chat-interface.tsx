@@ -299,7 +299,7 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full ">
       {/* Main Chat Card */}
       <div className="flex-1 bg-white rounded-lg shadow-sm border mb-4 flex flex-col">
         {/* Header */}
@@ -340,7 +340,7 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-6 overflow-y-auto max-h-[calc(100vh-200px)] overflow-y-auto">
           <ScrollArea className="h-full">
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">

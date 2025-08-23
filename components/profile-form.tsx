@@ -9,11 +9,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+// Phone number formatting utility
+const formatPhoneNumber = (value: string): string => {
+  // Remove all non-digits
+  const phoneNumber = value.replace(/\D/g, "")
+  
+  // Format based on length
+  if (phoneNumber.length === 0) return ""
+  if (phoneNumber.length <= 3) return `(${phoneNumber}`
+  if (phoneNumber.length <= 6) return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`
+  if (phoneNumber.length <= 10) return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`
+  
+  // For longer numbers (with extension), format as (XXX) XXX-XXXX ext XXXX
+  return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)} ext ${phoneNumber.slice(10)}`
+}
+
 interface Profile {
   id: string
   email: string
   full_name: string | null
   phone: string | null
+  company: string | null
+  role: string | null
+  is_admin: boolean | null
 }
 
 interface ProfileFormProps {
@@ -22,7 +40,8 @@ interface ProfileFormProps {
 
 export function ProfileForm({ profile }: ProfileFormProps) {
   const [fullName, setFullName] = useState(profile?.full_name || "")
-  const [phone, setPhone] = useState(profile?.phone || "")
+  const [phone, setPhone] = useState(formatPhoneNumber(profile?.phone || ""))
+  const [company, setCompany] = useState(profile?.company || "")
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
@@ -38,7 +57,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         .from("profiles")
         .update({
           full_name: fullName.trim() || null,
-          phone: phone.trim() || null,
+          phone: phone.replace(/\D/g, "") || null, // Store only digits in database
+          company: company.trim() || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", profile?.id)
@@ -84,9 +104,20 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             <Input
               id="phone"
               type="tel"
-              placeholder="Enter your phone number"
+              placeholder="(555) 123-4567"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+              maxLength={20}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="company">Company</Label>
+            <Input
+              id="company"
+              type="text"
+              placeholder="Enter your company name"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
             />
           </div>
           {message && (
