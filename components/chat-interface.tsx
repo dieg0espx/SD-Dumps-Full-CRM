@@ -2,14 +2,13 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, MessageCircle, RefreshCw } from "lucide-react"
+import { Send, MessageCircle, RefreshCw, Wifi, WifiOff } from "lucide-react"
 import { format } from "date-fns"
 import type { User } from "@supabase/supabase-js"
 
@@ -41,26 +40,50 @@ interface Message {
 interface ChatInterfaceProps {
   user: User
   profile: Profile
+  isPopup?: boolean
 }
 
-export function ChatInterface({ user, profile }: ChatInterfaceProps) {
+export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceProps) {
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting')
-  const [debugInfo, setDebugInfo] = useState<string[]>([])
+  const [lastMessageId, setLastMessageId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const supabase = createClient()
 
-  const addDebugInfo = (info: string) => {
-    setDebugInfo(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${info}`])
-  }
+  // Detect if we're in a popup window
+  const isInPopup = typeof window !== 'undefined' && window.opener
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
+
+  // Polling fallback for when real-time fails
+  const startPolling = useCallback(() => {
+    if (!conversation) return
+    
+    // Clear existing interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+    }
+
+    // Start polling every 2 seconds
+    pollingIntervalRef.current = setInterval(async () => {
+      console.log("Polling for new messages...")
+      await loadMessages(conversation.id)
+    }, 2000)
+  }, [conversation])
+
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     initializeChat()
@@ -70,15 +93,17 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
     scrollToBottom()
   }, [messages])
 
+  // Set up real-time subscriptions
   useEffect(() => {
     if (!conversation) return
 
-    addDebugInfo(`Setting up real-time subscription for conversation: ${conversation.id}`)
     console.log("Setting up real-time subscription for conversation:", conversation.id)
 
-    // Subscribe to message changes for the conversation
-    const messageChannel = supabase
-      .channel(`conversation-messages-${conversation.id}`)
+    // Create a unique channel name
+    const channelName = `chat-${conversation.id}-${user.id}`
+
+    const channel = supabase
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -88,10 +113,10 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
           filter: `conversation_id=eq.${conversation.id}`,
         },
         async (payload) => {
-          addDebugInfo(`New message received: ${payload.new.id}`)
           console.log("[Real-time] New message received:", payload)
 
           try {
+            // Fetch the complete message
             const { data: newMessage, error } = await supabase
               .from("messages")
               .select("*")
@@ -99,26 +124,31 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
               .single()
 
             if (error) {
-              addDebugInfo(`Error fetching message: ${error.message}`)
               console.error("Error fetching new message:", error)
               return
             }
 
             if (newMessage && newMessage.sender_id !== user.id) {
               // Get sender profile
-              const { data: senderProfile } = await supabase
+              const { data: senderProfile, error: profileError } = await supabase
                 .from("profiles")
                 .select("*")
                 .eq("id", newMessage.sender_id)
                 .single()
+
+              if (profileError) {
+                console.error("Error fetching sender profile:", profileError)
+                return
+              }
 
               const messageWithSender = {
                 ...newMessage,
                 sender: senderProfile,
               }
 
+              console.log("Adding new message to state:", messageWithSender)
               setMessages((prev) => [...prev, messageWithSender])
-              addDebugInfo(`Added message from ${senderProfile?.full_name || senderProfile?.email}`)
+              setLastMessageId(newMessage.id)
 
               // Mark as read if it's not from current user
               await supabase
@@ -128,7 +158,6 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
                 .neq("sender_id", user.id)
             }
           } catch (error) {
-            addDebugInfo(`Error processing message: ${error}`)
             console.error("Error processing new message:", error)
           }
         },
@@ -142,7 +171,6 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
           filter: `id=eq.${conversation.id}`,
         },
         (payload) => {
-          addDebugInfo(`Conversation updated: ${payload.eventType}`)
           console.log("[Real-time] Conversation updated:", payload)
           if (payload.new) {
             setConversation(payload.new as Conversation)
@@ -150,43 +178,31 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
         },
       )
       .subscribe((status) => {
-        addDebugInfo(`Subscription status: ${status}`)
-        console.log("Subscription status:", status)
+        console.log("Real-time subscription status:", status)
         setConnectionStatus(status === 'SUBSCRIBED' ? 'connected' : 'disconnected')
+        
+        // Start polling if real-time fails
+        if (status !== 'SUBSCRIBED') {
+          console.log("Real-time failed, starting polling fallback")
+          startPolling()
+        } else {
+          console.log("Real-time connected, stopping polling")
+          stopPolling()
+        }
       })
 
-    // Also subscribe to conversation updates
-    const conversationChannel = supabase
-      .channel(`conversation-updates-${conversation.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "conversations",
-          filter: `id=eq.${conversation.id}`,
-        },
-        (payload) => {
-          addDebugInfo(`Conversation change: ${payload.eventType}`)
-          console.log("[Real-time] Conversation change:", payload)
-          if (payload.new) {
-            setConversation(payload.new as Conversation)
-          }
-        },
-      )
-      .subscribe()
+    // Start polling as fallback immediately
+    startPolling()
 
     return () => {
-      addDebugInfo("Cleaning up subscriptions")
-      console.log("Cleaning up subscriptions")
-      messageChannel.unsubscribe()
-      conversationChannel.unsubscribe()
+      console.log("Cleaning up real-time subscription")
+      channel.unsubscribe()
+      stopPolling()
     }
-  }, [conversation?.id, user.id])
+  }, [conversation?.id, user.id, startPolling, stopPolling])
 
   const initializeChat = async () => {
     try {
-      addDebugInfo(`Initializing chat for user: ${user.id}`)
       console.log("Initializing chat for user:", user.id)
       
       // Get the most recent active conversation for the user
@@ -199,7 +215,6 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
         .limit(1)
 
       if (fetchError) {
-        addDebugInfo(`Error fetching conversations: ${fetchError.message}`)
         console.error("Error fetching conversations:", fetchError)
         throw fetchError
       }
@@ -208,7 +223,6 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
 
       // If no active conversation exists, create one
       if (!existingConversation) {
-        addDebugInfo("Creating new conversation")
         console.log("Creating new conversation")
         const { data: newConversation, error: createError } = await supabase
           .from("conversations")
@@ -221,19 +235,16 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
           .single()
 
         if (createError) {
-          addDebugInfo(`Error creating conversation: ${createError.message}`)
           console.error("Error creating conversation:", createError)
           throw createError
         }
         existingConversation = newConversation
       }
 
-      addDebugInfo(`Setting conversation: ${existingConversation.id}`)
       console.log("Setting conversation:", existingConversation)
       setConversation(existingConversation)
       await loadMessages(existingConversation.id)
     } catch (error) {
-      addDebugInfo(`Error initializing chat: ${error}`)
       console.error("Error initializing chat:", error)
     } finally {
       setLoading(false)
@@ -242,7 +253,6 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
 
   const loadMessages = async (conversationId: string) => {
     try {
-      addDebugInfo(`Loading messages for conversation: ${conversationId}`)
       console.log("Loading messages for conversation:", conversationId)
       
       // First get messages
@@ -253,35 +263,41 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
         .order("created_at", { ascending: true })
 
       if (messagesError) {
-        addDebugInfo(`Error loading messages: ${messagesError.message}`)
         console.error("Error loading messages:", messagesError)
         throw messagesError
       }
 
-      addDebugInfo(`Loaded ${messagesData?.length || 0} messages`)
       console.log("Loaded messages:", messagesData?.length || 0)
 
       // Then get sender profiles for each unique sender
-      const senderIds = [...new Set(messagesData?.map((m) => m.sender_id) || [])]
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("*")
-        .in("id", senderIds)
+      if (messagesData && messagesData.length > 0) {
+        const senderIds = [...new Set(messagesData.map((m) => m.sender_id))]
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("id", senderIds)
 
-      if (profilesError) {
-        addDebugInfo(`Error loading profiles: ${profilesError.message}`)
-        console.error("Error loading profiles:", profilesError)
-        throw profilesError
-      }
+        if (profilesError) {
+          console.error("Error loading profiles:", profilesError)
+          throw profilesError
+        }
 
-      // Combine the data
-      const messagesWithSenders =
-        messagesData?.map((message) => ({
+        // Combine the data
+        const messagesWithSenders = messagesData.map((message) => ({
           ...message,
           sender: profilesData?.find((p) => p.id === message.sender_id),
-        })) || []
+        }))
 
-      setMessages(messagesWithSenders)
+        setMessages(messagesWithSenders)
+        
+        // Update last message ID for tracking
+        if (messagesWithSenders.length > 0) {
+          setLastMessageId(messagesWithSenders[messagesWithSenders.length - 1].id)
+        }
+      } else {
+        setMessages([])
+        setLastMessageId(null)
+      }
 
       // Mark messages as read
       await supabase
@@ -290,8 +306,9 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
         .eq("conversation_id", conversationId)
         .neq("sender_id", user.id)
     } catch (error) {
-      addDebugInfo(`Error loading messages: ${error}`)
       console.error("Error loading messages:", error)
+      // Set empty messages array to prevent UI issues
+      setMessages([])
     }
   }
 
@@ -299,10 +316,9 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
     if (!newMessage.trim() || !conversation) return
 
     try {
-      addDebugInfo(`Sending message: ${newMessage.trim()}`)
       console.log("Sending message:", newMessage.trim())
       
-      // First insert the message
+      // Insert the message
       const { data: messageData, error: messageError } = await supabase
         .from("messages")
         .insert({
@@ -314,12 +330,11 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
         .single()
 
       if (messageError) {
-        addDebugInfo(`Error sending message: ${messageError.message}`)
         console.error("Error sending message:", messageError)
         throw messageError
       }
 
-      // Then get the sender profile
+      // Get the sender profile
       const { data: senderProfile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
@@ -327,7 +342,6 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
         .single()
 
       if (profileError) {
-        addDebugInfo(`Error getting sender profile: ${profileError.message}`)
         console.error("Error getting sender profile:", profileError)
         throw profileError
       }
@@ -338,18 +352,17 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
         sender: senderProfile,
       }
 
+      console.log("Message sent successfully:", messageWithSender)
       setMessages((prev) => [...prev, messageWithSender])
       setNewMessage("")
-      addDebugInfo("Message sent successfully")
+      setLastMessageId(messageData.id)
     } catch (error) {
-      addDebugInfo(`Error sending message: ${error}`)
       console.error("Error sending message:", error)
     }
   }
 
   const refreshMessages = async () => {
     if (!conversation) return
-    addDebugInfo("Manually refreshing messages")
     console.log("Manually refreshing messages")
     await loadMessages(conversation.id)
   }
@@ -383,47 +396,49 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="h-[600px] flex flex-col">
-        <CardHeader className="pb-3">
+    <div className={`flex flex-col ${isInPopup ? 'h-[calc(100vh-40px)]' : 'h-[calc(100vh-200px)]'}`}>
+      {/* Main Chat Card */}
+      <div className="flex-1 bg-white rounded-lg shadow-sm border mb-4 flex flex-col">
+        {/* Header */}
+        <div className="p-6 pb-4 border-b">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-lg">Support Chat</CardTitle>
-              <p className="text-sm text-gray-500">Get help with your bookings and questions</p>
+              <h1 className="text-xl font-bold text-gray-900">Support Chat</h1>
+              <p className="text-sm text-gray-600">Get help with your bookings and questions</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={conversation?.status === "active" ? "default" : "secondary"}>
-                {conversation?.status || "active"}
+            <div className="flex items-center gap-3">
+              <Badge variant="default" className="bg-black text-white">
+                active
               </Badge>
               <div className="flex items-center gap-1">
-                <div 
-                  className={`w-2 h-2 rounded-full ${
-                    connectionStatus === 'connected' 
-                      ? 'bg-green-500 animate-pulse' 
-                      : connectionStatus === 'connecting'
-                      ? 'bg-yellow-500 animate-pulse'
-                      : 'bg-red-500'
-                  }`}
-                ></div>
-                <span className="text-xs text-gray-500">
-                  {connectionStatus === 'connected' ? 'Online' : 
-                   connectionStatus === 'connecting' ? 'Connecting...' : 'Offline'}
-                </span>
+                {connectionStatus === 'connected' ? (
+                  <>
+                    <Wifi className="h-3 w-3 text-green-500" />
+                    <span className="text-xs text-gray-600">Live</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-3 w-3 text-yellow-500" />
+                    <span className="text-xs text-gray-600">Polling</span>
+                  </>
+                )}
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={refreshMessages}
-                className="ml-2"
+                className="p-1"
                 title="Refresh messages"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0 flex-1 flex flex-col">
-          <ScrollArea className="flex-1 p-4">
+        </div>
+
+        {/* Messages Area */}
+        <div className="flex-1 p-6 max-h-[calc(100vh-200px)] overflow-y-auto ">
+          <ScrollArea className="h-full">
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
                 <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
@@ -439,11 +454,17 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
                   >
                     <div
                       className={`max-w-[70%] rounded-lg px-3 py-2 ${
-                        message.sender_id === user.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+                        message.sender_id === user.id 
+                          ? "bg-blue-600 text-white" 
+                          : "bg-gray-100 text-gray-900"
                       }`}
                     >
                       <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 ${message.sender_id === user.id ? "text-blue-100" : "text-gray-500"}`}>
+                      <p className={`text-xs mt-1 ${
+                        message.sender_id === user.id 
+                          ? "text-blue-100" 
+                          : "text-gray-500"
+                      }`}>
                         {format(new Date(message.created_at), "h:mm a")}
                       </p>
                     </div>
@@ -470,40 +491,26 @@ export function ChatInterface({ user, profile }: ChatInterfaceProps) {
               </div>
             )}
           </ScrollArea>
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Type your message..."
-                value={newMessage}
-                onChange={handleInputChange}
-                onKeyPress={handleKeyPress}
-                className="flex-1"
-              />
-              <Button onClick={sendMessage} disabled={!newMessage.trim()}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Debug Panel - Only show in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <Card className="max-h-40 overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Debug Info</CardTitle>
-          </CardHeader>
-          <CardContent className="p-2">
-            <div className="text-xs space-y-1 max-h-24 overflow-y-auto">
-              {debugInfo.map((info, index) => (
-                <div key={index} className="text-gray-600 font-mono">
-                  {info}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        </div>
+      </div>
+
+      {/* Input Area - Fixed at bottom */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Type your message..."
+          value={newMessage}
+          onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
+          className="flex-1"
+        />
+        <Button 
+          onClick={sendMessage} 
+          disabled={!newMessage.trim()}
+          className="bg-gray-600 hover:bg-gray-700"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   )
 }

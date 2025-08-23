@@ -43,7 +43,7 @@ export default function SignUpPage() {
           data: {
             full_name: fullName,
             phone: phone,
-            company_name: companyName,
+            company: companyName,
           },
         },
       })

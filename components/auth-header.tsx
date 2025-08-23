@@ -38,7 +38,21 @@ export function AuthHeader({ user }: AuthHeaderProps) {
           <p className="text-sm text-gray-600">Container Rental Service</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => router.push("/chat")} className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              const chatWindow = window.open(
+                '/chat',
+                'support-chat',
+                'width=400,height=700,scrollbars=yes,resizable=yes,status=yes,location=yes,toolbar=no,menubar=no'
+              )
+              if (chatWindow) {
+                chatWindow.focus()
+              }
+            }} 
+            className="flex items-center gap-2"
+          >
             <MessageCircle className="h-4 w-4" />
             Support Chat
           </Button>
@@ -52,7 +66,16 @@ export function AuthHeader({ user }: AuthHeaderProps) {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => router.push("/profile")}>Profile</DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/bookings")}>My Bookings</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/chat")}>
+              <DropdownMenuItem onClick={() => {
+                const chatWindow = window.open(
+                  '/chat',
+                  'support-chat',
+                  'width=400,height=700,scrollbars=yes,resizable=yes,status=yes,location=yes,toolbar=no,menubar=no'
+                )
+                if (chatWindow) {
+                  chatWindow.focus()
+                }
+              }}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Support Chat
               </DropdownMenuItem>
