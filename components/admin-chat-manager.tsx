@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, MessageCircle, Clock, User, Bell } from "lucide-react"
+import { Send, MessageCircle, Clock, User, Bell, RefreshCw } from "lucide-react"
 import { format } from "date-fns"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
@@ -54,6 +54,7 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(true)
   const [newMessageCount, setNewMessageCount] = useState(0)
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
@@ -70,6 +71,8 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
   }, [messages])
 
   useEffect(() => {
+    console.log("Setting up admin real-time subscriptions")
+
     const conversationChannel = supabase
       .channel("admin-conversations")
       .on(
@@ -80,11 +83,14 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
           table: "conversations",
         },
         (payload) => {
-          console.log("[v0] Admin conversation change:", payload)
+          console.log("[Real-time] Admin conversation change:", payload)
           loadConversations()
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log("Admin conversation subscription status:", status)
+        setConnectionStatus(status === 'SUBSCRIBED' ? 'connected' : 'disconnected')
+      })
 
     const messageChannel = supabase
       .channel("admin-messages")
@@ -96,34 +102,65 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
           table: "messages",
         },
         async (payload) => {
-          console.log("[v0] Admin new message:", payload)
+          console.log("[Real-time] Admin new message:", payload)
 
-          if (selectedConversation && payload.new.conversation_id === selectedConversation.id) {
-            const { data: newMessage } = await supabase.from("messages").select("*").eq("id", payload.new.id).single()
+          try {
+            if (selectedConversation && payload.new.conversation_id === selectedConversation.id) {
+              const { data: newMessage, error } = await supabase
+                .from("messages")
+                .select("*")
+                .eq("id", payload.new.id)
+                .single()
 
-            if (newMessage) {
-              setMessages((prev) => [...prev, newMessage])
+              if (error) {
+                console.error("Error fetching new message:", error)
+                return
+              }
 
-              if (newMessage.sender_id !== user.id) {
-                await supabase.from("messages").update({ is_read: true }).eq("id", newMessage.id)
+              if (newMessage) {
+                // Get sender profile
+                const { data: senderProfile } = await supabase
+                  .from("profiles")
+                  .select("*")
+                  .eq("id", newMessage.sender_id)
+                  .single()
+
+                const messageWithSender = {
+                  ...newMessage,
+                  sender: senderProfile,
+                }
+
+                setMessages((prev) => [...prev, messageWithSender])
+
+                if (newMessage.sender_id !== user.id) {
+                  await supabase
+                    .from("messages")
+                    .update({ is_read: true })
+                    .eq("id", newMessage.id)
+                }
+              }
+            } else if (payload.new.sender_id !== user.id) {
+              setNewMessageCount((prev) => prev + 1)
+
+              try {
+                const audio = new Audio("/notification.mp3")
+                audio.volume = 0.3
+                audio.play().catch(() => {})
+              } catch (error) {
+                console.error("Error playing notification sound:", error)
               }
             }
-          } else if (payload.new.sender_id !== user.id) {
-            setNewMessageCount((prev) => prev + 1)
 
-            try {
-              const audio = new Audio("/notification.mp3")
-              audio.volume = 0.3
-              audio.play().catch(() => {})
-            } catch (error) {}
+            loadConversations()
+          } catch (error) {
+            console.error("Error processing new message:", error)
           }
-
-          loadConversations()
         },
       )
       .subscribe()
 
     return () => {
+      console.log("Cleaning up admin subscriptions")
       conversationChannel.unsubscribe()
       messageChannel.unsubscribe()
     }
@@ -135,6 +172,7 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
 
   const loadConversations = async () => {
     try {
+      console.log("Loading admin conversations")
       setLoading(true)
       const { data: conversationsData, error } = await supabase
         .from("conversations")
@@ -142,7 +180,12 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
         .eq("status", "active")
         .order("last_message_at", { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error loading conversations:", error)
+        throw error
+      }
+
+      console.log("Loaded conversations:", conversationsData?.length || 0)
 
       const userIds = [...new Set(conversationsData?.map((c) => c.user_id) || [])]
       const adminIds = [...new Set(conversationsData?.map((c) => c.admin_id).filter(Boolean) || [])]
@@ -181,13 +224,20 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
 
   const loadMessages = async (conversationId: string) => {
     try {
+      console.log("Loading messages for conversation:", conversationId)
+      
       const { data: messagesData, error } = await supabase
         .from("messages")
         .select("*")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error loading messages:", error)
+        throw error
+      }
+
+      console.log("Loaded messages:", messagesData?.length || 0)
 
       const senderIds = [...new Set(messagesData?.map((m) => m.sender_id) || [])]
       const { data: sendersData } = await supabase.from("profiles").select("*").in("id", senderIds)
@@ -217,6 +267,8 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
     if (!newMessage.trim() || !selectedConversation) return
 
     try {
+      console.log("Sending admin message:", newMessage.trim())
+      
       const { data: messageData, error } = await supabase
         .from("messages")
         .insert({
@@ -227,7 +279,10 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
         .select("*")
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Error sending message:", error)
+        throw error
+      }
 
       const { data: senderData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
@@ -245,8 +300,18 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
     }
   }
 
+  const refreshData = async () => {
+    console.log("Manually refreshing admin data")
+    await loadConversations()
+    if (selectedConversation) {
+      await loadMessages(selectedConversation.id)
+    }
+  }
+
   const updateConversationStatus = async (conversationId: string, status: string) => {
     try {
+      console.log("Updating conversation status:", conversationId, status)
+      
       await supabase.from("conversations").update({ status }).eq("id", conversationId)
 
       await loadConversations()
@@ -276,6 +341,25 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
                 Active Conversations
                 {newMessageCount > 0 && <Bell className="h-4 w-4 text-orange-500 animate-pulse" />}
               </CardTitle>
+              <div className="flex items-center gap-2">
+                <div 
+                  className={`w-2 h-2 rounded-full ${
+                    connectionStatus === 'connected' 
+                      ? 'bg-green-500 animate-pulse' 
+                      : connectionStatus === 'connecting'
+                      ? 'bg-yellow-500 animate-pulse'
+                      : 'bg-red-500'
+                  }`}
+                ></div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={refreshData}
+                  title="Refresh conversations"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -341,10 +425,38 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <span>Customer: {selectedConversation.user?.full_name || selectedConversation.user?.email}</span>
                       <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs">Online</span>
+                        <div 
+                          className={`w-2 h-2 rounded-full ${
+                            connectionStatus === 'connected' 
+                              ? 'bg-green-500 animate-pulse' 
+                              : connectionStatus === 'connecting'
+                              ? 'bg-yellow-500 animate-pulse'
+                              : 'bg-red-500'
+                          }`}
+                        ></div>
+                        <span className="text-xs">
+                          {connectionStatus === 'connected' ? 'Online' : 
+                           connectionStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                        </span>
                       </div>
                     </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateConversationStatus(selectedConversation.id, "closed")}
+                    >
+                      Close Chat
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => loadMessages(selectedConversation.id)}
+                      title="Refresh messages"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
