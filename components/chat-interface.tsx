@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,8 +49,7 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting')
-  const [lastMessageId, setLastMessageId] = useState<string | null>(null)
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const supabase = createClient()
@@ -62,8 +61,63 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  // Polling fallback for when real-time fails
-  const startPolling = useCallback(() => {
+  // Simple polling function that reloads all messages
+  const pollForMessages = async () => {
+    if (!conversation) return
+    
+    try {
+      console.log("Polling for messages...")
+      
+      // Get all messages for the conversation
+      const { data: messagesData, error: messagesError } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true })
+
+      if (messagesError) {
+        console.error("Error polling messages:", messagesError)
+        return
+      }
+
+      // Get sender profiles
+      if (messagesData && messagesData.length > 0) {
+        const senderIds = [...new Set(messagesData.map((m) => m.sender_id))]
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("id", senderIds)
+
+        if (profilesError) {
+          console.error("Error loading profiles:", profilesError)
+          return
+        }
+
+        // Combine messages with profiles
+        const messagesWithSenders = messagesData.map((message) => ({
+          ...message,
+          sender: profilesData?.find((p) => p.id === message.sender_id),
+        }))
+
+        // Update messages state
+        setMessages(messagesWithSenders)
+
+        // Mark messages as read
+        await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("conversation_id", conversation.id)
+          .neq("sender_id", user.id)
+      } else {
+        setMessages([])
+      }
+    } catch (error) {
+      console.error("Error in polling:", error)
+    }
+  }
+
+  // Start polling
+  const startPolling = () => {
     if (!conversation) return
     
     // Clear existing interval
@@ -71,19 +125,23 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
       clearInterval(pollingIntervalRef.current)
     }
 
-    // Start polling every 2 seconds
-    pollingIntervalRef.current = setInterval(async () => {
-      console.log("Polling for new messages...")
-      await loadMessages(conversation.id)
-    }, 2000)
-  }, [conversation])
+    console.log("Starting polling for conversation:", conversation.id)
+    
+    // Poll every 2 seconds
+    pollingIntervalRef.current = setInterval(pollForMessages, 2000)
+    
+    // Also poll immediately
+    pollForMessages()
+  }
 
-  const stopPolling = useCallback(() => {
+  // Stop polling
+  const stopPolling = () => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current)
       pollingIntervalRef.current = null
+      console.log("Stopped polling")
     }
-  }, [])
+  }
 
   useEffect(() => {
     initializeChat()
@@ -93,113 +151,17 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
     scrollToBottom()
   }, [messages])
 
-  // Set up real-time subscriptions
+  // Set up polling when conversation changes
   useEffect(() => {
-    if (!conversation) return
-
-    console.log("Setting up real-time subscription for conversation:", conversation.id)
-
-    // Create a unique channel name
-    const channelName = `chat-${conversation.id}-${user.id}`
-
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversation.id}`,
-        },
-        async (payload) => {
-          console.log("[Real-time] New message received:", payload)
-
-          try {
-            // Fetch the complete message
-            const { data: newMessage, error } = await supabase
-              .from("messages")
-              .select("*")
-              .eq("id", payload.new.id)
-              .single()
-
-            if (error) {
-              console.error("Error fetching new message:", error)
-              return
-            }
-
-            if (newMessage && newMessage.sender_id !== user.id) {
-              // Get sender profile
-              const { data: senderProfile, error: profileError } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", newMessage.sender_id)
-                .single()
-
-              if (profileError) {
-                console.error("Error fetching sender profile:", profileError)
-                return
-              }
-
-              const messageWithSender = {
-                ...newMessage,
-                sender: senderProfile,
-              }
-
-              console.log("Adding new message to state:", messageWithSender)
-              setMessages((prev) => [...prev, messageWithSender])
-              setLastMessageId(newMessage.id)
-
-              // Mark as read if it's not from current user
-              await supabase
-                .from("messages")
-                .update({ is_read: true })
-                .eq("id", newMessage.id)
-                .neq("sender_id", user.id)
-            }
-          } catch (error) {
-            console.error("Error processing new message:", error)
-          }
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "conversations",
-          filter: `id=eq.${conversation.id}`,
-        },
-        (payload) => {
-          console.log("[Real-time] Conversation updated:", payload)
-          if (payload.new) {
-            setConversation(payload.new as Conversation)
-          }
-        },
-      )
-      .subscribe((status) => {
-        console.log("Real-time subscription status:", status)
-        setConnectionStatus(status === 'SUBSCRIBED' ? 'connected' : 'disconnected')
-        
-        // Start polling if real-time fails
-        if (status !== 'SUBSCRIBED') {
-          console.log("Real-time failed, starting polling fallback")
-          startPolling()
-        } else {
-          console.log("Real-time connected, stopping polling")
-          stopPolling()
-        }
-      })
-
-    // Start polling as fallback immediately
-    startPolling()
+    if (conversation) {
+      startPolling()
+      setConnectionStatus('connected')
+    }
 
     return () => {
-      console.log("Cleaning up real-time subscription")
-      channel.unsubscribe()
       stopPolling()
     }
-  }, [conversation?.id, user.id, startPolling, stopPolling])
+  }, [conversation?.id])
 
   const initializeChat = async () => {
     try {
@@ -243,72 +205,10 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
 
       console.log("Setting conversation:", existingConversation)
       setConversation(existingConversation)
-      await loadMessages(existingConversation.id)
     } catch (error) {
       console.error("Error initializing chat:", error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const loadMessages = async (conversationId: string) => {
-    try {
-      console.log("Loading messages for conversation:", conversationId)
-      
-      // First get messages
-      const { data: messagesData, error: messagesError } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true })
-
-      if (messagesError) {
-        console.error("Error loading messages:", messagesError)
-        throw messagesError
-      }
-
-      console.log("Loaded messages:", messagesData?.length || 0)
-
-      // Then get sender profiles for each unique sender
-      if (messagesData && messagesData.length > 0) {
-        const senderIds = [...new Set(messagesData.map((m) => m.sender_id))]
-        const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
-          .select("*")
-          .in("id", senderIds)
-
-        if (profilesError) {
-          console.error("Error loading profiles:", profilesError)
-          throw profilesError
-        }
-
-        // Combine the data
-        const messagesWithSenders = messagesData.map((message) => ({
-          ...message,
-          sender: profilesData?.find((p) => p.id === message.sender_id),
-        }))
-
-        setMessages(messagesWithSenders)
-        
-        // Update last message ID for tracking
-        if (messagesWithSenders.length > 0) {
-          setLastMessageId(messagesWithSenders[messagesWithSenders.length - 1].id)
-        }
-      } else {
-        setMessages([])
-        setLastMessageId(null)
-      }
-
-      // Mark messages as read
-      await supabase
-        .from("messages")
-        .update({ is_read: true })
-        .eq("conversation_id", conversationId)
-        .neq("sender_id", user.id)
-    } catch (error) {
-      console.error("Error loading messages:", error)
-      // Set empty messages array to prevent UI issues
-      setMessages([])
     }
   }
 
@@ -353,18 +253,21 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
       }
 
       console.log("Message sent successfully:", messageWithSender)
+      
+      // Add message to state immediately for better UX
       setMessages((prev) => [...prev, messageWithSender])
       setNewMessage("")
-      setLastMessageId(messageData.id)
+      
+      // Trigger a poll to get any other new messages
+      setTimeout(pollForMessages, 500)
     } catch (error) {
       console.error("Error sending message:", error)
     }
   }
 
   const refreshMessages = async () => {
-    if (!conversation) return
     console.log("Manually refreshing messages")
-    await loadMessages(conversation.id)
+    await pollForMessages()
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -419,7 +322,7 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
                 ) : (
                   <>
                     <WifiOff className="h-3 w-3 text-yellow-500" />
-                    <span className="text-xs text-gray-600">Polling</span>
+                    <span className="text-xs text-gray-600">Offline</span>
                   </>
                 )}
               </div>

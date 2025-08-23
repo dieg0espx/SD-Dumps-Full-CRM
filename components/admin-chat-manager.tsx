@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, MessageCircle, Clock, User, Bell, RefreshCw } from "lucide-react"
+import { Send, MessageCircle, Clock, User, Bell, RefreshCw, Wifi, WifiOff } from "lucide-react"
 import { format } from "date-fns"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
@@ -54,125 +54,20 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(true)
   const [newMessageCount, setNewMessageCount] = useState(0)
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting')
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const conversationsPollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const messagesPollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const supabase = createClient()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  useEffect(() => {
-    loadConversations()
-  }, [])
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  useEffect(() => {
-    console.log("Setting up admin real-time subscriptions")
-
-    const conversationChannel = supabase
-      .channel("admin-conversations")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "conversations",
-        },
-        (payload) => {
-          console.log("[Real-time] Admin conversation change:", payload)
-          loadConversations()
-        },
-      )
-      .subscribe((status) => {
-        console.log("Admin conversation subscription status:", status)
-        setConnectionStatus(status === 'SUBSCRIBED' ? 'connected' : 'disconnected')
-      })
-
-    const messageChannel = supabase
-      .channel("admin-messages")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-        },
-        async (payload) => {
-          console.log("[Real-time] Admin new message:", payload)
-
-          try {
-            if (selectedConversation && payload.new.conversation_id === selectedConversation.id) {
-              const { data: newMessage, error } = await supabase
-                .from("messages")
-                .select("*")
-                .eq("id", payload.new.id)
-                .single()
-
-              if (error) {
-                console.error("Error fetching new message:", error)
-                return
-              }
-
-              if (newMessage) {
-                // Get sender profile
-                const { data: senderProfile } = await supabase
-                  .from("profiles")
-                  .select("*")
-                  .eq("id", newMessage.sender_id)
-                  .single()
-
-                const messageWithSender = {
-                  ...newMessage,
-                  sender: senderProfile,
-                }
-
-                setMessages((prev) => [...prev, messageWithSender])
-
-                if (newMessage.sender_id !== user.id) {
-                  await supabase
-                    .from("messages")
-                    .update({ is_read: true })
-                    .eq("id", newMessage.id)
-                }
-              }
-            } else if (payload.new.sender_id !== user.id) {
-              setNewMessageCount((prev) => prev + 1)
-
-              try {
-                const audio = new Audio("/notification.mp3")
-                audio.volume = 0.3
-                audio.play().catch(() => {})
-              } catch (error) {
-                console.error("Error playing notification sound:", error)
-              }
-            }
-
-            loadConversations()
-          } catch (error) {
-            console.error("Error processing new message:", error)
-          }
-        },
-      )
-      .subscribe()
-
-    return () => {
-      console.log("Cleaning up admin subscriptions")
-      conversationChannel.unsubscribe()
-      messageChannel.unsubscribe()
-    }
-  }, [selectedConversation, user.id])
-
-  useEffect(() => {
-    setNewMessageCount(0)
-  }, [selectedConversation])
-
-  const loadConversations = async () => {
+  // Simple polling function for conversations
+  const pollConversations = async () => {
     try {
-      console.log("Loading admin conversations")
+      console.log("Polling for conversations...")
       setLoading(true)
       const { data: conversationsData, error } = await supabase
         .from("conversations")
@@ -182,7 +77,7 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
 
       if (error) {
         console.error("Error loading conversations:", error)
-        throw error
+        return
       }
 
       console.log("Loaded conversations:", conversationsData?.length || 0)
@@ -216,25 +111,28 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
 
       setConversations(conversationsWithCounts)
     } catch (error) {
-      console.error("Error loading conversations:", error)
+      console.error("Error polling conversations:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  const loadMessages = async (conversationId: string) => {
+  // Simple polling function for messages
+  const pollMessages = async () => {
+    if (!selectedConversation) return
+    
     try {
-      console.log("Loading messages for conversation:", conversationId)
+      console.log("Polling for messages in conversation:", selectedConversation.id)
       
       const { data: messagesData, error } = await supabase
         .from("messages")
         .select("*")
-        .eq("conversation_id", conversationId)
+        .eq("conversation_id", selectedConversation.id)
         .order("created_at", { ascending: true })
 
       if (error) {
-        console.error("Error loading messages:", error)
-        throw error
+        console.error("Error polling messages:", error)
+        return
       }
 
       console.log("Loaded messages:", messagesData?.length || 0)
@@ -249,19 +147,95 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
 
       setMessages(messagesWithSenders)
 
+      // Mark messages as read
       await supabase
         .from("messages")
         .update({ is_read: true })
-        .eq("conversation_id", conversationId)
+        .eq("conversation_id", selectedConversation.id)
         .neq("sender_id", user.id)
 
+      // Assign admin if not already assigned
       if (selectedConversation && !selectedConversation.admin_id) {
-        await supabase.from("conversations").update({ admin_id: user.id }).eq("id", conversationId)
+        await supabase.from("conversations").update({ admin_id: user.id }).eq("id", selectedConversation.id)
       }
     } catch (error) {
-      console.error("Error loading messages:", error)
+      console.error("Error polling messages:", error)
     }
   }
+
+  // Start polling for conversations
+  const startConversationsPolling = () => {
+    // Clear existing interval
+    if (conversationsPollingIntervalRef.current) {
+      clearInterval(conversationsPollingIntervalRef.current)
+    }
+
+    console.log("Starting conversations polling")
+    
+    // Poll conversations every 3 seconds
+    conversationsPollingIntervalRef.current = setInterval(pollConversations, 3000)
+    
+    // Also poll immediately
+    pollConversations()
+  }
+
+  // Start polling for messages
+  const startMessagesPolling = () => {
+    if (!selectedConversation) return
+    
+    // Clear existing interval
+    if (messagesPollingIntervalRef.current) {
+      clearInterval(messagesPollingIntervalRef.current)
+    }
+
+    console.log("Starting messages polling for conversation:", selectedConversation.id)
+    
+    // Poll messages every 2 seconds
+    messagesPollingIntervalRef.current = setInterval(pollMessages, 2000)
+    
+    // Also poll immediately
+    pollMessages()
+  }
+
+  // Stop polling
+  const stopPolling = () => {
+    if (conversationsPollingIntervalRef.current) {
+      clearInterval(conversationsPollingIntervalRef.current)
+      conversationsPollingIntervalRef.current = null
+    }
+    if (messagesPollingIntervalRef.current) {
+      clearInterval(messagesPollingIntervalRef.current)
+      messagesPollingIntervalRef.current = null
+    }
+    console.log("Stopped all polling")
+  }
+
+  useEffect(() => {
+    startConversationsPolling()
+    
+    return () => {
+      stopPolling()
+    }
+  }, [])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  // Set up messages polling when selected conversation changes
+  useEffect(() => {
+    if (selectedConversation) {
+      startMessagesPolling()
+      setNewMessageCount(0)
+    }
+
+    return () => {
+      if (messagesPollingIntervalRef.current) {
+        clearInterval(messagesPollingIntervalRef.current)
+        messagesPollingIntervalRef.current = null
+      }
+    }
+  }, [selectedConversation?.id])
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return
@@ -291,37 +265,29 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
         sender: senderData,
       }
 
+      // Add message to state immediately for better UX
       setMessages((prev) => [...prev, messageWithSender])
       setNewMessage("")
 
-      await loadConversations()
+      // Trigger a poll to get any other new messages
+      setTimeout(pollMessages, 500)
     } catch (error) {
       console.error("Error sending message:", error)
     }
   }
 
-  const refreshData = async () => {
-    console.log("Manually refreshing admin data")
-    await loadConversations()
-    if (selectedConversation) {
-      await loadMessages(selectedConversation.id)
-    }
+  const refreshConversations = async () => {
+    console.log("Manually refreshing conversations")
+    await pollConversations()
   }
 
-  const updateConversationStatus = async (conversationId: string, status: string) => {
-    try {
-      console.log("Updating conversation status:", conversationId, status)
-      
-      await supabase.from("conversations").update({ status }).eq("id", conversationId)
+  const refreshMessages = async () => {
+    console.log("Manually refreshing messages")
+    await pollMessages()
+  }
 
-      await loadConversations()
-      if (selectedConversation?.id === conversationId && status !== "active") {
-        setSelectedConversation(null)
-        setMessages([])
-      }
-    } catch (error) {
-      console.error("Error updating conversation status:", error)
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -331,30 +297,51 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
     }
   }
 
+  const selectConversation = (conversation: Conversation) => {
+    setSelectedConversation(conversation)
+  }
+
+  if (loading && conversations.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+          <p className="text-gray-500">Loading conversations...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[700px]">
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-3">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+      {/* Conversations List */}
+      <div className="lg:col-span-1">
+        <Card>
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                Active Conversations
-                {newMessageCount > 0 && <Bell className="h-4 w-4 text-orange-500 animate-pulse" />}
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Conversations
               </CardTitle>
               <div className="flex items-center gap-2">
-                <div 
-                  className={`w-2 h-2 rounded-full ${
-                    connectionStatus === 'connected' 
-                      ? 'bg-green-500 animate-pulse' 
-                      : connectionStatus === 'connecting'
-                      ? 'bg-yellow-500 animate-pulse'
-                      : 'bg-red-500'
-                  }`}
-                ></div>
+                <div className="flex items-center gap-1">
+                  {connectionStatus === 'connected' ? (
+                    <>
+                      <Wifi className="h-3 w-3 text-green-500" />
+                      <span className="text-xs text-gray-600">Live</span>
+                    </>
+                  ) : (
+                    <>
+                      <WifiOff className="h-3 w-3 text-yellow-500" />
+                      <span className="text-xs text-gray-600">Offline</span>
+                    </>
+                  )}
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={refreshData}
+                  onClick={refreshConversations}
+                  className="p-1"
                   title="Refresh conversations"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -362,165 +349,159 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[600px]">
-              {loading ? (
-                <div className="p-4 text-center text-gray-500">Loading...</div>
-              ) : conversations.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
+          <CardContent>
+            <ScrollArea className="h-[calc(100vh-300px)]">
+              {conversations.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
                   <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                   <p>No active conversations</p>
                 </div>
               ) : (
-                conversations.map((conversation) => (
-                  <div
-                    key={conversation.id}
-                    className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                      selectedConversation?.id === conversation.id ? "bg-blue-50 border-blue-200" : ""
-                    } ${conversation.unread_count! > 0 ? "bg-yellow-50" : ""}`}
-                    onClick={() => {
-                      setSelectedConversation(conversation)
-                      loadMessages(conversation.id)
-                    }}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm truncate">{conversation.subject}</h3>
-                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                          <User className="h-3 w-3" />
-                          {conversation.user?.full_name || conversation.user?.email}
+                <div className="space-y-2">
+                  {conversations.map((conversation) => (
+                    <div
+                      key={conversation.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedConversation?.id === conversation.id
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-white border-gray-200 hover:bg-gray-50"
+                      }`}
+                      onClick={() => selectConversation(conversation)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-gray-500" />
+                            <p className="font-medium text-sm truncate">
+                              {conversation.user?.full_name || conversation.user?.email || "Unknown User"}
+                            </p>
+                            {conversation.unread_count && conversation.unread_count > 0 && (
+                              <Badge variant="destructive" className="text-xs">
+                                {conversation.unread_count}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1 truncate">
+                            {conversation.subject}
+                          </p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Clock className="h-3 w-3 text-gray-400" />
+                            <span className="text-xs text-gray-500">
+                              {format(new Date(conversation.last_message_at), "MMM d, h:mm a")}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      {conversation.unread_count! > 0 && (
-                        <Badge variant="destructive" className="text-xs animate-pulse">
-                          {conversation.unread_count}
-                        </Badge>
-                      )}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(conversation.last_message_at), "MMM d, h:mm a")}
-                      </div>
-                    </div>
-                    {conversation.admin && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        Assigned to: {conversation.admin.full_name || conversation.admin.email}
-                      </div>
-                    )}
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </ScrollArea>
           </CardContent>
         </Card>
+      </div>
 
-        <Card className="lg:col-span-2">
-          {selectedConversation ? (
-            <>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{selectedConversation.subject}</CardTitle>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span>Customer: {selectedConversation.user?.full_name || selectedConversation.user?.email}</span>
-                      <div className="flex items-center gap-1">
-                        <div 
-                          className={`w-2 h-2 rounded-full ${
-                            connectionStatus === 'connected' 
-                              ? 'bg-green-500 animate-pulse' 
-                              : connectionStatus === 'connecting'
-                              ? 'bg-yellow-500 animate-pulse'
-                              : 'bg-red-500'
-                          }`}
-                        ></div>
-                        <span className="text-xs">
-                          {connectionStatus === 'connected' ? 'Online' : 
-                           connectionStatus === 'connecting' ? 'Connecting...' : 'Offline'}
-                        </span>
-                      </div>
-                    </div>
+      {/* Chat Interface */}
+      <div className="lg:col-span-2">
+        <Card className="h-full flex flex-col">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                {selectedConversation ? (
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5" />
+                    Chat with {selectedConversation.user?.full_name || selectedConversation.user?.email || "Customer"}
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateConversationStatus(selectedConversation.id, "closed")}
-                    >
-                      Close Chat
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => loadMessages(selectedConversation.id)}
-                      title="Refresh messages"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </div>
+                ) : (
+                  "Select a conversation"
+                )}
+              </CardTitle>
+              {selectedConversation && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshMessages}
+                    className="p-1"
+                    title="Refresh messages"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[480px] p-4">
-                  {messages.length === 0 ? (
-                    <div className="text-center text-gray-500 py-8">
-                      <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                      <p>No messages yet</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.sender_id === user.id ? "justify-end" : "justify-start"}`}
-                        >
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col">
+            {selectedConversation ? (
+              <>
+                {/* Messages Area */}
+                <div className="flex-1 mb-4">
+                  <ScrollArea className="h-full">
+                    {messages.length === 0 ? (
+                      <div className="text-center text-gray-500 py-8">
+                        <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                        <p>No messages yet</p>
+                        <p className="text-sm">Start the conversation</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {messages.map((message) => (
                           <div
-                            className={`max-w-[70%] rounded-lg px-3 py-2 ${
-                              message.sender_id === user.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
-                            }`}
+                            key={message.id}
+                            className={`flex ${message.sender_id === user.id ? "justify-end" : "justify-start"}`}
                           >
-                            <p className="text-sm">{message.content}</p>
-                            <div className="flex items-center justify-end mt-1">
-                              <p
-                                className={`text-xs ${
-                                  message.sender_id === user.id ? "text-blue-100" : "text-gray-500"
-                                }`}
-                              >
+                            <div
+                              className={`max-w-[70%] rounded-lg px-3 py-2 ${
+                                message.sender_id === user.id 
+                                  ? "bg-blue-600 text-white" 
+                                  : "bg-gray-100 text-gray-900"
+                              }`}
+                            >
+                              <p className="text-sm">{message.content}</p>
+                              <p className={`text-xs mt-1 ${
+                                message.sender_id === user.id 
+                                  ? "text-blue-100" 
+                                  : "text-gray-500"
+                              }`}>
                                 {format(new Date(message.created_at), "h:mm a")}
                               </p>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  )}
-                </ScrollArea>
-                <div className="p-4 border-t">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Type your response..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      className="flex-1"
-                    />
-                    <Button onClick={sendMessage} disabled={!newMessage.trim()}>
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )}
+                  </ScrollArea>
                 </div>
-              </CardContent>
-            </>
-          ) : (
-            <CardContent className="flex items-center justify-center h-full">
-              <div className="text-center text-gray-500">
-                <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium mb-2">Select a conversation</h3>
-                <p className="text-sm">Choose a conversation from the list to start responding</p>
+
+                {/* Input Area */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Type your message..."
+                    value={newMessage}
+                    onChange={handleInputChange}
+                    onKeyPress={handleKeyPress}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={sendMessage} 
+                    disabled={!newMessage.trim()}
+                    className="bg-gray-600 hover:bg-gray-700"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">Select a conversation</p>
+                  <p className="text-sm">Choose a conversation from the list to start chatting</p>
+                </div>
               </div>
-            </CardContent>
-          )}
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>
