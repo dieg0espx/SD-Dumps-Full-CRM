@@ -2,6 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 interface PaymentTrackerProps {
   payments: any[]
 }
@@ -33,7 +42,7 @@ export function PaymentTracker({ payments }: PaymentTrackerProps) {
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
             <p className="text-xs text-muted-foreground">From completed payments</p>
           </CardContent>
         </Card>
@@ -43,7 +52,7 @@ export function PaymentTracker({ payments }: PaymentTrackerProps) {
             <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${pendingAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(pendingAmount)}</div>
             <p className="text-xs text-muted-foreground">Awaiting processing</p>
           </CardContent>
         </Card>
@@ -88,7 +97,7 @@ export function PaymentTracker({ payments }: PaymentTrackerProps) {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="font-semibold">${payment.amount}</p>
+                      <p className="font-semibold">{formatCurrency(payment.amount)}</p>
                       <p className="text-xs text-gray-500 capitalize">{payment.payment_method?.replace("_", " ")}</p>
                     </div>
                     <Badge className={getStatusColor(payment.status)}>{payment.status}</Badge>

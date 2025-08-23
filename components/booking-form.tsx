@@ -14,6 +14,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft } from "lucide-react"
 import { format, differenceInDays, eachDayOfInterval, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
 import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 
@@ -39,14 +48,7 @@ interface Booking {
   status: string
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
+
 
 export function BookingForm({ user }: BookingFormProps) {
   const [containerTypes, setContainerTypes] = useState<ContainerType[]>([])

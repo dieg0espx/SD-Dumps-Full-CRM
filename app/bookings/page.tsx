@@ -5,6 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 export default async function BookingsPage() {
   const supabase = await createClient()
   const {
@@ -126,7 +135,7 @@ export default async function BookingsPage() {
                         <h4 className="font-medium text-gray-900 mb-2">Payment</h4>
                         <div className="space-y-1 text-sm text-gray-600">
                           <div>
-                            <span className="font-medium">Total Amount:</span> ${booking.total_amount}
+                            <span className="font-medium">Total Amount:</span> {formatCurrency(booking.total_amount)}
                           </div>
                           <div>
                             <span className="font-medium">Booked:</span> {format(new Date(booking.created_at), "PPP")}

@@ -1,31 +1,40 @@
 import { cn } from "../lib/utils";
 import { Check, Star } from "lucide-react";
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
 export default function Pricing() {
   const plans = [
     {
       name: "17 Yard Dumpster",
-      price: "$595",
+      price: formatCurrency(595),
       description: "Perfect for home cleanouts and small renovation projects",
       features: [
         "Includes 2 tons of disposal",
         "16' long x 8' wide x 4' high",
         "Flexible rental periods",
         "Drop-off and pick-up included",
-        "Additional tonnage: $125 per ton"
+        `Additional tonnage: ${formatCurrency(125)} per ton`
       ],
       popular: false
     },
     {
       name: "21 Yard Dumpster", 
-      price: "$695",
+      price: formatCurrency(695),
       description: "Great for medium renovation projects and roof repairs",
       features: [
         "Includes 2 tons of disposal",
         "20' long x 8' wide x 4.5' high",
         "Flexible rental periods", 
         "Drop-off and pick-up included",
-        "Additional tonnage: $125 per ton",
+        `Additional tonnage: ${formatCurrency(125)} per ton`,
         "Priority support"
       ],
       popular: true
@@ -136,17 +145,17 @@ export default function Pricing() {
           <div className="grid md:grid-cols-3 gap-6 text-sm">
             <div className="text-center">
               <div className="font-medium text-foreground">Extra Tonnage</div>
-              <div className="text-2xl font-bold text-brand">$125</div>
+              <div className="text-2xl font-bold text-brand">{formatCurrency(125)}</div>
               <div className="text-muted-foreground">per ton</div>
             </div>
             <div className="text-center">
               <div className="font-medium text-foreground">Appliances</div>
-              <div className="text-2xl font-bold text-brand">$30</div>
+              <div className="text-2xl font-bold text-brand">{formatCurrency(30)}</div>
               <div className="text-muted-foreground">each</div>
             </div>
             <div className="text-center">
               <div className="font-medium text-foreground">Extra Days</div>
-              <div className="text-2xl font-bold text-brand">$30</div>
+              <div className="text-2xl font-bold text-brand">{formatCurrency(30)}</div>
               <div className="text-muted-foreground">per day</div>
             </div>
           </div>

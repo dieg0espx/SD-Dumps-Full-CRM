@@ -1,5 +1,14 @@
 import Image from "next/image";
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
 export default function ProductListings() {
   return (
     <section className="py-20">
@@ -23,8 +32,8 @@ export default function ProductListings() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-main">$595</div>
-              <p className="text-xs text-gray-500 mt-1">+ $125 per additional ton</p>
+              <div className="text-2xl font-bold text-main">{formatCurrency(595)}</div>
+              <p className="text-xs text-gray-500 mt-1">+ {formatCurrency(125)} per additional ton</p>
               <button className="mt-2 bg-main text-white px-4 py-2 rounded font-semibold text-sm hover:opacity-90 transition">
                 Rent Now
               </button>
@@ -49,8 +58,8 @@ export default function ProductListings() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-main">$695</div>
-              <p className="text-xs text-gray-500 mt-1">+ $125 per additional ton</p>
+              <div className="text-2xl font-bold text-main">{formatCurrency(695)}</div>
+              <p className="text-xs text-gray-500 mt-1">+ {formatCurrency(125)} per additional ton</p>
               <button className="mt-2 bg-main text-white px-4 py-2 rounded font-semibold text-sm hover:opacity-90 transition">
                 Rent Now
               </button>
@@ -63,15 +72,15 @@ export default function ProductListings() {
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Extra Tonnage:</span>
-                <span className="font-medium">$125 per ton</span>
+                <span className="font-medium">{formatCurrency(125)} per ton</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Appliances:</span>
-                <span className="font-medium">$30 each</span>
+                <span className="font-medium">{formatCurrency(30)} each</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Extra Days:</span>
-                <span className="font-medium">$30 per day</span>
+                <span className="font-medium">{formatCurrency(30)} per day</span>
               </div>
             </div>
             <div className="mt-4 p-3 bg-blue-50 rounded border-l-4 border-blue-400">

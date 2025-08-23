@@ -13,6 +13,15 @@ import { CreditCard, Wallet, Building } from "lucide-react"
 import { format, differenceInDays, isValid, parseISO } from "date-fns"
 import { useRouter } from "next/navigation"
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 interface PaymentFormProps {
   bookingData: any
 }
@@ -178,12 +187,7 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
     return v
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount)
-  }
+
 
   return (
     <div className="space-y-6">
@@ -335,7 +339,7 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
 
             <div className="pt-4">
               <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
-                {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(bookingData.totalAmount)}`}
+                {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(bookingData.total_amount)}`}
               </Button>
             </div>
 

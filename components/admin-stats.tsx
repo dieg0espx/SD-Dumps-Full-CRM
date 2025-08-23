@@ -7,6 +7,15 @@ import { Calendar, Package, Users, Clock } from "lucide-react"
 import { format } from "date-fns"
 import { BookingDetailsSidebar } from "./booking-details-sidebar"
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 interface AdminStatsProps {
   totalBookings: number
   pendingBookings: number
@@ -124,7 +133,7 @@ export function AdminStats({ totalBookings, pendingBookings, totalUsers, recentB
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <p className="font-medium">${booking.total_amount}</p>
+                        <p className="font-medium">{formatCurrency(booking.total_amount)}</p>
                         <p className="text-xs text-gray-500 capitalize">{booking.service_type}</p>
                       </div>
                       <Badge className={getStatusColor(booking.status)}>{booking.status}</Badge>

@@ -1,18 +1,27 @@
 import { useState } from 'react';
 import { cn } from "../lib/utils";
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
 const faqData = [
   {
     question: "What sizes of dumpsters do you offer?",
-    answer: "We offer 17-yard dumpsters ($595 including 2 tons) and 21-yard dumpsters ($695 including 2 tons). For concrete and dirt disposal, we have specialized containers available - please call us to order these items."
+    answer: `We offer 17-yard dumpsters (${formatCurrency(595)} including 2 tons) and 21-yard dumpsters (${formatCurrency(695)} including 2 tons). For concrete and dirt disposal, we have specialized containers available - please call us to order these items.`
   },
   {
     question: "How does the pricing work?",
-    answer: "We charge the base price upon delivery. If you exceed the included 2 tons, we charge an additional $125 per ton after we dump. For example, if you throw out 3 tons with a 17-yard dumpster, you pay $595 initially, then $125 for the extra ton."
+    answer: `We charge the base price upon delivery. If you exceed the included 2 tons, we charge an additional ${formatCurrency(125)} per ton after we dump. For example, if you throw out 3 tons with a 17-yard dumpster, you pay ${formatCurrency(595)} initially, then ${formatCurrency(125)} for the extra ton.`
   },
   {
     question: "What additional charges should I expect?",
-    answer: "Additional charges include: $125 per ton for extra tonnage beyond the included 2 tons, $30 per appliance, and $30 per extra day if you need the dumpster longer than the standard rental period."
+    answer: `Additional charges include: ${formatCurrency(125)} per ton for extra tonnage beyond the included 2 tons, ${formatCurrency(30)} per appliance, and ${formatCurrency(30)} per extra day if you need the dumpster longer than the standard rental period.`
   },
   {
     question: "What materials can I dispose of?",

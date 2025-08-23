@@ -11,6 +11,15 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2 } from "lucide-react"
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
 import {
   Dialog,
   DialogContent,
@@ -242,7 +251,7 @@ export function InventoryManager({ containerTypes: initialContainerTypes }: Inve
                 <div className="flex gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Price per Day</p>
-                    <p className="font-semibold">${container.price_per_day}</p>
+                    <p className="font-semibold">{formatCurrency(container.price_per_day)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Available</p>

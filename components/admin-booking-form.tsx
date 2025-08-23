@@ -15,6 +15,15 @@ import { CalendarIcon, Plus } from "lucide-react"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 interface AdminBookingFormProps {
   containerTypes: any[]
   users: any[]
@@ -160,7 +169,7 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                 <SelectContent>
                   {containerTypes.map((container) => (
                     <SelectItem key={container.id} value={container.id}>
-                      {container.name} - ${container.price_per_day}
+                      {container.name} - {formatCurrency(container.price_per_day)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -258,7 +267,7 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>{selectedContainer.name}</span>
-                <span>${selectedContainer.price_per_day}</span>
+                <span>{formatCurrency(selectedContainer.price_per_day)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Duration</span>
@@ -266,7 +275,7 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total</span>
-                <span>${calculateTotal()}</span>
+                <span>{formatCurrency(calculateTotal())}</span>
               </div>
             </div>
           </CardContent>

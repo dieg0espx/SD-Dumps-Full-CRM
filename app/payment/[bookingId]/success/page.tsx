@@ -7,6 +7,15 @@ import { CheckCircle, Calendar, MapPin, Truck } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 interface PaymentSuccessPageProps {
   params: {
     bookingId: string
@@ -125,7 +134,7 @@ export default async function PaymentSuccessPage({ params }: PaymentSuccessPageP
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Amount Paid:</span>
-                    <span className="font-semibold">${booking.total_amount}</span>
+                    <span className="font-semibold">{formatCurrency(booking.total_amount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Payment Method:</span>
