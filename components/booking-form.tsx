@@ -11,9 +11,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft } from "lucide-react"
+import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft, CreditCard, Wallet, Building } from "lucide-react"
 import { format, differenceInDays, eachDayOfInterval, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
+import { Separator } from "@/components/ui/separator"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -48,8 +49,6 @@ interface Booking {
   status: string
 }
 
-
-
 export function BookingForm({ user }: BookingFormProps) {
   const [containerTypes, setContainerTypes] = useState<ContainerType[]>([])
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
@@ -73,7 +72,14 @@ export function BookingForm({ user }: BookingFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [loadingData, setLoadingData] = useState(true)
   const [currentStep, setCurrentStep] = useState<number>(1)
-  const totalSteps = 5
+  const totalSteps = 6
+
+  // Payment form state
+  const [paymentMethod, setPaymentMethod] = useState("credit_card")
+  const [cardNumber, setCardNumber] = useState("")
+  const [expiryDate, setExpiryDate] = useState("")
+  const [cvv, setCvv] = useState("")
+  const [cardName, setCardName] = useState("")
 
   const router = useRouter()
   const supabase = createClient()
@@ -213,10 +219,28 @@ export function BookingForm({ user }: BookingFormProps) {
     // Remove the automatic step check that was causing auto-redirect
   }
 
-  const handleProceedToPayment = async () => {
+  const simulatePayment = async () => {
+    // Simulate payment processing delay
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    // Simulate 95% success rate
+    const isSuccess = Math.random() > 0.05
+
+    if (!isSuccess) {
+      throw new Error("Payment failed. Please try again.")
+    }
+
+    return {
+      transaction_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      status: "completed",
+    }
+  }
+
+  const handlePaymentSubmit = async () => {
     setIsLoading(true)
     setError(null)
 
+    // Validate all required fields
     if (!selectedContainer || !startDate || !endDate) {
       setError("Please fill in all required fields")
       setIsLoading(false)
@@ -244,6 +268,30 @@ export function BookingForm({ user }: BookingFormProps) {
       return
     }
 
+    // Validate payment fields
+    if (paymentMethod === "credit_card") {
+      if (!cardName.trim() || !cardNumber.trim() || !expiryDate.trim() || !cvv.trim()) {
+        setError("Please fill in all credit card fields")
+        setIsLoading(false)
+        return
+      }
+      
+      // Basic card number validation
+      const cleanCardNumber = cardNumber.replace(/\s/g, "")
+      if (cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
+        setError("Please enter a valid card number")
+        setIsLoading(false)
+        return
+      }
+      
+      // Basic CVV validation
+      if (cvv.length < 3 || cvv.length > 4) {
+        setError("Please enter a valid CVV")
+        setIsLoading(false)
+        return
+      }
+    }
+
     try {
       const customerAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`
       const deliveryAddress =
@@ -259,31 +307,106 @@ export function BookingForm({ user }: BookingFormProps) {
         await supabase.from("profiles").update({ phone: currentUser.user_metadata.phone }).eq("id", user.id)
       }
 
-      // Prepare booking data for payment page
-      const bookingData = {
-        user_id: user.id,
-        container_type_id: selectedContainer,
-        start_date: format(startDate, "yyyy-MM-dd"),
-        end_date: format(endDate, "yyyy-MM-dd"),
-        pickup_time: pickupTime,
-        delivery_address: deliveryAddress,
-        customer_address: customerAddress,
-        service_type: serviceType,
-        total_amount: totalAmount,
-        notes: notes.trim() || null,
-        extra_tonnage: extraTonnage,
-        appliance_count: applianceCount,
+      // Create the booking
+      const { data: booking, error: bookingError } = await supabase
+        .from("bookings")
+        .insert({
+          user_id: user.id,
+          container_type_id: selectedContainer,
+          start_date: format(startDate, "yyyy-MM-dd"),
+          end_date: format(endDate, "yyyy-MM-dd"),
+          pickup_time: pickupTime,
+          delivery_address: deliveryAddress,
+          customer_address: customerAddress,
+          service_type: serviceType,
+          total_amount: totalAmount,
+          notes: notes.trim() || null,
+          status: "pending",
+          payment_status: "pending",
+        })
+        .select()
+        .single()
+
+      if (bookingError) {
+        console.error("[v0] Booking creation error:", bookingError)
+        throw new Error(`Failed to create booking: ${bookingError.message}`)
       }
 
-      // Store booking data in localStorage and redirect to payment
-      localStorage.setItem("pendingBooking", JSON.stringify(bookingData))
-      router.push("/payment")
+      console.log("[v0] Booking created successfully:", booking)
+
+      // Simulate payment processing
+      const paymentResult = await simulatePayment()
+
+      // Create payment record
+      const { error: paymentError } = await supabase.from("payments").insert({
+        booking_id: booking.id,
+        amount: totalAmount,
+        payment_method: paymentMethod,
+        transaction_id: paymentResult.transaction_id,
+        status: paymentResult.status,
+      })
+
+      if (paymentError) {
+        console.error("[v0] Payment creation error:", paymentError)
+        throw new Error(`Failed to create payment record: ${paymentError.message}`)
+      }
+
+      console.log("[v0] Payment record created successfully")
+
+      // Update booking status
+      const { error: updateError } = await supabase
+        .from("bookings")
+        .update({
+          payment_status: "paid",
+          status: "confirmed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", booking.id)
+
+      if (updateError) {
+        console.error("[v0] Booking update error:", updateError)
+        throw new Error(`Failed to update booking status: ${updateError.message}`)
+      }
+
+      console.log("[v0] Booking status updated successfully")
+
+      // Redirect to success page
+      router.push(`/payment/${booking.id}/success`)
     } catch (error: unknown) {
-      console.error("[v0] Booking preparation error:", error)
-      setError(error instanceof Error ? error.message : "An error occurred")
+      console.error("[v0] Payment error:", error)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError("Payment failed. Please try again.")
+      }
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
+    const matches = v.match(/\d{4,16}/g)
+    const match = (matches && matches[0]) || ""
+    const parts = []
+
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4))
+    }
+
+    if (parts.length) {
+      return parts.join(" ")
+    } else {
+      return v
+    }
+  }
+
+  const formatExpiryDate = (value: string) => {
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
+    if (v.length >= 2) {
+      return `${v.substring(0, 2)}/${v.substring(2, 4)}`
+    }
+    return v
   }
 
   const nextStep = () => {
@@ -315,6 +438,8 @@ export function BookingForm({ user }: BookingFormProps) {
           (serviceType === "pickup" || (deliveryStreetAddress && deliveryCity && deliveryState && deliveryZipCode))
         )
       case 4:
+        return true
+      case 5:
         return true
       default:
         return true
@@ -372,6 +497,7 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 3 && "Service & Address"}
             {currentStep === 4 && "Additional Services"}
             {currentStep === 5 && "Review & Book"}
+            {currentStep === 6 && "Payment"}
           </h2>
           <p className="text-gray-600 mt-1">
             {currentStep === 1 && "Choose the perfect container size for your project"}
@@ -379,6 +505,7 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 3 && "Configure service options and addresses"}
             {currentStep === 4 && "Add optional services"}
             {currentStep === 5 && "Review and confirm your booking"}
+            {currentStep === 6 && "Complete your payment securely"}
           </p>
         </div>
       </div>
@@ -478,7 +605,7 @@ export function BookingForm({ user }: BookingFormProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
                 <div className="flex items-center justify-center mb-4">
                   <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
                     <CalendarIcon className="w-6 h-6 text-white" />
@@ -656,13 +783,13 @@ export function BookingForm({ user }: BookingFormProps) {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-xl flex items-center">
-                  <MapPin className="w-6 h-6 mr-2 text-blue-600" />
+                <CardTitle className="text-lg flex items-center">
+                  <MapPin className="w-5 h-5 mr-2 text-blue-600" />
                   Your Address
                 </CardTitle>
-                <CardDescription className="text-base">Billing and contact address information</CardDescription>
+                <CardDescription className="text-sm">Billing and contact address information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -723,13 +850,13 @@ export function BookingForm({ user }: BookingFormProps) {
             </Card>
 
             {serviceType === "delivery" && (
-              <Card className="border-0 shadow-lg border-l-4 border-l-blue-600">
+              <Card className="border border-gray-200 shadow-sm border-l-4 border-l-blue-600">
                 <CardHeader>
-                  <CardTitle className="text-xl flex items-center">
-                    <Truck className="w-6 h-6 mr-2 text-blue-600" />
+                  <CardTitle className="text-lg flex items-center">
+                    <Truck className="w-5 h-5 mr-2 text-blue-600" />
                     Delivery Address
                   </CardTitle>
-                  <CardDescription className="text-base">Where should we deliver the container?</CardDescription>
+                  <CardDescription className="text-sm">Where should we deliver the container?</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
@@ -793,14 +920,14 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 4 && (
-          <Card className="border-0 shadow-lg">
-            <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl">Additional Services</CardTitle>
-              <CardDescription className="text-lg">Enhance your rental with optional services</CardDescription>
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-xl">Additional Services</CardTitle>
+              <CardDescription className="text-base">Enhance your rental with optional services</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="grid gap-6">
-                <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
+                <div className="bg-orange-50 rounded-xl p-6 border border-orange-200">
                   <div className="flex items-start space-x-4">
                     <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -839,7 +966,7 @@ export function BookingForm({ user }: BookingFormProps) {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                <div className="bg-green-50 rounded-xl p-6 border border-green-200">
                   <div className="flex items-start space-x-4">
                     <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -897,10 +1024,10 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 5 && selectedContainer && totalDays > 0 && (
-          <Card className="border-0 shadow-lg">
-            <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl">Order Summary</CardTitle>
-              <CardDescription className="text-lg">Review your booking details before proceeding</CardDescription>
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-xl">Order Summary</CardTitle>
+              <CardDescription className="text-base">Review your booking details before proceeding</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-8">
@@ -968,7 +1095,7 @@ export function BookingForm({ user }: BookingFormProps) {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+                <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
                   <h4 className="text-xl font-bold text-gray-900 mb-6 text-center">Pricing Breakdown</h4>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-2 border-b border-gray-200">
@@ -1002,6 +1129,177 @@ export function BookingForm({ user }: BookingFormProps) {
           </Card>
         )}
 
+        {currentStep === 6 && (
+          <div className="space-y-6">
+            {/* Order Summary */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="text-center pb-6">
+                <CardTitle className="text-2xl">Payment Information</CardTitle>
+                <CardDescription className="text-lg">Complete your booking with secure payment</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Order Summary */}
+                  <Card className="border border-gray-200">
+                    <CardHeader>
+                      <CardTitle>Order Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span>Container:</span>
+                          <span>
+                            {containerTypes.find((ct) => ct.id === selectedContainer)?.size}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Rental Period:</span>
+                          <span>
+                            {startDate && endDate ? (
+                              <>
+                                {format(startDate, "MMM dd")} - {format(endDate, "MMM dd, yyyy")}
+                              </>
+                            ) : (
+                              "Invalid dates"
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Duration:</span>
+                          <span>{totalDays} days</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Service:</span>
+                          <span className="capitalize">{serviceType}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between font-semibold text-lg">
+                          <span>Total:</span>
+                          <span>{formatCurrency(totalAmount)}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Payment Form */}
+                  <Card className="border border-gray-200">
+                    <CardHeader>
+                      <CardTitle>Payment Method</CardTitle>
+                      <CardDescription>Choose your payment method and enter details</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {/* Payment Method Selection */}
+                        <div className="space-y-3">
+                          <Label>Payment Method</Label>
+                          <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                            <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                              <RadioGroupItem value="credit_card" id="credit_card" />
+                              <Label htmlFor="credit_card" className="flex items-center cursor-pointer flex-1">
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                Credit/Debit Card
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                              <RadioGroupItem value="paypal" id="paypal" />
+                              <Label htmlFor="paypal" className="flex items-center cursor-pointer flex-1">
+                                <Wallet className="mr-2 h-4 w-4" />
+                                PayPal
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                              <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                              <Label htmlFor="bank_transfer" className="flex items-center cursor-pointer flex-1">
+                                <Building className="mr-2 h-4 w-4" />
+                                Bank Transfer
+                              </Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+
+                        {/* Credit Card Form */}
+                        {paymentMethod === "credit_card" && (
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="cardName">Cardholder Name</Label>
+                              <Input
+                                id="cardName"
+                                placeholder="John Doe"
+                                value={cardName}
+                                onChange={(e) => setCardName(e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="cardNumber">Card Number</Label>
+                              <Input
+                                id="cardNumber"
+                                placeholder="1234 5678 9012 3456"
+                                value={cardNumber}
+                                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                                maxLength={19}
+                                required
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="expiryDate">Expiry Date</Label>
+                                <Input
+                                  id="expiryDate"
+                                  placeholder="MM/YY"
+                                  value={expiryDate}
+                                  onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
+                                  maxLength={5}
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="cvv">CVV</Label>
+                                <Input
+                                  id="cvv"
+                                  placeholder="123"
+                                  value={cvv}
+                                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
+                                  maxLength={4}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Alternative Payment Methods */}
+                        {paymentMethod === "paypal" && (
+                          <div className="p-4 bg-blue-50 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                              You will be redirected to PayPal to complete your payment securely.
+                            </p>
+                          </div>
+                        )}
+
+                        {paymentMethod === "bank_transfer" && (
+                          <div className="p-4 bg-green-50 rounded-lg">
+                            <p className="text-sm text-green-800">
+                              Bank transfer details will be provided after confirming your booking.
+                            </p>
+                          </div>
+                        )}
+
+                        {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</div>}
+
+                        <div className="text-xs text-gray-500 text-center">
+                          <p>🔒 This is a simulated payment system for demonstration purposes.</p>
+                          <p>No real payment will be processed.</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {error && <div className="text-red-600 text-sm">{error}</div>}
 
         <div className="flex justify-between">
@@ -1029,9 +1327,9 @@ export function BookingForm({ user }: BookingFormProps) {
                 isLoading || !selectedContainer || !startDate || !endDate || !isDateRangeAvailable(startDate, endDate)
               }
               className="flex items-center"
-              onClick={handleProceedToPayment}
+              onClick={handlePaymentSubmit}
             >
-              {isLoading ? "Preparing Payment..." : "Proceed to Payment"}
+              {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(totalAmount)}`}
             </Button>
           )}
         </div>

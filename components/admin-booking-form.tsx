@@ -5,13 +5,16 @@ import type React from "react"
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Plus } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Separator } from "@/components/ui/separator"
+import { CalendarIcon, Plus, CreditCard, Wallet, Building, CheckCircle, AlertCircle, ArrowRight } from "lucide-react"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 
@@ -39,6 +42,18 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
   const [deliveryAddress, setDeliveryAddress] = useState("")
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(false)
+  
+  // Payment states
+  const [paymentMethod, setPaymentMethod] = useState("credit_card")
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "completed" | "failed">("pending")
+  const [cardNumber, setCardNumber] = useState("")
+  const [expiryDate, setExpiryDate] = useState("")
+  const [cvv, setCvv] = useState("")
+  const [cardName, setCardName] = useState("")
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
+  const [currentStep, setCurrentStep] = useState<"booking" | "payment">("booking")
+  const [createdBooking, setCreatedBooking] = useState<any>(null)
 
   const supabase = createClient()
   const router = useRouter()
@@ -52,7 +67,64 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
     return selectedContainer.price_per_day * Math.max(1, days)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
+    const matches = v.match(/\d{4,16}/g)
+    const match = (matches && matches[0]) || ""
+    const parts = []
+
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4))
+    }
+
+    if (parts.length) {
+      return parts.join(" ")
+    } else {
+      return v
+    }
+  }
+
+  const formatExpiryDate = (value: string) => {
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
+    if (v.length >= 2) {
+      return `${v.substring(0, 2)}/${v.substring(2, 4)}`
+    }
+    return v
+  }
+
+  const simulatePayment = async () => {
+    // Simulate payment processing delay
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    // Simulate 95% success rate
+    const isSuccess = Math.random() > 0.05
+
+    if (!isSuccess) {
+      throw new Error("Payment failed. Please try again.")
+    }
+
+    return {
+      transaction_id: `admin_txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      status: "completed",
+    }
+  }
+
+  const processPayment = async () => {
+    setPaymentError(null)
+    setPaymentStatus("pending")
+    
+    try {
+      const paymentResult = await simulatePayment()
+      setPaymentStatus("completed")
+      return paymentResult
+    } catch (error) {
+      setPaymentStatus("failed")
+      setPaymentError(error instanceof Error ? error.message : "Payment failed")
+      throw error
+    }
+  }
+
+  const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser || !containerType || !startDate || !endDate || !serviceType || !customerAddress) {
       return
@@ -73,7 +145,8 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
           customer_address: customerAddress,
           delivery_address: serviceType === "delivery" ? deliveryAddress : null,
           total_amount: totalAmount,
-          status: "confirmed",
+          status: "pending",
+          payment_status: "pending",
           notes: notes || null,
         })
         .select()
@@ -81,16 +154,15 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
 
       if (bookingError) throw bookingError
 
-      // Create payment record
-      await supabase.from("payments").insert({
-        booking_id: booking.id,
-        amount: totalAmount,
-        status: "completed",
-        payment_method: "admin_created",
-        transaction_id: `admin_${Date.now()}`,
-      })
-
-      router.push("/admin")
+      setCreatedBooking(booking)
+      
+      // Move to payment step if payment processing is enabled
+      if (showPaymentForm) {
+        setCurrentStep("payment")
+      } else {
+        // Redirect to admin dashboard if no payment processing
+        router.push("/admin")
+      }
     } catch (error) {
       console.error("Error creating booking:", error)
     } finally {
@@ -98,8 +170,288 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
     }
   }
 
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!createdBooking) return
+
+    setLoading(true)
+    try {
+      // Process payment
+      const paymentResult = await processPayment()
+
+      // Create payment record
+      await supabase.from("payments").insert({
+        booking_id: createdBooking.id,
+        amount: createdBooking.total_amount,
+        status: paymentResult.status,
+        payment_method: paymentMethod,
+        transaction_id: paymentResult.transaction_id,
+      })
+
+      // Update booking status to confirmed
+      await supabase
+        .from("bookings")
+        .update({
+          status: "confirmed",
+          payment_status: "paid",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", createdBooking.id)
+
+      // Redirect to admin dashboard after successful payment
+      setTimeout(() => {
+        router.push("/admin")
+      }, 2000)
+    } catch (error) {
+      console.error("Payment error:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleBackToBooking = () => {
+    setCurrentStep("booking")
+    setPaymentStatus("pending")
+    setPaymentError(null)
+  }
+
+  if (currentStep === "payment" && createdBooking) {
+    return (
+      <div className="space-y-6">
+        {/* Progress Indicator */}
+        <div className="flex items-center justify-center space-x-4 mb-8">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+            <span className="text-sm font-medium">Booking Created</span>
+          </div>
+          <div className="w-8 h-1 bg-gray-300"></div>
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">6</div>
+            <span className="text-sm font-medium">Payment Processing</span>
+          </div>
+        </div>
+
+        {/* Order Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Order Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span>Customer:</span>
+                <span>{selectedUserData?.full_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Container:</span>
+                <span>{selectedContainer?.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Rental Period:</span>
+                <span>
+                  {startDate && endDate ? (
+                    <>
+                      {format(startDate, "MMM dd")} - {format(endDate, "MMM dd, yyyy")}
+                    </>
+                  ) : (
+                    "Invalid dates"
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Duration:</span>
+                <span>{Math.ceil((endDate!.getTime() - startDate!.getTime()) / (1000 * 60 * 60 * 24))} days</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Service:</span>
+                <span className="capitalize">{serviceType}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Total:</span>
+                <span>{formatCurrency(calculateTotal())}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Status */}
+        {paymentStatus === "completed" && (
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3 text-green-800">
+                <CheckCircle className="h-6 w-6" />
+                <div>
+                  <h3 className="font-semibold">Payment Successful!</h3>
+                  <p className="text-sm">Booking has been confirmed and payment processed.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {paymentStatus === "failed" && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3 text-red-800">
+                <AlertCircle className="h-6 w-6" />
+                <div>
+                  <h3 className="font-semibold">Payment Failed</h3>
+                  <p className="text-sm">{paymentError}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Payment Form */}
+        {paymentStatus === "pending" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 6: Payment Processing</CardTitle>
+              <CardDescription>Complete the payment to confirm the booking</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handlePaymentSubmit} className="space-y-6">
+                {/* Payment Method Selection */}
+                <div className="space-y-3">
+                  <Label>Payment Method</Label>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <RadioGroupItem value="credit_card" id="credit_card" />
+                      <Label htmlFor="credit_card" className="flex items-center cursor-pointer flex-1">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Credit/Debit Card
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <RadioGroupItem value="paypal" id="paypal" />
+                      <Label htmlFor="paypal" className="flex items-center cursor-pointer flex-1">
+                        <Wallet className="mr-2 h-4 w-4" />
+                        PayPal
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                      <Label htmlFor="bank_transfer" className="flex items-center cursor-pointer flex-1">
+                        <Building className="mr-2 h-4 w-4" />
+                        Bank Transfer
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Credit Card Form */}
+                {paymentMethod === "credit_card" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cardName">Cardholder Name</Label>
+                      <Input
+                        id="cardName"
+                        placeholder="John Doe"
+                        value={cardName}
+                        onChange={(e) => setCardName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cardNumber">Card Number</Label>
+                      <Input
+                        id="cardNumber"
+                        placeholder="1234 5678 9012 3456"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                        maxLength={19}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="expiryDate">Expiry Date</Label>
+                        <Input
+                          id="expiryDate"
+                          placeholder="MM/YY"
+                          value={expiryDate}
+                          onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
+                          maxLength={5}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cvv">CVV</Label>
+                        <Input
+                          id="cvv"
+                          placeholder="123"
+                          value={cvv}
+                          onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
+                          maxLength={4}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Alternative Payment Methods */}
+                {paymentMethod === "paypal" && (
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      Payment will be processed through PayPal.
+                    </p>
+                  </div>
+                )}
+
+                {paymentMethod === "bank_transfer" && (
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      Bank transfer details will be provided after booking confirmation.
+                    </p>
+                  </div>
+                )}
+
+                {paymentError && <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{paymentError}</div>}
+
+                <div className="flex justify-between pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleBackToBooking}
+                    className="flex items-center gap-2"
+                  >
+                    ← Back to Booking
+                  </Button>
+                  <Button type="submit" size="lg" disabled={loading}>
+                    {loading ? "Processing Payment..." : `Complete Payment - ${formatCurrency(calculateTotal())}`}
+                  </Button>
+                </div>
+
+                <div className="text-xs text-gray-500 text-center">
+                  <p>🔒 This is a simulated payment system for demonstration purposes.</p>
+                  <p>No real payment will be processed.</p>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleCreateBooking} className="space-y-6">
+      {/* Progress Indicator */}
+      <div className="flex items-center justify-center space-x-4 mb-8">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1-5</div>
+          <span className="text-sm font-medium">Booking Details</span>
+        </div>
+        <div className="w-8 h-1 bg-gray-300"></div>
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">6</div>
+          <span className="text-sm font-medium text-gray-500">Payment</span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Customer Selection */}
         <Card>
@@ -282,13 +634,42 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
         </Card>
       )}
 
+      {/* Payment Processing Option */}
+      {selectedContainer && startDate && endDate && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Step 6: Payment Processing</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="process-payment"
+                checked={showPaymentForm}
+                onChange={(e) => setShowPaymentForm(e.target.checked)}
+                className="rounded"
+              />
+              <Label htmlFor="process-payment">Process payment to confirm booking</Label>
+            </div>
+            
+            {showPaymentForm && (
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  After creating the booking, you will proceed to step 6 to process payment and confirm the order.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex justify-end gap-4">
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancel
         </Button>
         <Button type="submit" disabled={loading} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          {loading ? "Creating..." : "Create Booking"}
+          {loading ? "Creating..." : showPaymentForm ? "Create Booking & Continue to Payment" : "Create Booking"}
         </Button>
       </div>
     </form>

@@ -36,7 +36,7 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
     .single()
 
   if (!booking) {
-    redirect("/bookings")
+    redirect("/booking")
   }
 
   // If already paid, redirect to success

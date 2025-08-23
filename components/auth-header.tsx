@@ -41,20 +41,11 @@ export function AuthHeader({ user }: AuthHeaderProps) {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => {
-              const chatWindow = window.open(
-                '/chat',
-                'support-chat',
-                'width=400,height=700,scrollbars=yes,resizable=yes,status=yes,location=yes,toolbar=no,menubar=no'
-              )
-              if (chatWindow) {
-                chatWindow.focus()
-              }
-            }} 
+            onClick={() => router.push("/booking")}
             className="flex items-center gap-2"
           >
             <MessageCircle className="h-4 w-4" />
-            Support Chat
+            Dashboard
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -64,20 +55,10 @@ export function AuthHeader({ user }: AuthHeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push("/profile")}>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/bookings")}>My Bookings</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                const chatWindow = window.open(
-                  '/chat',
-                  'support-chat',
-                  'width=400,height=700,scrollbars=yes,resizable=yes,status=yes,location=yes,toolbar=no,menubar=no'
-                )
-                if (chatWindow) {
-                  chatWindow.focus()
-                }
-              }}>
+              <DropdownMenuItem onClick={() => router.push("/booking")}>Dashboard</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/booking")}>
                 <MessageCircle className="h-4 w-4 mr-2" />
-                Support Chat
+                Dashboard
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="text-red-600">

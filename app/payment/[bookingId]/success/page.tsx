@@ -54,7 +54,7 @@ export default async function PaymentSuccessPage({ params }: PaymentSuccessPageP
     .single()
 
   if (!booking || booking.payment_status !== "paid") {
-    redirect("/bookings")
+    redirect("/booking")
   }
 
   const payment = booking.payments?.[0]
@@ -175,7 +175,7 @@ export default async function PaymentSuccessPage({ params }: PaymentSuccessPageP
 
             {/* Action Buttons */}
             <div className="flex gap-4">
-              <Link href="/bookings" className="flex-1">
+              <Link href="/booking" className="flex-1">
                 <Button variant="outline" className="w-full bg-transparent">
                   View All Bookings
                 </Button>
