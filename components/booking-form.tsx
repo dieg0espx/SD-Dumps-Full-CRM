@@ -72,7 +72,6 @@ export function BookingForm({ user }: BookingFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [loadingData, setLoadingData] = useState(true)
   const [currentStep, setCurrentStep] = useState<number>(1)
-  const totalSteps = 6
 
   // Payment form state
   const [paymentMethod, setPaymentMethod] = useState("credit_card")
@@ -81,8 +80,14 @@ export function BookingForm({ user }: BookingFormProps) {
   const [cvv, setCvv] = useState("")
   const [cardName, setCardName] = useState("")
 
+  // Success state
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [successData, setSuccessData] = useState<any>(null)
+
   const router = useRouter()
   const supabase = createClient()
+
+  const totalSteps = isSuccess ? 7 : 6
 
   useEffect(() => {
     const loadData = async () => {
@@ -370,8 +375,18 @@ export function BookingForm({ user }: BookingFormProps) {
 
       console.log("[v0] Booking status updated successfully")
 
-      // Redirect to success page
-      router.push(`/payment/${booking.id}/success`)
+      // Set success state with booking data
+      setSuccessData({
+        booking: booking,
+        payment: {
+          transaction_id: paymentResult.transaction_id,
+          payment_method: paymentMethod,
+          amount: totalAmount,
+          created_at: new Date().toISOString()
+        }
+      })
+      setIsSuccess(true)
+      setCurrentStep(7)
     } catch (error: unknown) {
       console.error("[v0] Payment error:", error)
       if (error instanceof Error) {
@@ -460,36 +475,38 @@ export function BookingForm({ user }: BookingFormProps) {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <div className="relative">
-          <div className="flex items-center justify-between">
-            {Array.from({ length: totalSteps }, (_, i) => (
-              <div key={i} className="flex items-center flex-1">
-                <div className="relative flex items-center justify-center">
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-200 z-10 bg-white",
-                      i + 1 <= currentStep
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-400 border-gray-300",
-                    )}
-                  >
-                    {i + 1}
-                  </div>
-                </div>
-                {i < totalSteps - 1 && (
-                  <div className="flex-1 h-0.5 mx-4">
+        {!isSuccess && (
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              {Array.from({ length: totalSteps }, (_, i) => (
+                <div key={i} className="flex items-center flex-1">
+                  <div className="relative flex items-center justify-center">
                     <div
                       className={cn(
-                        "h-full transition-all duration-200",
-                        i + 1 < currentStep ? "bg-blue-600" : "bg-gray-300",
+                        "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-200 z-10 bg-white",
+                        i + 1 <= currentStep
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-400 border-gray-300",
                       )}
-                    />
+                    >
+                      {i + 1}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+                  {i < totalSteps - 1 && (
+                    <div className="flex-1 h-0.5 mx-4">
+                      <div
+                        className={cn(
+                          "h-full transition-all duration-200",
+                          i + 1 < currentStep ? "bg-blue-600" : "bg-gray-300",
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div className="mt-6 text-center">
           <h2 className="text-2xl font-bold text-gray-900">
             {currentStep === 1 && "Select Container"}
@@ -498,6 +515,7 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 4 && "Additional Services"}
             {currentStep === 5 && "Review & Book"}
             {currentStep === 6 && "Payment"}
+            {currentStep === 7 && "Booking Confirmed!"}
           </h2>
           <p className="text-gray-600 mt-1">
             {currentStep === 1 && "Choose the perfect container size for your project"}
@@ -506,6 +524,7 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 4 && "Add optional services"}
             {currentStep === 5 && "Review and confirm your booking"}
             {currentStep === 6 && "Complete your payment securely"}
+            {currentStep === 7 && "Your booking has been successfully confirmed"}
           </p>
         </div>
       </div>
@@ -1300,6 +1319,125 @@ export function BookingForm({ user }: BookingFormProps) {
           </div>
         )}
 
+        {currentStep === 7 && isSuccess && successData && (
+          <div className="space-y-6">
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="text-center pb-6">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                  <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <CardTitle className="text-2xl text-green-600">Payment Successful!</CardTitle>
+                <CardDescription className="text-lg">Your container rental has been confirmed</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Booking Confirmation */}
+                  <Card className="border border-gray-200">
+                    <CardHeader>
+                      <CardTitle>Booking Confirmation</CardTitle>
+                      <CardDescription>Booking #{successData.booking.id.slice(0, 8)}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <div>
+                            <p className="font-medium">Rental Period</p>
+                            <p className="text-sm text-gray-600">
+                              {format(new Date(successData.booking.start_date), "EEEE, MMMM dd, yyyy")} -{" "}
+                              {format(new Date(successData.booking.end_date), "EEEE, MMMM dd, yyyy")}
+                            </p>
+                            {successData.booking.pickup_time && (
+                              <p className="text-sm text-gray-600">Preferred time: {successData.booking.pickup_time}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Truck className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <div>
+                            <p className="font-medium">Container & Service</p>
+                            <p className="text-sm text-gray-600">
+                              {containerTypes.find((ct) => ct.id === successData.booking.container_type_id)?.size}
+                            </p>
+                            <p className="text-sm text-gray-600 capitalize">{successData.booking.service_type} service</p>
+                          </div>
+                        </div>
+
+                        {successData.booking.delivery_address && (
+                          <div className="flex items-start gap-3">
+                            <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="font-medium">Delivery Address</p>
+                              <p className="text-sm text-gray-600">{successData.booking.delivery_address}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {successData.booking.notes && (
+                          <div>
+                            <p className="font-medium">Special Instructions</p>
+                            <p className="text-sm text-gray-600">{successData.booking.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Payment Details */}
+                  <Card className="border border-gray-200">
+                    <CardHeader>
+                      <CardTitle>Payment Details</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span>Amount Paid:</span>
+                          <span className="font-semibold">{formatCurrency(successData.payment.amount)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Payment Method:</span>
+                          <span className="capitalize">{successData.payment.payment_method.replace("_", " ")}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Transaction ID:</span>
+                          <span className="font-mono text-sm">{successData.payment.transaction_id}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Payment Date:</span>
+                          <span>{format(new Date(successData.payment.created_at), "PPP")}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Next Steps */}
+                  <Card className="border border-gray-200">
+                    <CardHeader>
+                      <CardTitle>What's Next?</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 text-sm text-gray-600">
+                        <p>✅ Your booking has been confirmed and payment processed</p>
+                        <p>📧 You'll receive a confirmation email with all the details</p>
+                        <p>📞 Our team will contact you 24 hours before your scheduled date</p>
+                        {successData.booking.service_type === "delivery" ? (
+                          <p>🚚 We'll deliver the container to your specified address</p>
+                        ) : (
+                          <p>🏢 Please visit our location to pick up your container</p>
+                        )}
+                        <p>📱 You can track your booking status in your account</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {error && <div className="text-red-600 text-sm">{error}</div>}
 
         <div className="flex justify-between">
@@ -1319,7 +1457,7 @@ export function BookingForm({ user }: BookingFormProps) {
               Next
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
-          ) : (
+          ) : currentStep === 6 ? (
             <Button
               type="button"
               size="lg"
@@ -1331,6 +1469,53 @@ export function BookingForm({ user }: BookingFormProps) {
             >
               {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(totalAmount)}`}
             </Button>
+          ) : (
+            <div className="flex gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsSuccess(false)
+                  setSuccessData(null)
+                  setCurrentStep(1)
+                  // Reset form
+                  setSelectedContainer("")
+                  setStartDate(undefined)
+                  setEndDate(undefined)
+                  setServiceType("pickup")
+                  setPickupTime("09:00")
+                  setStreetAddress("")
+                  setCity("")
+                  setState("")
+                  setZipCode("")
+                  setDeliveryStreetAddress("")
+                  setDeliveryCity("")
+                  setDeliveryState("")
+                  setDeliveryZipCode("")
+                  setExtraTonnage(0)
+                  setApplianceCount(0)
+                  setNotes("")
+                  setPaymentMethod("credit_card")
+                  setCardNumber("")
+                  setExpiryDate("")
+                  setCvv("")
+                  setCardName("")
+                }}
+                className="flex items-center"
+              >
+                Book Another Container
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  // This will trigger a page refresh to show the updated bookings list
+                  window.location.reload()
+                }}
+                className="flex items-center"
+              >
+                View My Bookings
+              </Button>
+            </div>
           )}
         </div>
       </form>
