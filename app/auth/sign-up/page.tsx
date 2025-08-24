@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight, Check, X } from "lucide-react"
+import { formatPhoneNumber } from "@/lib/phone-utils"
 
 export default function SignUpPage() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -22,19 +23,6 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
 
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
-    const phoneNumber = value.replace(/\D/g, "")
-    
-    // Format based on length
-    if (phoneNumber.length <= 3) {
-      return phoneNumber
-    } else if (phoneNumber.length <= 6) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`
-    } else {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`
-    }
-  }
   const [companyName, setCompanyName] = useState("")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")

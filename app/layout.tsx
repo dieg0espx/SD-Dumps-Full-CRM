@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { ConditionalLayout } from '@/components/ConditionalLayout'
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -28,11 +29,9 @@ html {
         `}</style>
       </head>
       <body>
-        <Header/>
-        <main className="mt-16" >
+        <ConditionalLayout>
           {children}
-        </main>
-        <Footer />
+        </ConditionalLayout>
       </body>
     </html>
   )

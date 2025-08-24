@@ -58,7 +58,72 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
   const isInPopup = typeof window !== 'undefined' && window.opener
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messagesEndRef.current) {
+      const scrollContainer = messagesEndRef.current.closest('[data-radix-scroll-area-viewport]')
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight
+      } else {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" })
+      }
+    }
+  }
+
+  // Initial load of messages with loading state
+  const loadMessages = async () => {
+    if (!conversation) return
+    
+    try {
+      console.log("Loading messages for conversation:", conversation.id)
+      setLoading(true)
+      
+      // Get all messages for the conversation
+      const { data: messagesData, error: messagesError } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true })
+
+      if (messagesError) {
+        console.error("Error loading messages:", messagesError)
+        return
+      }
+
+      // Get sender profiles
+      if (messagesData && messagesData.length > 0) {
+        const senderIds = [...new Set(messagesData.map((m) => m.sender_id))]
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("id", senderIds)
+
+        if (profilesError) {
+          console.error("Error loading profiles:", profilesError)
+          return
+        }
+
+        // Combine messages with profiles
+        const messagesWithSenders = messagesData.map((message) => ({
+          ...message,
+          sender: profilesData?.find((p) => p.id === message.sender_id),
+        }))
+
+        // Update messages state
+        setMessages(messagesWithSenders)
+
+        // Mark messages as read
+        await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("conversation_id", conversation.id)
+          .neq("sender_id", user.id)
+      } else {
+        setMessages([])
+      }
+    } catch (error) {
+      console.error("Error loading messages:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Simple polling function that reloads all messages
@@ -99,8 +164,13 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
           sender: profilesData?.find((p) => p.id === message.sender_id),
         }))
 
-        // Update messages state
-        setMessages(messagesWithSenders)
+        // Only update if messages have actually changed
+        setMessages(prevMessages => {
+          if (JSON.stringify(prevMessages) !== JSON.stringify(messagesWithSenders)) {
+            return messagesWithSenders
+          }
+          return prevMessages
+        })
 
         // Mark messages as read
         await supabase
@@ -127,11 +197,11 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
 
     console.log("Starting polling for conversation:", conversation.id)
     
-    // Poll every 2 seconds
-    pollingIntervalRef.current = setInterval(pollForMessages, 2000)
+    // Load messages initially with loading state
+    loadMessages()
     
-    // Also poll immediately
-    pollForMessages()
+    // Poll every 3 seconds without loading state
+    pollingIntervalRef.current = setInterval(pollForMessages, 3000)
   }
 
   // Stop polling
@@ -148,8 +218,20 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
   }, [user.id])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    // Only scroll to bottom if we're near the bottom or if it's a new message from the current user
+    if (messagesEndRef.current) {
+      const scrollContainer = messagesEndRef.current.closest('[data-radix-scroll-area-viewport]')
+      if (scrollContainer) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainer
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
+        
+        // Scroll to bottom if near bottom or if the last message is from the current user
+        if (isNearBottom || (messages.length > 0 && messages[messages.length - 1]?.sender_id === user.id)) {
+          scrollToBottom()
+        }
+      }
+    }
+  }, [messages, user.id])
 
   // Set up polling when conversation changes
   useEffect(() => {
@@ -207,7 +289,6 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
       setConversation(existingConversation)
     } catch (error) {
       console.error("Error initializing chat:", error)
-    } finally {
       setLoading(false)
     }
   }
@@ -267,7 +348,7 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
 
   const refreshMessages = async () => {
     console.log("Manually refreshing messages")
-    await pollForMessages()
+    await loadMessages()
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -340,8 +421,8 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 p-6 overflow-y-auto max-h-[calc(100vh-200px)] overflow-y-auto">
-          <ScrollArea className="h-full">
+        <div className="flex-1 p-6 overflow-hidden">
+          <ScrollArea className="h-full max-h-[calc(100vh-300px)]">
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
                 <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
@@ -349,7 +430,7 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
                 <p className="text-sm">Send a message to get help with your bookings</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 pr-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}

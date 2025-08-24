@@ -52,7 +52,7 @@ export default async function AdminDashboardPage() {
     const containerTypeIds = [...new Set(bookings.map((b) => b.container_type_id))]
 
     const [{ data: profiles }, { data: containerTypes }] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, email").in("id", userIds),
+      supabase.from("profiles").select("id, full_name, email, phone").in("id", userIds),
       supabase.from("container_types").select("id, name, size").in("id", containerTypeIds),
     ])
 

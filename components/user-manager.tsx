@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { UserIcon, Mail, Phone, Building, Calendar, Shield, User } from "lucide-react"
+import { UserIcon, Mail, Phone, Building, Calendar, Shield, User, MapPin, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { formatPhoneNumber } from "@/lib/phone-utils"
 
 interface UserManagerProps {
   users: any[]
@@ -22,11 +23,18 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
   const [selectedUser, setSelectedUser] = useState<any>(null)
 
   const filteredUsers = users.filter((user) => {
+    const addressString = [
+      user.street_address,
+      user.city,
+      user.state,
+      user.zip_code
+    ].filter(Boolean).join(" ").toLowerCase()
+    
     const matchesSearch =
       user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.address?.toLowerCase().includes(searchTerm.toLowerCase())
+      addressString.includes(searchTerm.toLowerCase())
 
     const matchesRole = roleFilter === "all" || user.role === roleFilter
 
@@ -45,7 +53,7 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <div className="flex-1">
+            <div className="flex-1 space-y-2">
               <Label htmlFor="search">Search Users</Label>
               <Input
                 id="search"
@@ -54,7 +62,7 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="w-48">
+            <div className="w-48 space-y-2">
               <Label htmlFor="role-filter">Filter by Role</Label>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger>
@@ -116,7 +124,7 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
                         {user.phone && (
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Phone className="h-3 w-3" />
-                            {user.phone}
+                            {formatPhoneNumber(user.phone)}
                           </div>
                         )}
                       </div>
@@ -197,7 +205,7 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
                     <Label className="text-sm font-medium text-gray-500">Phone</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Phone className="h-4 w-4 text-gray-400" />
-                      <span>{selectedUser.phone}</span>
+                      <span>{formatPhoneNumber(selectedUser.phone)}</span>
                     </div>
                   </div>
                 )}
@@ -212,11 +220,49 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
                   </div>
                 )}
 
-                {selectedUser.address && (
+                {(selectedUser.street_address || selectedUser.city || selectedUser.state || selectedUser.zip_code) && (
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Address</Label>
-                    <div className="mt-1">
-                      <span className="text-sm">{selectedUser.address}</span>
+                    <div className="space-y-3 mt-1">
+                      {selectedUser.street_address && (
+                        <div>
+                          <Label className="text-xs font-medium text-gray-400">Street Address</Label>
+                          <div className="mt-1">
+                            <span className="text-sm">{selectedUser.street_address}</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {(selectedUser.city || selectedUser.state || selectedUser.zip_code) && (
+                        <div className="grid grid-cols-3 gap-3">
+                          {selectedUser.city && (
+                            <div>
+                              <Label className="text-xs font-medium text-gray-400">City</Label>
+                              <div className="mt-1">
+                                <span className="text-sm">{selectedUser.city}</span>
+                              </div>
+                            </div>
+                          )}
+                          {selectedUser.state && (
+                            <div>
+                              <Label className="text-xs font-medium text-gray-400">State</Label>
+                              <div className="mt-1">
+                                <span className="text-sm">{selectedUser.state}</span>
+                              </div>
+                            </div>
+                          )}
+                          {selectedUser.zip_code && (
+                            <div>
+                              <Label className="text-xs font-medium text-gray-400">ZIP Code</Label>
+                              <div className="mt-1">
+                                <span className="text-sm">{selectedUser.zip_code}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+
                     </div>
                   </div>
                 )}
@@ -234,6 +280,44 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
                   <div className="mt-1">
                     <Badge variant="outline">{selectedUser.bookingCount || 0} bookings</Badge>
                   </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t">
+                <Label className="text-sm font-medium text-gray-500 mb-3 block">Quick Actions</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {selectedUser.phone && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(`tel:${selectedUser.phone}`, '_self')}
+                      className="flex items-center gap-2"
+                    >
+                      <Phone className="h-4 w-4" />
+                      Call
+                    </Button>
+                  )}
+                  {selectedUser.phone && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(`sms:${selectedUser.phone}`, '_self')}
+                      className="flex items-center gap-2"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      SMS
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`mailto:${selectedUser.email}`, '_self')}
+                    className="flex items-center gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Button>
                 </div>
               </div>
             </div>

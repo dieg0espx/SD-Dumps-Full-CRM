@@ -38,7 +38,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">Phone</h3>
-                      <p className="text-gray-600">(123) 456-7890</p>
+                      <p className="text-gray-600">(760) 270-0312</p>
                       <p className="text-sm text-gray-500">Available 24/7 for urgent requests</p>
                     </div>
                   </div>
@@ -49,7 +49,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">Email</h3>
-                      <p className="text-gray-600">info@sddumps.com</p>
+                      <p className="text-gray-600">sandiegodumpingsolutions@gmail.com</p>
                       <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
                     </div>
                   </div>
@@ -149,7 +149,7 @@ export default function Contact() {
                       id="phone"
                       name="phone"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-main focus:border-transparent"
-                      placeholder="(123) 456-7890"
+                                              placeholder="(760) 270-0312"
                     />
                   </div>
 

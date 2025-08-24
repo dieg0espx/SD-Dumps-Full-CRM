@@ -4,6 +4,7 @@ import { X, Calendar, Package, User, CreditCard, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
+import { formatPhoneNumber } from "@/lib/phone-utils"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -75,7 +76,7 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose }: BookingDetai
                     <span className="font-medium">Email:</span> {booking.profiles?.email || "N/A"}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">Phone:</span> {booking.profiles?.phone || "N/A"}
+                    <span className="font-medium">Phone:</span> {booking.profiles?.phone ? formatPhoneNumber(booking.profiles.phone) : "N/A"}
                   </p>
                   {booking.profiles?.company && (
                     <p className="text-sm">

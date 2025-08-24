@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator"
 import { CalendarIcon, Plus, CreditCard, Wallet, Building, CheckCircle, AlertCircle, ArrowRight } from "lucide-react"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
+import { formatPhoneNumber } from "@/lib/phone-utils"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -482,7 +483,7 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                 </p>
                 {selectedUserData.phone && (
                   <p className="text-sm">
-                    <strong>Phone:</strong> {selectedUserData.phone}
+                    <strong>Phone:</strong> {formatPhoneNumber(selectedUserData.phone)}
                   </p>
                 )}
                 {selectedUserData.company && (

@@ -14,7 +14,7 @@ export default function Header() {
 
   const handleCallUs = () => {
     // You can replace this phone number with your actual business phone
-    window.location.href = 'tel:+1234567890'
+    window.location.href = 'tel:+17602700312'
   }
 
   return (

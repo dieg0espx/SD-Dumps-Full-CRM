@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { CreditCard, Wallet, Building, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react"
 import { format, differenceInDays, isValid, parseISO } from "date-fns"
 import { useRouter } from "next/navigation"
+import { formatPhoneNumber } from "@/lib/phone-utils"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {

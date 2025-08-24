@@ -33,7 +33,7 @@ export default async function AdminCalendarPage() {
     const containerTypeIds = [...new Set(bookings.map((b) => b.container_type_id))]
 
     // Fetch profiles and container types
-    const { data: profiles } = await supabase.from("profiles").select("id, full_name, email").in("id", userIds)
+    const { data: profiles } = await supabase.from("profiles").select("id, full_name, email, phone").in("id", userIds)
 
     const { data: containerTypes } = await supabase
       .from("container_types")

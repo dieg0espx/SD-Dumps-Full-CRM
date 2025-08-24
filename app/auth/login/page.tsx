@@ -32,10 +32,20 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      const { data: profile } = await supabase.from("profiles").select("role").single()
+      // Get the current user's profile to check their role
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single()
 
-      if (profile?.role === "admin") {
-        router.push("/admin")
+        if (profile?.role === "admin") {
+          router.push("/admin")
+        } else {
+          router.push("/booking")
+        }
       } else {
         router.push("/booking")
       }

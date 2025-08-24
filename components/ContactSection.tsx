@@ -19,11 +19,11 @@ export default function ContactSection() {
           </div>
           <div className="flex flex-col items-center">
             <Phone className="w-8 h-8 text-main mb-4" />
-            <div className="text-gray-600">(123) 270-3332</div>
+            <div className="text-gray-600">(760) 270-0312</div>
           </div>
           <div className="flex flex-col items-center">
             <Mail className="w-8 h-8 text-main mb-4" />
-            <div className="text-gray-600">sandumps@email.com</div>
+            <div className="text-gray-600">sandiegodumpingsolutions@gmail.com</div>
           </div>
         </div>
 

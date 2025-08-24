@@ -53,6 +53,7 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(true)
+  const [messagesLoading, setMessagesLoading] = useState(false)
   const [newMessageCount, setNewMessageCount] = useState(0)
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -61,7 +62,14 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
   const supabase = createClient()
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messagesEndRef.current) {
+      const scrollContainer = messagesEndRef.current.closest('[data-radix-scroll-area-viewport]')
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight
+      } else {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+      }
+    }
   }
 
   // Simple polling function for conversations
@@ -69,9 +77,14 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
     try {
       console.log("Polling for conversations...")
       setLoading(true)
+      
+      // Get conversations that have at least one message using a JOIN
       const { data: conversationsData, error } = await supabase
         .from("conversations")
-        .select("*")
+        .select(`
+          *,
+          messages!inner(id)
+        `)
         .eq("status", "active")
         .order("last_message_at", { ascending: false })
 
@@ -80,24 +93,38 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
         return
       }
 
-      console.log("Loaded conversations:", conversationsData?.length || 0)
+      if (!conversationsData || conversationsData.length === 0) {
+        setConversations([])
+        setLoading(false)
+        return
+      }
 
-      const userIds = [...new Set(conversationsData?.map((c) => c.user_id) || [])]
-      const adminIds = [...new Set(conversationsData?.map((c) => c.admin_id).filter(Boolean) || [])]
+      // Remove duplicates from JOIN (since inner join can create multiple rows per conversation)
+      const uniqueConversations = conversationsData.reduce((acc, conv) => {
+        if (!acc.find((c: any) => c.id === conv.id)) {
+          acc.push(conv)
+        }
+        return acc
+      }, [] as any[])
+
+      console.log("Total conversations with messages:", uniqueConversations.length)
+
+      const userIds = [...new Set(uniqueConversations.map((c: any) => c.user_id))]
+      const adminIds = [...new Set(uniqueConversations.map((c: any) => c.admin_id).filter(Boolean))]
 
       const [usersData, adminsData] = await Promise.all([
         userIds.length > 0 ? supabase.from("profiles").select("*").in("id", userIds) : { data: [] },
         adminIds.length > 0 ? supabase.from("profiles").select("*").in("id", adminIds) : { data: [] },
       ])
 
-      const conversationsWithProfiles = (conversationsData || []).map((conv) => ({
+      const conversationsWithProfiles = uniqueConversations.map((conv: any) => ({
         ...conv,
         user: usersData.data?.find((u) => u.id === conv.user_id),
         admin: adminsData.data?.find((a) => a.id === conv.admin_id),
       }))
 
       const conversationsWithCounts = await Promise.all(
-        conversationsWithProfiles.map(async (conv) => {
+        conversationsWithProfiles.map(async (conv: any) => {
           const { count } = await supabase
             .from("messages")
             .select("*", { count: "exact", head: true })
@@ -145,7 +172,13 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
         sender: sendersData?.find((s) => s.id === msg.sender_id),
       }))
 
-      setMessages(messagesWithSenders)
+      // Only update if messages have actually changed
+      setMessages(prevMessages => {
+        if (JSON.stringify(prevMessages) !== JSON.stringify(messagesWithSenders)) {
+          return messagesWithSenders
+        }
+        return prevMessages
+      })
 
       // Mark messages as read
       await supabase
@@ -179,6 +212,55 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
     pollConversations()
   }
 
+  // Initial load of messages with loading state
+  const loadMessages = async () => {
+    if (!selectedConversation) return
+    
+    try {
+      console.log("Loading messages for conversation:", selectedConversation.id)
+      setMessagesLoading(true)
+      
+      const { data: messagesData, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", selectedConversation.id)
+        .order("created_at", { ascending: true })
+
+      if (error) {
+        console.error("Error loading messages:", error)
+        return
+      }
+
+      console.log("Loaded messages:", messagesData?.length || 0)
+
+      const senderIds = [...new Set(messagesData?.map((m) => m.sender_id) || [])]
+      const { data: sendersData } = await supabase.from("profiles").select("*").in("id", senderIds)
+
+      const messagesWithSenders = (messagesData || []).map((msg) => ({
+        ...msg,
+        sender: sendersData?.find((s) => s.id === msg.sender_id),
+      }))
+
+      setMessages(messagesWithSenders)
+
+      // Mark messages as read
+      await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("conversation_id", selectedConversation.id)
+        .neq("sender_id", user.id)
+
+      // Assign admin if not already assigned
+      if (selectedConversation && !selectedConversation.admin_id) {
+        await supabase.from("conversations").update({ admin_id: user.id }).eq("id", selectedConversation.id)
+      }
+    } catch (error) {
+      console.error("Error loading messages:", error)
+    } finally {
+      setMessagesLoading(false)
+    }
+  }
+
   // Start polling for messages
   const startMessagesPolling = () => {
     if (!selectedConversation) return
@@ -190,11 +272,11 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
 
     console.log("Starting messages polling for conversation:", selectedConversation.id)
     
-    // Poll messages every 2 seconds
-    messagesPollingIntervalRef.current = setInterval(pollMessages, 2000)
+    // Load messages initially with loading state
+    loadMessages()
     
-    // Also poll immediately
-    pollMessages()
+    // Poll messages every 2 seconds without loading state
+    messagesPollingIntervalRef.current = setInterval(pollMessages, 2000)
   }
 
   // Stop polling
@@ -219,14 +301,28 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
   }, [])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    // Only scroll to bottom if we're near the bottom or if it's a new message from the current user
+    if (messagesEndRef.current) {
+      const scrollContainer = messagesEndRef.current.closest('[data-radix-scroll-area-viewport]')
+      if (scrollContainer) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainer
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
+        
+        // Scroll to bottom if near bottom or if the last message is from the current user
+        if (isNearBottom || (messages.length > 0 && messages[messages.length - 1]?.sender_id === user.id)) {
+          scrollToBottom()
+        }
+      }
+    }
+  }, [messages, user.id])
 
   // Set up messages polling when selected conversation changes
   useEffect(() => {
     if (selectedConversation) {
       startMessagesPolling()
       setNewMessageCount(0)
+      // Scroll to bottom when conversation changes
+      setTimeout(() => scrollToBottom(), 1000)
     }
 
     return () => {
@@ -283,7 +379,7 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
 
   const refreshMessages = async () => {
     console.log("Manually refreshing messages")
-    await pollMessages()
+    await loadMessages()
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -313,11 +409,11 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-120px)]">
       {/* Conversations List */}
-      <div className="lg:col-span-1">
-        <Card>
-          <CardHeader>
+      <div className="lg:col-span-1 h-[calc(100vh-120px)]">
+        <Card className="h-full flex flex-col">
+          <CardHeader className="flex-shrink-0">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5" />
@@ -349,15 +445,15 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[calc(100vh-300px)]">
+          <CardContent className="flex-1 p-0 min-h-0">
+            <ScrollArea className="h-full px-6">
               {conversations.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                   <p>No active conversations</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 py-4">
                   {conversations.map((conversation) => (
                     <div
                       key={conversation.id}
@@ -402,9 +498,9 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
       </div>
 
       {/* Chat Interface */}
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 h-[calc(100vh-120px)]">
         <Card className="h-full flex flex-col">
-          <CardHeader>
+          <CardHeader className="flex-shrink-0">
             <div className="flex items-center justify-between">
               <CardTitle>
                 {selectedConversation ? (
@@ -431,20 +527,25 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
               )}
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
+          <CardContent className="flex-1 flex flex-col p-0 min-h-0">
             {selectedConversation ? (
               <>
                 {/* Messages Area */}
-                <div className="flex-1 mb-4">
-                  <ScrollArea className="h-full">
-                    {messages.length === 0 ? (
+                <div className="flex-1 px-6 pb-4 min-h-0">
+                  <ScrollArea className="h-full max-h-[calc(100vh-280px)]">
+                    {messagesLoading ? (
+                      <div className="text-center text-gray-500 py-8">
+                        <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300 animate-pulse" />
+                        <p>Loading messages...</p>
+                      </div>
+                    ) : messages.length === 0 ? (
                       <div className="text-center text-gray-500 py-8">
                         <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                        <p>No messages yet</p>
-                        <p className="text-sm">Start the conversation</p>
+                        <p>No messages found</p>
+                        <p className="text-sm">This conversation should have messages</p>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-4 py-4">
                         {messages.map((message) => (
                           <div
                             key={message.id}
@@ -475,7 +576,7 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
                 </div>
 
                 {/* Input Area */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 px-6 pb-6 flex-shrink-0">
                   <Input
                     placeholder="Type your message..."
                     value={newMessage}
@@ -493,7 +594,7 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center px-6">
                 <div className="text-center text-gray-500">
                   <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <p className="text-lg font-medium">Select a conversation</p>

@@ -66,8 +66,8 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Contact Info</h3>
             <div className="space-y-2 text-gray-400">
-              <div>Phone: (123) 270-3332</div>
-              <div>Email: sandumps@email.com</div>
+              <div>Phone: (760) 270-0312</div>
+              <div>Email: sandiegodumpingsolutions@gmail.com</div>
               <div>Address: 123 Main Street, City, State 12345</div>
               <div>Hours: Mon-Fri: 9AM-6PM</div>
             </div>
@@ -118,10 +118,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Scroll to Top Button */}
-      <button className="fixed bottom-8 left-8 w-12 h-12 bg-main text-white rounded-full shadow-lg hover:bg-main/90 transition-colors flex items-center justify-center">
-        <ArrowUp className="w-5 h-5" />
-      </button>
+
     </footer>
   )
 }
