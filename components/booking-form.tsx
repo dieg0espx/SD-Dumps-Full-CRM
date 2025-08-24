@@ -489,34 +489,36 @@ export function BookingForm({ user }: BookingFormProps) {
       <div className="mb-6 sm:mb-8">
         {!isSuccess && (
           <div className="relative">
-            <div className="flex items-center justify-between overflow-x-auto pb-2">
-              {Array.from({ length: totalSteps }, (_, i) => (
-                <div key={i} className="flex items-center flex-1 min-w-0">
-                  <div className="relative flex items-center justify-center">
-                    <div
-                      className={cn(
-                        "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold border-2 transition-all duration-200 z-10 bg-white",
-                        i + 1 <= currentStep
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-400 border-gray-300",
-                      )}
-                    >
-                      {i + 1}
-                    </div>
-                  </div>
-                  {i < totalSteps - 1 && (
-                    <div className="flex-1 h-0.5 mx-2 sm:mx-4">
+            <div className="flex items-center justify-center overflow-x-auto pb-2">
+                            <div className="flex items-center justify-center w-[90%] max-w-md">
+                {Array.from({ length: totalSteps }, (_, i) => (
+                  <div key={i} className="flex items-center">
+                    <div className="relative flex items-center justify-center -mx-1 sm:-mx-2">
                       <div
                         className={cn(
-                          "h-full transition-all duration-200",
-                          i + 1 < currentStep ? "bg-blue-600" : "bg-gray-300",
+                          "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold border-2 transition-all duration-200 z-10 bg-white",
+                          i + 1 <= currentStep
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-gray-400 border-gray-300",
                         )}
-                      />
+                      >
+                        {i + 1}
+                      </div>
                     </div>
-                  )}
+                    {i < totalSteps - 1 && (
+                      <div className="h-0.5 w-8 sm:w-12">
+                        <div
+                          className={cn(
+                            "h-full transition-all duration-200",
+                            i + 1 < currentStep ? "bg-blue-600" : "bg-gray-300",
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
                 </div>
-              ))}
-            </div>
+              </div>
           </div>
         )}
         <div className="mt-4 sm:mt-6 text-center">
@@ -543,7 +545,7 @@ export function BookingForm({ user }: BookingFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {currentStep === 1 && (
-          <Card className="border-0 shadow-lg">
+          <Card className="border-0">
             <CardHeader className="text-center pb-6">
               <CardTitle className="text-2xl">Select Container Type</CardTitle>
               <CardDescription className="text-lg">
@@ -566,9 +568,9 @@ export function BookingForm({ user }: BookingFormProps) {
                         <Label
                           htmlFor={container.id}
                           className={cn(
-                            "block cursor-pointer rounded-xl border-2 p-4 sm:p-6 transition-all duration-200 hover:shadow-md",
+                            "block cursor-pointer rounded-xl border-2 p-4 sm:p-6 transition-all duration-200",
                             selectedContainer === container.id
-                              ? "border-blue-600 bg-blue-50 shadow-md"
+                              ? "border-blue-600 bg-blue-50"
                               : "border-gray-200 bg-white hover:border-gray-300",
                           )}
                         >
@@ -628,7 +630,7 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 2 && (
-          <Card className="border-0 shadow-lg">
+          <Card className="border-0">
             <CardHeader className="text-center pb-4 sm:pb-6">
               <CardTitle className="text-xl sm:text-2xl">Select Rental Period</CardTitle>
               <CardDescription className="text-base sm:text-lg">
@@ -645,51 +647,70 @@ export function BookingForm({ user }: BookingFormProps) {
                 <div className="text-center mb-2 sm:mb-4">
                   <Label className="text-sm sm:text-lg font-semibold text-gray-900">Select Date Range</Label>
                 </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-12 sm:h-14 justify-center text-left font-medium text-sm sm:text-base lg:text-lg border-2 hover:border-blue-300 transition-colors px-3 sm:px-4",
-                        (!startDate || !endDate) && "text-muted-foreground",
-                        startDate && endDate && "border-blue-600 bg-blue-50 text-blue-900",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                      <span className="truncate">
-                        {startDate && endDate
-                          ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}`
-                          : "Click to select your rental dates"}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)] sm:max-w-none" align="center" side="bottom">
-                    <Calendar
-                      mode="range"
-                      selected={{ from: startDate, to: endDate }}
-                      onSelect={(range) => {
-                        setStartDate(range?.from)
-                        setEndDate(range?.to)
-                      }}
-                      disabled={(date) => date < new Date() || isDateUnavailable(date)}
-                      initialFocus
-                      numberOfMonths={isMobile ? 1 : 2}
-                      modifiers={{
-                        unavailable: (date) => isDateUnavailable(date),
-                        limited: (date) => {
-                          if (!selectedContainer) return false
-                          const availability = getDateAvailability(date)
-                          return availability.available > 0 && availability.available < availability.total
-                        },
-                      }}
-                      modifiersStyles={{
-                        unavailable: { backgroundColor: "#fee2e2", color: "#dc2626" },
-                        limited: { backgroundColor: "#fef3c7", color: "#d97706" },
-                      }}
-                      className="rounded-md border"
-                    />
-                  </PopoverContent>
-                </Popover>
+                {currentStep === 2 && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full h-12 sm:h-14 justify-center text-left font-medium text-sm sm:text-base lg:text-lg border-2 hover:border-blue-300 transition-colors px-3 sm:px-4",
+                          (!startDate || !endDate) && "text-muted-foreground",
+                          startDate && endDate && "border-blue-600 bg-blue-50 text-blue-900",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                        <span className="truncate">
+                          {startDate && endDate
+                            ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}`
+                            : "Click to select your rental dates"}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)] sm:max-w-none z-50" align="center" side="bottom">
+                      <Calendar
+                        mode="range"
+                        selected={{ from: startDate, to: endDate }}
+                        onSelect={(range) => {
+                          setStartDate(range?.from)
+                          setEndDate(range?.to)
+                        }}
+                        disabled={(date) => date < new Date() || isDateUnavailable(date)}
+                        initialFocus
+                        numberOfMonths={isMobile ? 1 : 2}
+                        modifiers={{
+                          unavailable: (date) => isDateUnavailable(date),
+                          limited: (date) => {
+                            if (!selectedContainer) return false
+                            const availability = getDateAvailability(date)
+                            return availability.available > 0 && availability.available < availability.total
+                          },
+                        }}
+                        modifiersStyles={{
+                          unavailable: { backgroundColor: "#fee2e2", color: "#dc2626" },
+                          limited: { backgroundColor: "#fef3c7", color: "#d97706" },
+                        }}
+                        className="rounded-md border"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+                {currentStep !== 2 && (
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full h-12 sm:h-14 justify-center text-left font-medium text-sm sm:text-base lg:text-lg border-2 px-3 sm:px-4",
+                      startDate && endDate ? "border-blue-600 bg-blue-50 text-blue-900" : "border-gray-300 text-gray-500"
+                    )}
+                    disabled
+                  >
+                    <CalendarIcon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                    <span className="truncate">
+                      {startDate && endDate
+                        ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}`
+                        : "No dates selected"}
+                    </span>
+                  </Button>
+                )}
               </div>
 
               {selectedContainer && (
@@ -729,7 +750,7 @@ export function BookingForm({ user }: BookingFormProps) {
 
         {currentStep === 3 && (
           <div className="space-y-6">
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0">
               <CardHeader className="text-center pb-6">
                 <CardTitle className="text-2xl">Service Options</CardTitle>
                 <CardDescription className="text-lg">Choose how you'd like to handle your container</CardDescription>
@@ -742,9 +763,9 @@ export function BookingForm({ user }: BookingFormProps) {
                       <Label
                         htmlFor="pickup"
                         className={cn(
-                          "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200 hover:shadow-md",
+                          "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200",
                           serviceType === "pickup"
-                            ? "border-blue-600 bg-blue-50 shadow-md"
+                            ? "border-blue-600 bg-blue-50"
                             : "border-gray-200 bg-white hover:border-gray-300",
                         )}
                       >
@@ -773,9 +794,9 @@ export function BookingForm({ user }: BookingFormProps) {
                       <Label
                         htmlFor="delivery"
                         className={cn(
-                          "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200 hover:shadow-md",
+                          "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200",
                           serviceType === "delivery"
-                            ? "border-blue-600 bg-blue-50 shadow-md"
+                            ? "border-blue-600 bg-blue-50"
                             : "border-gray-200 bg-white hover:border-gray-300",
                         )}
                       >
@@ -817,7 +838,7 @@ export function BookingForm({ user }: BookingFormProps) {
               </CardContent>
             </Card>
 
-            <Card className="border border-gray-200 shadow-sm">
+            <Card className="border border-gray-200">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center">
                   <MapPin className="w-5 h-5 mr-2 text-blue-600" />
@@ -884,7 +905,7 @@ export function BookingForm({ user }: BookingFormProps) {
             </Card>
 
             {serviceType === "delivery" && (
-              <Card className="border border-gray-200 shadow-sm border-l-4 border-l-blue-600">
+              <Card className="border border-gray-200 border-l-4 border-l-blue-600">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center">
                     <Truck className="w-5 h-5 mr-2 text-blue-600" />
@@ -954,7 +975,7 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 4 && (
-          <Card className="border border-gray-200 shadow-sm">
+          <Card className="border border-gray-200">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl">Additional Services</CardTitle>
               <CardDescription className="text-base">Enhance your rental with optional services</CardDescription>
@@ -1058,7 +1079,7 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 5 && selectedContainer && totalDays > 0 && (
-          <Card className="border border-gray-200 shadow-sm">
+          <Card className="border border-gray-200">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl">Order Summary</CardTitle>
               <CardDescription className="text-base">Review your booking details before proceeding</CardDescription>
@@ -1150,7 +1171,7 @@ export function BookingForm({ user }: BookingFormProps) {
                         <span className="font-semibold text-gray-900">{formatCurrency(applianceAmount)}</span>
                       </div>
                     )}
-                    <div className="bg-blue-600 text-white rounded-lg p-4 mt-4">
+                    <div className="">
                       <div className="flex justify-between items-center">
                         <span className="text-xl font-bold">Total Amount:</span>
                         <span className="text-2xl font-bold">{formatCurrency(totalAmount)}</span>
@@ -1166,7 +1187,7 @@ export function BookingForm({ user }: BookingFormProps) {
         {currentStep === 6 && (
           <div className="space-y-6">
             {/* Order Summary */}
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0">
               <CardHeader className="text-center pb-6">
                 <CardTitle className="text-2xl">Payment Information</CardTitle>
                 <CardDescription className="text-lg">Complete your booking with secure payment</CardDescription>
@@ -1335,8 +1356,8 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 7 && isSuccess && successData && (
-          <div className="space-y-6">
-            <Card className="border-0 shadow-lg">
+          <div className="space-y-6 relative z-10">
+            <Card className="border-0">
               <CardHeader className="text-center pb-6">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                   <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1357,7 +1378,7 @@ export function BookingForm({ user }: BookingFormProps) {
                     <CardContent>
                       <div className="space-y-4">
                         <div className="flex items-start gap-3">
-                          <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <CalendarIcon className="h-5 w-5 text-gray-400 mt-0.5" />
                           <div>
                             <p className="font-medium">Rental Period</p>
                             <p className="text-sm text-gray-600">
