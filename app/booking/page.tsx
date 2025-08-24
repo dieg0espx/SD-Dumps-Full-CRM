@@ -337,7 +337,7 @@ export default function BookingDashboard() {
   const { title, description } = getHeaderTitle()
 
   return (
-    <div className="h-screen bg-gray-50 flex">
+    <div className="h-[calc(100vh-70px)] bg-gray-50 flex">
       {/* Mobile Sidebar Overlay */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="w-64 p-0">
