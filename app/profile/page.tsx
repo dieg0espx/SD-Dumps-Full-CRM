@@ -13,8 +13,12 @@ export default async function ProfilePage() {
     redirect("/auth/login")
   }
 
-  // Fetch user profile
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  // Fetch user profile with address fields
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, email, full_name, phone, company, street_address, city, state, zip_code, country, role, is_admin")
+    .eq("id", user.id)
+    .single()
 
   return (
     <div className="min-h-screen bg-gray-50">

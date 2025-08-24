@@ -25,7 +25,8 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
     const matchesSearch =
       user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.company?.toLowerCase().includes(searchTerm.toLowerCase())
+      user.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.address?.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesRole = roleFilter === "all" || user.role === roleFilter
 
@@ -48,7 +49,7 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
               <Label htmlFor="search">Search Users</Label>
               <Input
                 id="search"
-                placeholder="Search by name, email, or company..."
+                placeholder="Search by name, email, company, or address..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -207,6 +208,15 @@ export function UserManager({ users: initialUsers }: UserManagerProps) {
                     <div className="flex items-center gap-2 mt-1">
                       <Building className="h-4 w-4 text-gray-400" />
                       <span>{selectedUser.company}</span>
+                    </div>
+                  </div>
+                )}
+
+                {selectedUser.address && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Address</Label>
+                    <div className="mt-1">
+                      <span className="text-sm">{selectedUser.address}</span>
                     </div>
                   </div>
                 )}

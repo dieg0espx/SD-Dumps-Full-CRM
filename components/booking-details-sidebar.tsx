@@ -82,6 +82,11 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose }: BookingDetai
                       <span className="font-medium">Company:</span> {booking.profiles.company}
                     </p>
                   )}
+                  {booking.profiles?.address && (
+                    <p className="text-sm">
+                      <span className="font-medium">Address:</span> {booking.profiles.address}
+                    </p>
+                  )}
                 </div>
               </div>
 

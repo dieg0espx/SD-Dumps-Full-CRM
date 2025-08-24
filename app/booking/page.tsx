@@ -13,6 +13,7 @@ import { ProfileForm } from "@/components/profile-form"
 import { ClientPaymentHistory } from "@/components/client-payment-history"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { DebugProfile } from "@/components/debug-profile"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -50,7 +51,8 @@ export default function BookingDashboard() {
       setUser(user)
 
       // Fetch user profile
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+      console.log("📊 Profile fetch result:", { profile, profileError })
       setProfile(profile)
 
       // Fetch user's bookings
@@ -290,6 +292,7 @@ export default function BookingDashboard() {
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Profile</h1>
               <p className="text-gray-600">Manage your account information</p>
             </div>
+            <DebugProfile />
             <ProfileForm profile={profile} />
           </div>
         )

@@ -41,6 +41,21 @@ interface BookingFormProps {
   user: User
 }
 
+interface Profile {
+  id: string
+  email: string
+  full_name: string | null
+  phone: string | null
+  company: string | null
+  street_address: string | null
+  city: string | null
+  state: string | null
+  zip_code: string | null
+  country: string | null
+  role: string | null
+  is_admin: boolean | null
+}
+
 interface Booking {
   id: string
   start_date: string
@@ -50,6 +65,7 @@ interface Booking {
 }
 
 export function BookingForm({ user }: BookingFormProps) {
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [containerTypes, setContainerTypes] = useState<ContainerType[]>([])
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
   const [selectedContainer, setSelectedContainer] = useState<string>("")
@@ -65,6 +81,7 @@ export function BookingForm({ user }: BookingFormProps) {
   const [deliveryCity, setDeliveryCity] = useState<string>("")
   const [deliveryState, setDeliveryState] = useState<string>("")
   const [deliveryZipCode, setDeliveryZipCode] = useState<string>("")
+  const [useProfileAddress, setUseProfileAddress] = useState<boolean>(false)
   const [extraTonnage, setExtraTonnage] = useState<number>(0)
   const [applianceCount, setApplianceCount] = useState<number>(0)
   const [notes, setNotes] = useState<string>("")
@@ -101,6 +118,26 @@ export function BookingForm({ user }: BookingFormProps) {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Handle profile address checkbox
+  useEffect(() => {
+    if (useProfileAddress && profile && serviceType === "delivery") {
+      setDeliveryStreetAddress(profile.street_address || "")
+      setDeliveryCity(profile.city || "")
+      setDeliveryState(profile.state || "")
+      setDeliveryZipCode(profile.zip_code || "")
+    }
+  }, [useProfileAddress, profile, serviceType])
+
+  // Populate billing address with profile address when profile loads
+  useEffect(() => {
+    if (profile) {
+      setStreetAddress(profile.street_address || "")
+      setCity(profile.city || "")
+      setState(profile.state || "")
+      setZipCode(profile.zip_code || "")
+    }
+  }, [profile])
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -134,6 +171,20 @@ export function BookingForm({ user }: BookingFormProps) {
 
         console.log("[v0] Loaded bookings:", bookings)
         setExistingBookings(bookings || [])
+
+        // Load user profile
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, email, full_name, phone, company, street_address, city, state, zip_code, country, role, is_admin")
+          .eq("id", user.id)
+          .single()
+
+        if (profileError) {
+          console.error("[v0] Profile error:", profileError)
+        } else {
+          console.log("[v0] Loaded profile:", profile)
+          setProfile(profile)
+        }
       } catch (error) {
         console.error("[v0] Error loading data:", error)
         setError("Failed to load container types. Please refresh the page.")
@@ -270,19 +321,12 @@ export function BookingForm({ user }: BookingFormProps) {
       return
     }
 
-    if (!streetAddress.trim() || !city.trim() || !state.trim() || !zipCode.trim()) {
-      setError("Please fill in all address fields")
-      setIsLoading(false)
-      return
-    }
-
-    if (
-      serviceType === "delivery" &&
-      (!deliveryStreetAddress.trim() || !deliveryCity.trim() || !deliveryState.trim() || !deliveryZipCode.trim())
-    ) {
-      setError("Please fill in all delivery address fields")
-      setIsLoading(false)
-      return
+    if (serviceType === "delivery") {
+      if (!useProfileAddress && (!deliveryStreetAddress.trim() || !deliveryCity.trim() || !deliveryState.trim() || !deliveryZipCode.trim())) {
+        setError("Please fill in all delivery address fields")
+        setIsLoading(false)
+        return
+      }
     }
 
     // Validate payment fields
@@ -310,10 +354,11 @@ export function BookingForm({ user }: BookingFormProps) {
     }
 
     try {
-      const customerAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`
       const deliveryAddress =
         serviceType === "delivery"
-          ? `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`
+          ? useProfileAddress && profile
+            ? `${profile.street_address}, ${profile.city}, ${profile.state} ${profile.zip_code}`
+            : `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`
           : null
 
       // Update user profile with phone if available
@@ -334,7 +379,7 @@ export function BookingForm({ user }: BookingFormProps) {
           end_date: format(endDate, "yyyy-MM-dd"),
           pickup_time: pickupTime,
           delivery_address: deliveryAddress,
-          customer_address: customerAddress,
+          customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
           service_type: serviceType,
           total_amount: totalAmount,
           notes: notes.trim() || null,
@@ -458,11 +503,9 @@ export function BookingForm({ user }: BookingFormProps) {
         return (
           serviceType &&
           pickupTime &&
-          streetAddress &&
-          city &&
-          state &&
-          zipCode &&
-          (serviceType === "pickup" || (deliveryStreetAddress && deliveryCity && deliveryState && deliveryZipCode))
+          (serviceType === "pickup" || (
+            useProfileAddress || (deliveryStreetAddress && deliveryCity && deliveryState && deliveryZipCode)
+          ))
         )
       case 4:
         return true
@@ -838,71 +881,7 @@ export function BookingForm({ user }: BookingFormProps) {
               </CardContent>
             </Card>
 
-            <Card className="border border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-blue-600" />
-                  Your Address
-                </CardTitle>
-                <CardDescription className="text-sm">Billing and contact address information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="streetAddress" className="text-base font-medium">
-                    Street Address *
-                  </Label>
-                  <Input
-                    id="streetAddress"
-                    placeholder="123 Main Street"
-                    value={streetAddress}
-                    onChange={(e) => setStreetAddress(e.target.value)}
-                    className="h-12 text-base border-2 focus:border-blue-600"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city" className="text-base font-medium">
-                      City *
-                    </Label>
-                    <Input
-                      id="city"
-                      placeholder="City"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="h-12 text-base border-2 focus:border-blue-600"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="state" className="text-base font-medium">
-                      State *
-                    </Label>
-                    <Input
-                      id="state"
-                      placeholder="State"
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      className="h-12 text-base border-2 focus:border-blue-600"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-                    <Label htmlFor="zipCode" className="text-base font-medium">
-                      ZIP Code *
-                    </Label>
-                    <Input
-                      id="zipCode"
-                      placeholder="12345"
-                      value={zipCode}
-                      onChange={(e) => setZipCode(e.target.value)}
-                      className="h-12 text-base border-2 focus:border-blue-600"
-                      required
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+
 
             {serviceType === "delivery" && (
               <Card className="border border-gray-200 border-l-4 border-l-blue-600">
@@ -914,60 +893,87 @@ export function BookingForm({ user }: BookingFormProps) {
                   <CardDescription className="text-sm">Where should we deliver the container?</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="deliveryStreetAddress" className="text-base font-medium">
-                      Street Address *
-                    </Label>
-                    <Input
-                      id="deliveryStreetAddress"
-                      placeholder="123 Main Street"
-                      value={deliveryStreetAddress}
-                      onChange={(e) => setDeliveryStreetAddress(e.target.value)}
-                      className="h-12 text-base border-2 focus:border-blue-600"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="deliveryCity" className="text-base font-medium">
-                        City *
-                      </Label>
-                      <Input
-                        id="deliveryCity"
-                        placeholder="City"
-                        value={deliveryCity}
-                        onChange={(e) => setDeliveryCity(e.target.value)}
-                        className="h-12 text-base border-2 focus:border-blue-600"
-                        required
-                      />
+                  {profile && profile.street_address && (
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          id="useProfileAddress"
+                          checked={useProfileAddress}
+                          onChange={(e) => setUseProfileAddress(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <Label htmlFor="useProfileAddress" className="text-sm font-medium text-gray-900 cursor-pointer">
+                          Use my profile address
+                        </Label>
+                      </div>
+                      {useProfileAddress && (
+                        <div className="mt-3 text-sm text-gray-600">
+                          <p>{profile.street_address}</p>
+                          <p>{profile.city}, {profile.state} {profile.zip_code}</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="deliveryState" className="text-base font-medium">
-                        State *
-                      </Label>
-                      <Input
-                        id="deliveryState"
-                        placeholder="State"
-                        value={deliveryState}
-                        onChange={(e) => setDeliveryState(e.target.value)}
-                        className="h-12 text-base border-2 focus:border-blue-600"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-                      <Label htmlFor="deliveryZipCode" className="text-base font-medium">
-                        ZIP Code *
-                      </Label>
-                      <Input
-                        id="deliveryZipCode"
-                        placeholder="12345"
-                        value={deliveryZipCode}
-                        onChange={(e) => setDeliveryZipCode(e.target.value)}
-                        className="h-12 text-base border-2 focus:border-blue-600"
-                        required
-                      />
-                    </div>
-                  </div>
+                  )}
+                  
+                  {!useProfileAddress && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="deliveryStreetAddress" className="text-base font-medium">
+                          Street Address *
+                        </Label>
+                        <Input
+                          id="deliveryStreetAddress"
+                          placeholder="123 Main Street"
+                          value={deliveryStreetAddress}
+                          onChange={(e) => setDeliveryStreetAddress(e.target.value)}
+                          className="h-12 text-base border-2 focus:border-blue-600"
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="deliveryCity" className="text-base font-medium">
+                            City *
+                          </Label>
+                          <Input
+                            id="deliveryCity"
+                            placeholder="City"
+                            value={deliveryCity}
+                            onChange={(e) => setDeliveryCity(e.target.value)}
+                            className="h-12 text-base border-2 focus:border-blue-600"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="deliveryState" className="text-base font-medium">
+                            State *
+                          </Label>
+                          <Input
+                            id="deliveryState"
+                            placeholder="State"
+                            value={deliveryState}
+                            onChange={(e) => setDeliveryState(e.target.value)}
+                            className="h-12 text-base border-2 focus:border-blue-600"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+                          <Label htmlFor="deliveryZipCode" className="text-base font-medium">
+                            ZIP Code *
+                          </Label>
+                          <Input
+                            id="deliveryZipCode"
+                            placeholder="12345"
+                            value={deliveryZipCode}
+                            onChange={(e) => setDeliveryZipCode(e.target.value)}
+                            className="h-12 text-base border-2 focus:border-blue-600"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -1528,6 +1534,7 @@ export function BookingForm({ user }: BookingFormProps) {
                   setDeliveryCity("")
                   setDeliveryState("")
                   setDeliveryZipCode("")
+                  setUseProfileAddress(false)
                   setExtraTonnage(0)
                   setApplianceCount(0)
                   setNotes("")
