@@ -11,6 +11,7 @@ interface ConditionalLayoutProps {
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname()
   const isAdminRoute = pathname?.startsWith('/admin')
+  const isBookingRoute = pathname === '/booking'
 
   if (isAdminRoute) {
     return <>{children}</>
@@ -22,7 +23,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
       <main className="mt-16">
         {children}
       </main>
-      <Footer />
+      {!isBookingRoute && <Footer />}
     </>
   )
 }
