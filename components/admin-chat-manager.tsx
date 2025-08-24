@@ -59,7 +59,33 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const conversationsPollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const messagesPollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const notificationAudioRef = useRef<HTMLAudioElement | null>(null)
   const supabase = createClient()
+
+  // Initialize notification sound
+  useEffect(() => {
+    // Create a simple notification sound using Web Audio API
+    const createNotificationSound = () => {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1)
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2)
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+      
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.3)
+    }
+    
+    notificationAudioRef.current = { play: createNotificationSound } as any
+  }, [])
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -144,6 +170,13 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
     }
   }
 
+  // Play notification sound
+  const playNotificationSound = () => {
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.play()
+    }
+  }
+
   // Simple polling function for messages
   const pollMessages = async () => {
     if (!selectedConversation) return
@@ -172,9 +205,19 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
         sender: sendersData?.find((s) => s.id === msg.sender_id),
       }))
 
-      // Only update if messages have actually changed
+      // Check for new messages and play notification
       setMessages(prevMessages => {
         if (JSON.stringify(prevMessages) !== JSON.stringify(messagesWithSenders)) {
+          // Check if there are new messages from other users
+          const newMessages = messagesWithSenders.filter(newMsg => 
+            !prevMessages.find(prevMsg => prevMsg.id === newMsg.id) && 
+            newMsg.sender_id !== user.id
+          )
+          
+          if (newMessages.length > 0) {
+            playNotificationSound()
+          }
+          
           return messagesWithSenders
         }
         return prevMessages
@@ -471,7 +514,7 @@ export function AdminChatManager({ user }: AdminChatManagerProps) {
                             <p className="font-medium text-sm truncate">
                               {conversation.user?.full_name || conversation.user?.email || "Unknown User"}
                             </p>
-                            {conversation.unread_count && conversation.unread_count > 0 && (
+                            {(conversation.unread_count ?? 0) > 0 && (
                               <Badge variant="destructive" className="text-xs">
                                 {conversation.unread_count}
                               </Badge>

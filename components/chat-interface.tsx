@@ -52,7 +52,33 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const notificationAudioRef = useRef<HTMLAudioElement | null>(null)
   const supabase = createClient()
+
+  // Initialize notification sound
+  useEffect(() => {
+    // Create a simple notification sound using Web Audio API
+    const createNotificationSound = () => {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1)
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2)
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+      
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.3)
+    }
+    
+    notificationAudioRef.current = { play: createNotificationSound } as any
+  }, [])
 
   // Detect if we're in a popup window
   const isInPopup = typeof window !== 'undefined' && window.opener
@@ -126,6 +152,13 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
     }
   }
 
+  // Play notification sound
+  const playNotificationSound = () => {
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.play()
+    }
+  }
+
   // Simple polling function that reloads all messages
   const pollForMessages = async () => {
     if (!conversation) return
@@ -164,9 +197,19 @@ export function ChatInterface({ user, profile, isPopup = false }: ChatInterfaceP
           sender: profilesData?.find((p) => p.id === message.sender_id),
         }))
 
-        // Only update if messages have actually changed
+        // Check for new messages and play notification
         setMessages(prevMessages => {
           if (JSON.stringify(prevMessages) !== JSON.stringify(messagesWithSenders)) {
+            // Check if there are new messages from other users
+            const newMessages = messagesWithSenders.filter(newMsg => 
+              !prevMessages.find(prevMsg => prevMsg.id === newMsg.id) && 
+              newMsg.sender_id !== user.id
+            )
+            
+            if (newMessages.length > 0) {
+              playNotificationSound()
+            }
+            
             return messagesWithSenders
           }
           return prevMessages
