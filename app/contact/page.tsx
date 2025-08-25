@@ -1,7 +1,59 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { Phone, Mail, MapPin, Clock, MessageSquare } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+
+export const metadata: Metadata = {
+  title: 'Contact SD Dumps | Get Free Quote & Support',
+  description: 'Contact SD Dumps for professional waste management services. Get free quotes, schedule pickups, or get support. Serving San Diego County with 24/7 availability.',
+  keywords: [
+    'contact SD Dumps',
+    'waste management quote',
+    'dumpster rental contact',
+    'San Diego waste services',
+    'free quote',
+    'schedule pickup',
+    'waste management support',
+    'emergency waste services'
+  ],
+      openGraph: {
+      title: 'Contact SD Dumps | Get Free Quote & Support',
+      description: 'Contact SD Dumps for professional waste management services. Get free quotes, schedule pickups, or get support. Serving San Diego County with 24/7 availability.',
+      url: 'https://sddumps.com/contact',
+      siteName: 'SD Dumps',
+      images: [
+        {
+          url: '/miniature.png',
+          width: 1200,
+          height: 630,
+          alt: 'Contact SD Dumps for Waste Management Services',
+        },
+      ],
+      locale: 'en_US',
+      type: 'website',
+    },
+      twitter: {
+      card: 'summary_large_image',
+      title: 'Contact SD Dumps | Get Free Quote & Support',
+      description: 'Contact SD Dumps for professional waste management services. Get free quotes, schedule pickups, or get support.',
+      images: ['/miniature.png'],
+    },
+  alternates: {
+    canonical: '/contact',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+}
 
 export default function Contact() {
   return (

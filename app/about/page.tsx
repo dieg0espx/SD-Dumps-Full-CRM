@@ -1,9 +1,61 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Shield, Users, Award, Truck, Check } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+
+export const metadata: Metadata = {
+  title: 'About SD Dumps | Professional Waste Management Company',
+  description: 'Learn about SD Dumps, a trusted waste management company with over 10 years of experience providing professional dumpster rental and waste disposal services in San Diego.',
+  keywords: [
+    'about SD Dumps',
+    'waste management company',
+    'dumpster rental company',
+    'San Diego waste services',
+    'professional waste disposal',
+    'licensed waste management',
+    'environmental responsibility',
+    'waste management experience'
+  ],
+      openGraph: {
+      title: 'About SD Dumps | Professional Waste Management Company',
+      description: 'Learn about SD Dumps, a trusted waste management company with over 10 years of experience providing professional dumpster rental and waste disposal services in San Diego.',
+      url: 'https://sddumps.com/about',
+      siteName: 'SD Dumps',
+      images: [
+        {
+          url: '/miniature.png',
+          width: 1200,
+          height: 630,
+          alt: 'SD Dumps Professional Waste Management',
+        },
+      ],
+      locale: 'en_US',
+      type: 'website',
+    },
+      twitter: {
+      card: 'summary_large_image',
+      title: 'About SD Dumps | Professional Waste Management Company',
+      description: 'Learn about SD Dumps, a trusted waste management company with over 10 years of experience in San Diego.',
+      images: ['/miniature.png'],
+    },
+  alternates: {
+    canonical: '/about',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+}
 
 export default function About() {
   return (

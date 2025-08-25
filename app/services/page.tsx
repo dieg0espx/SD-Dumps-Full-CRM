@@ -1,4 +1,5 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Check, Truck, Clock, Shield, Users, Award, Phone, Calendar, Home, Building, Wrench, Leaf } from 'lucide-react'
@@ -7,6 +8,57 @@ import Footer from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+
+export const metadata: Metadata = {
+  title: 'Waste Management Services | Container Rental Solutions',
+  description: 'Professional waste management services including residential dumpster rental, commercial waste solutions, construction debris removal, and yard waste disposal in San Diego.',
+  keywords: [
+    'waste management services',
+    'residential dumpster rental',
+    'commercial waste solutions',
+    'construction debris removal',
+    'yard waste disposal',
+    'demolition waste',
+    'landscaping debris',
+    'San Diego waste management'
+  ],
+      openGraph: {
+      title: 'Waste Management Services | Container Rental Solutions',
+      description: 'Professional waste management services including residential dumpster rental, commercial waste solutions, construction debris removal, and yard waste disposal in San Diego.',
+      url: 'https://sddumps.com/services',
+      siteName: 'SD Dumps',
+      images: [
+        {
+          url: '/miniature.png',
+          width: 1200,
+          height: 630,
+          alt: 'SD Dumps Waste Management Services',
+        },
+      ],
+      locale: 'en_US',
+      type: 'website',
+    },
+      twitter: {
+      card: 'summary_large_image',
+      title: 'Waste Management Services | Container Rental Solutions',
+      description: 'Professional waste management services including residential dumpster rental, commercial waste solutions, and construction debris removal.',
+      images: ['/miniature.png'],
+    },
+  alternates: {
+    canonical: '/services',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+}
 
 export default function Services() {
   return (
