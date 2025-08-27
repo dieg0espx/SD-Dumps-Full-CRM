@@ -76,7 +76,7 @@ export default function About() {
                   For over a decade, we've been providing professional dumpster rental and waste management services to contractors, homeowners, and businesses across the region.
                 </p>
                 
-                <div className="grid grid-cols-2 gap-4 sm:gap-6 ml-0 mr-auto w-fit">
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 mx-auto w-fit">
                   <div className="text-center">
                     <div className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-400 mb-1 sm:mb-2">10+</div>
                     <div className="text-xs sm:text-sm lg:text-base text-gray-600">Years Experience</div>
