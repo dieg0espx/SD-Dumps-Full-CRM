@@ -338,7 +338,6 @@ export function AdminPaymentForm({ booking }: AdminPaymentFormProps) {
               </div>
 
               <div className="text-xs text-gray-500 text-center">
-                <p>🔒 This is a simulated payment system for demonstration purposes.</p>
                 <p>No real payment will be processed.</p>
               </div>
             </form>

@@ -18,6 +18,7 @@ import { CalendarIcon, Plus, CreditCard, Wallet, Building, CheckCircle, AlertCir
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 import { formatPhoneNumber } from "@/lib/phone-utils"
+import { StripeElements } from "@/components/stripe-elements"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -45,12 +46,8 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
   const [loading, setLoading] = useState(false)
   
   // Payment states
-  const [paymentMethod, setPaymentMethod] = useState("credit_card")
+  const [paymentMethod, setPaymentMethod] = useState("stripe")
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "completed" | "failed">("pending")
-  const [cardNumber, setCardNumber] = useState("")
-  const [expiryDate, setExpiryDate] = useState("")
-  const [cvv, setCvv] = useState("")
-  const [cardName, setCardName] = useState("")
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [showPaymentForm, setShowPaymentForm] = useState(false)
   const [currentStep, setCurrentStep] = useState<"booking" | "payment">("booking")
@@ -68,30 +65,6 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
     return selectedContainer.price_per_day * Math.max(1, days)
   }
 
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
-    const matches = v.match(/\d{4,16}/g)
-    const match = (matches && matches[0]) || ""
-    const parts = []
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4))
-    }
-
-    if (parts.length) {
-      return parts.join(" ")
-    } else {
-      return v
-    }
-  }
-
-  const formatExpiryDate = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
-    if (v.length >= 2) {
-      return `${v.substring(0, 2)}/${v.substring(2, 4)}`
-    }
-    return v
-  }
 
   const simulatePayment = async () => {
     // Simulate payment processing delay
@@ -319,8 +292,8 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                   <Label>Payment Method</Label>
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                     <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <RadioGroupItem value="credit_card" id="credit_card" />
-                      <Label htmlFor="credit_card" className="flex items-center cursor-pointer flex-1">
+                      <RadioGroupItem value="stripe" id="stripe" />
+                      <Label htmlFor="stripe" className="flex items-center cursor-pointer flex-1">
                         <CreditCard className="mr-2 h-4 w-4" />
                         Credit/Debit Card
                       </Label>
@@ -342,56 +315,30 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                   </RadioGroup>
                 </div>
 
-                {/* Credit Card Form */}
-                {paymentMethod === "credit_card" && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cardName">Cardholder Name</Label>
-                      <Input
-                        id="cardName"
-                        placeholder="John Doe"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cardNumber">Card Number</Label>
-                      <Input
-                        id="cardNumber"
-                        placeholder="1234 5678 9012 3456"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                        maxLength={19}
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiryDate">Expiry Date</Label>
-                        <Input
-                          id="expiryDate"
-                          placeholder="MM/YY"
-                          value={expiryDate}
-                          onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
-                          maxLength={5}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input
-                          id="cvv"
-                          placeholder="123"
-                          value={cvv}
-                          onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
-                          maxLength={4}
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
+                {/* Stripe Elements */}
+                {paymentMethod === "stripe" && (
+                  <StripeElements
+                    amount={calculateTotal()}
+                    bookingId="temp"
+                    bookingData={{
+                      container_type_id: containerType,
+                      start_date: startDate?.toISOString(),
+                      end_date: endDate?.toISOString(),
+                      service_type: serviceType,
+                      customer_address: customerAddress,
+                      delivery_address: serviceType === 'delivery' ? deliveryAddress : null,
+                      total_amount: calculateTotal(),
+                      pickup_time: "09:00",
+                      notes: notes,
+                    }}
+                    onSuccess={() => {
+                      setPaymentStatus("completed")
+                      setCurrentStep("payment")
+                    }}
+                    onError={(error) => setPaymentError(error)}
+                  />
                 )}
+
 
                 {/* Alternative Payment Methods */}
                 {paymentMethod === "paypal" && (
@@ -427,7 +374,6 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                 </div>
 
                 <div className="text-xs text-gray-500 text-center">
-                  <p>🔒 This is a simulated payment system for demonstration purposes.</p>
                   <p>No real payment will be processed.</p>
                 </div>
               </form>

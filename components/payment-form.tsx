@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { CreditCard, Wallet, Building } from "lucide-react"
 import { format, differenceInDays, isValid, parseISO } from "date-fns"
 import { useRouter } from "next/navigation"
+import { StripeElements } from "@/components/stripe-elements"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -29,11 +30,7 @@ interface PaymentFormProps {
 export function PaymentForm({ bookingData }: PaymentFormProps) {
   console.log("[v0] PaymentForm received bookingData:", bookingData)
   
-  const [paymentMethod, setPaymentMethod] = useState("credit_card")
-  const [cardNumber, setCardNumber] = useState("")
-  const [expiryDate, setExpiryDate] = useState("")
-  const [cvv, setCvv] = useState("")
-  const [cardName, setCardName] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState("stripe")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -85,6 +82,12 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Skip form submission for Stripe payments as they're handled by the Stripe component
+    if (paymentMethod === "stripe") {
+      return
+    }
+    
     setIsLoading(true)
     setError(null)
 
@@ -132,7 +135,7 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
         console.log("[v0] Processing payment for existing booking:", bookingId)
       }
 
-      // Simulate payment processing
+      // Simulate payment processing for non-Stripe methods
       const paymentResult = await simulatePayment()
 
       // Create payment record
@@ -171,30 +174,6 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
     }
   }
 
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
-    const matches = v.match(/\d{4,16}/g)
-    const match = (matches && matches[0]) || ""
-    const parts = []
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4))
-    }
-
-    if (parts.length) {
-      return parts.join(" ")
-    } else {
-      return v
-    }
-  }
-
-  const formatExpiryDate = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
-    if (v.length >= 2) {
-      return `${v.substring(0, 2)}/${v.substring(2, 4)}`
-    }
-    return v
-  }
 
 
 
@@ -255,8 +234,8 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
               <Label>Payment Method</Label>
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                 <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <RadioGroupItem value="credit_card" id="credit_card" />
-                  <Label htmlFor="credit_card" className="flex items-center cursor-pointer flex-1">
+                  <RadioGroupItem value="stripe" id="stripe" />
+                  <Label htmlFor="stripe" className="flex items-center cursor-pointer flex-1">
                     <CreditCard className="mr-2 h-4 w-4" />
                     Credit/Debit Card
                   </Label>
@@ -278,56 +257,22 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
               </RadioGroup>
             </div>
 
-            {/* Credit Card Form */}
-            {paymentMethod === "credit_card" && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cardName">Cardholder Name</Label>
-                  <Input
-                    id="cardName"
-                    placeholder="John Doe"
-                    value={cardName}
-                    onChange={(e) => setCardName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cardNumber">Card Number</Label>
-                  <Input
-                    id="cardNumber"
-                    placeholder="1234 5678 9012 3456"
-                    value={cardNumber}
-                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                    maxLength={19}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="expiryDate">Expiry Date</Label>
-                    <Input
-                      id="expiryDate"
-                      placeholder="MM/YY"
-                      value={expiryDate}
-                      onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
-                      maxLength={5}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cvv">CVV</Label>
-                    <Input
-                      id="cvv"
-                      placeholder="123"
-                      value={cvv}
-                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
-                      maxLength={4}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+            {/* Stripe Elements */}
+            {paymentMethod === "stripe" && (
+              <StripeElements
+                amount={bookingData.total_amount || 0}
+                bookingId={bookingData.id || "temp"}
+                bookingData={bookingData}
+                onSuccess={() => {
+                  // Clear localStorage if it exists
+                  localStorage.removeItem("pendingBooking")
+                  // Redirect to success page
+                  router.push(`/payment/${bookingData.id || "temp"}/success`)
+                }}
+                onError={(error) => setError(error)}
+              />
             )}
+
 
             {/* Alternative Payment Methods */}
             {paymentMethod === "paypal" && (
@@ -348,16 +293,20 @@ export function PaymentForm({ bookingData }: PaymentFormProps) {
 
             {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</div>}
 
-            <div className="pt-4">
-              <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
-                {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(bookingData.total_amount || 0)}`}
-              </Button>
-            </div>
+            {/* Submit button only for non-Stripe payment methods */}
+            {paymentMethod !== "stripe" && (
+              <div className="pt-4">
+                <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(bookingData.total_amount || 0)}`}
+                </Button>
+              </div>
+            )}
 
-            <div className="text-xs text-gray-500 text-center">
-              <p>🔒 This is a simulated payment system for demonstration purposes.</p>
-              <p>No real payment will be processed.</p>
-            </div>
+            {paymentMethod !== "stripe" && (
+              <div className="text-xs text-gray-500 text-center">
+                <p>No real payment will be processed.</p>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

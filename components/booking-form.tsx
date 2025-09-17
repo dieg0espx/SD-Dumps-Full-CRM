@@ -15,6 +15,7 @@ import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft, Cr
 import { format, differenceInDays, eachDayOfInterval, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import { StripeElements } from "@/components/stripe-elements"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -91,11 +92,7 @@ export function BookingForm({ user }: BookingFormProps) {
   const [currentStep, setCurrentStep] = useState<number>(1)
 
   // Payment form state
-  const [paymentMethod, setPaymentMethod] = useState("credit_card")
-  const [cardNumber, setCardNumber] = useState("")
-  const [expiryDate, setExpiryDate] = useState("")
-  const [cvv, setCvv] = useState("")
-  const [cardName, setCardName] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState("stripe")
 
   // Success state
   const [isSuccess, setIsSuccess] = useState(false)
@@ -329,7 +326,7 @@ export function BookingForm({ user }: BookingFormProps) {
       }
     }
 
-    // Validate payment fields
+    // Validate payment fields (skip for Stripe as it's handled by StripeElements)
     if (paymentMethod === "credit_card") {
       if (!cardName.trim() || !cardNumber.trim() || !expiryDate.trim() || !cvv.trim()) {
         setError("Please fill in all credit card fields")
@@ -396,47 +393,55 @@ export function BookingForm({ user }: BookingFormProps) {
 
       console.log("[v0] Booking created successfully:", booking)
 
-      // Simulate payment processing
-      const paymentResult = await simulatePayment()
+      // Skip payment processing for Stripe as it's handled by StripeElements
+      if (paymentMethod !== "stripe") {
+        // Simulate payment processing for non-Stripe methods
+        const paymentResult = await simulatePayment()
 
-      // Create payment record
-      const { error: paymentError } = await supabase.from("payments").insert({
-        booking_id: booking.id,
-        amount: totalAmount,
-        payment_method: paymentMethod,
-        transaction_id: paymentResult.transaction_id,
-        status: paymentResult.status,
-      })
-
-      if (paymentError) {
-        console.error("[v0] Payment creation error:", paymentError)
-        throw new Error(`Failed to create payment record: ${paymentError.message}`)
-      }
-
-      console.log("[v0] Payment record created successfully")
-
-      // Update booking status
-      const { error: updateError } = await supabase
-        .from("bookings")
-        .update({
-          payment_status: "paid",
-          status: "confirmed",
-          updated_at: new Date().toISOString(),
+        // Create payment record
+        const { error: paymentError } = await supabase.from("payments").insert({
+          booking_id: booking.id,
+          amount: totalAmount,
+          payment_method: paymentMethod,
+          transaction_id: paymentResult.transaction_id,
+          status: paymentResult.status,
         })
-        .eq("id", booking.id)
 
-      if (updateError) {
-        console.error("[v0] Booking update error:", updateError)
-        throw new Error(`Failed to update booking status: ${updateError.message}`)
+        if (paymentError) {
+          console.error("[v0] Payment creation error:", paymentError)
+          throw new Error(`Failed to create payment record: ${paymentError.message}`)
+        }
+
+        console.log("[v0] Payment record created successfully")
+
+        // Update booking status
+        const { error: updateError } = await supabase
+          .from("bookings")
+          .update({
+            payment_status: "paid",
+            status: "confirmed",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", booking.id)
+
+        if (updateError) {
+          console.error("[v0] Booking update error:", updateError)
+          throw new Error(`Failed to update booking status: ${updateError.message}`)
+        }
+
+        console.log("[v0] Booking status updated successfully")
       }
-
-      console.log("[v0] Booking status updated successfully")
 
       // Set success state with booking data
       setSuccessData({
         booking: booking,
-        payment: {
+        payment: paymentMethod !== "stripe" ? {
           transaction_id: paymentResult.transaction_id,
+          payment_method: paymentMethod,
+          amount: totalAmount,
+          created_at: new Date().toISOString()
+        } : {
+          transaction_id: "stripe_processing",
           payment_method: paymentMethod,
           amount: totalAmount,
           created_at: new Date().toISOString()
@@ -456,30 +461,6 @@ export function BookingForm({ user }: BookingFormProps) {
     }
   }
 
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
-    const matches = v.match(/\d{4,16}/g)
-    const match = (matches && matches[0]) || ""
-    const parts = []
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4))
-    }
-
-    if (parts.length) {
-      return parts.join(" ")
-    } else {
-      return v
-    }
-  }
-
-  const formatExpiryDate = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "")
-    if (v.length >= 2) {
-      return `${v.substring(0, 2)}/${v.substring(2, 4)}`
-    }
-    return v
-  }
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -526,6 +507,7 @@ export function BookingForm({ user }: BookingFormProps) {
       </div>
     )
   }
+
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -1255,8 +1237,8 @@ export function BookingForm({ user }: BookingFormProps) {
                           <Label>Payment Method</Label>
                           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                             <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                              <RadioGroupItem value="credit_card" id="credit_card" />
-                              <Label htmlFor="credit_card" className="flex items-center cursor-pointer flex-1">
+                              <RadioGroupItem value="stripe" id="stripe" />
+                              <Label htmlFor="stripe" className="flex items-center cursor-pointer flex-1">
                                 <CreditCard className="mr-2 h-4 w-4" />
                                 Credit/Debit Card
                               </Label>
@@ -1278,56 +1260,40 @@ export function BookingForm({ user }: BookingFormProps) {
                           </RadioGroup>
                         </div>
 
-                        {/* Credit Card Form */}
-                        {paymentMethod === "credit_card" && (
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="cardName">Cardholder Name</Label>
-                              <Input
-                                id="cardName"
-                                placeholder="John Doe"
-                                value={cardName}
-                                onChange={(e) => setCardName(e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="cardNumber">Card Number</Label>
-                              <Input
-                                id="cardNumber"
-                                placeholder="1234 5678 9012 3456"
-                                value={cardNumber}
-                                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                                maxLength={19}
-                                required
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="expiryDate">Expiry Date</Label>
-                                <Input
-                                  id="expiryDate"
-                                  placeholder="MM/YY"
-                                  value={expiryDate}
-                                  onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
-                                  maxLength={5}
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="cvv">CVV</Label>
-                                <Input
-                                  id="cvv"
-                                  placeholder="123"
-                                  value={cvv}
-                                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
-                                  maxLength={4}
-                                  required
-                                />
-                              </div>
-                            </div>
-                          </div>
+                        {/* Stripe Elements */}
+                        {paymentMethod === "stripe" && (
+                          <StripeElements
+                            amount={totalAmount}
+                            bookingId="temp"
+                            bookingData={{
+                              container_type_id: selectedContainer,
+                              start_date: startDate?.toISOString(),
+                              end_date: endDate?.toISOString(),
+                              service_type: serviceType,
+                              customer_address: useProfileAddress ? `${profile?.address || ''}` : `${streetAddress}, ${city}, ${state} ${zipCode}`,
+                              delivery_address: serviceType === 'delivery' ? `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}` : null,
+                              total_amount: totalAmount,
+                              pickup_time: pickupTime,
+                              notes: notes,
+                              phone: profile?.phone,
+                            }}
+                            onSuccess={(bookingData) => {
+                              setIsSuccess(true)
+                              setCurrentStep(7)
+                              setSuccessData({
+                                booking: bookingData,
+                                payment: {
+                                  transaction_id: "stripe_processing",
+                                  payment_method: "stripe",
+                                  amount: totalAmount,
+                                  created_at: new Date().toISOString()
+                                }
+                              })
+                            }}
+                            onError={(error) => setError(error)}
+                          />
                         )}
+
 
                         {/* Alternative Payment Methods */}
                         {paymentMethod === "paypal" && (
@@ -1349,7 +1315,6 @@ export function BookingForm({ user }: BookingFormProps) {
                         {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</div>}
 
                         <div className="text-xs text-gray-500 text-center">
-                          <p>🔒 This is a simulated payment system for demonstration purposes.</p>
                           <p>No real payment will be processed.</p>
                         </div>
                       </div>
@@ -1500,17 +1465,20 @@ export function BookingForm({ user }: BookingFormProps) {
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           ) : currentStep === 6 ? (
-            <Button
-              type="button"
-              size="lg"
-              disabled={
-                isLoading || !selectedContainer || !startDate || !endDate || !isDateRangeAvailable(startDate, endDate)
-              }
-              className="flex items-center order-1 sm:order-2"
-              onClick={handlePaymentSubmit}
-            >
-              {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(totalAmount)}`}
-            </Button>
+            // Only show submit button for non-Stripe payment methods
+            paymentMethod !== "stripe" && (
+              <Button
+                type="button"
+                size="lg"
+                disabled={
+                  isLoading || !selectedContainer || !startDate || !endDate || !isDateRangeAvailable(startDate, endDate)
+                }
+                className="flex items-center order-1 sm:order-2"
+                onClick={handlePaymentSubmit}
+              >
+                {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(totalAmount)}`}
+              </Button>
+            )
           ) : (
             <div className="flex flex-col sm:flex-row gap-4 order-1 sm:order-2 w-full sm:w-auto">
               <Button
