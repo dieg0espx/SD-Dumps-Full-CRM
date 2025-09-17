@@ -12,6 +12,10 @@ export default function Header() {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false)
+  }
+
   const handleCallUs = () => {
     // You can replace this phone number with your actual business phone
     window.location.href = 'tel:+17602700312'
@@ -22,7 +26,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center">
+          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <Image
               src="/logo.png"
               alt="SD Dumps Logo"
@@ -31,7 +35,7 @@ export default function Header() {
               className="mr-3"
             />
             <span className="text-xl font-bold text-gray-900">SD Dumps</span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
@@ -78,31 +82,35 @@ export default function Header() {
             <div className="px-4 pt-4 pb-4 space-y-2">
               <Link
                 href="/"
+                onClick={closeMobileMenu}
                 className="block text-center px-3 py-3 text-gray-700 hover:text-main hover:bg-gray-50 rounded-md transition-colors font-medium"
               >
                 Home
               </Link>
               <Link
                 href="/about"
+                onClick={closeMobileMenu}
                 className="block text-center px-3 py-3 text-gray-700 hover:text-main hover:bg-gray-50 rounded-md transition-colors font-medium"
               >
                 About
               </Link>
               <Link
                 href="/services"
+                onClick={closeMobileMenu}
                 className="block text-center px-3 py-3 text-gray-700 hover:text-main hover:bg-gray-50 rounded-md transition-colors font-medium"
               >
                 Services
               </Link>
               <Link
                 href="/contact"
+                onClick={closeMobileMenu}
                 className="block text-center px-3 py-3 text-gray-700 hover:text-main hover:bg-gray-50 rounded-md transition-colors font-medium"
               >
                 Contact
               </Link>
             </div>
             <div className="px-4 py-4 border-t border-gray-200 space-y-3">
-              <Link href="/auth/login">
+              <Link href="/auth/login" onClick={closeMobileMenu}>
                 <button className="w-full bg-main text-white px-4 py-3 rounded-lg hover:bg-main/90 transition-colors font-medium">
                   Login
                 </button>
