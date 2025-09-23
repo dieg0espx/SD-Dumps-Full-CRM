@@ -11,11 +11,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft, CreditCard, Wallet, Building } from "lucide-react"
+import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft, CreditCard, Wallet, Smartphone } from "lucide-react"
 import { format, differenceInDays, eachDayOfInterval, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { StripeElements } from "@/components/stripe-elements"
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -326,29 +327,7 @@ export function BookingForm({ user }: BookingFormProps) {
       }
     }
 
-    // Validate payment fields (skip for Stripe as it's handled by StripeElements)
-    if (paymentMethod === "credit_card") {
-      if (!cardName.trim() || !cardNumber.trim() || !expiryDate.trim() || !cvv.trim()) {
-        setError("Please fill in all credit card fields")
-        setIsLoading(false)
-        return
-      }
-      
-      // Basic card number validation
-      const cleanCardNumber = cardNumber.replace(/\s/g, "")
-      if (cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
-        setError("Please enter a valid card number")
-        setIsLoading(false)
-        return
-      }
-      
-      // Basic CVV validation
-      if (cvv.length < 3 || cvv.length > 4) {
-        setError("Please enter a valid CVV")
-        setIsLoading(false)
-        return
-      }
-    }
+    // Payment validation is handled by Stripe component
 
     try {
       const deliveryAddress =
@@ -393,10 +372,11 @@ export function BookingForm({ user }: BookingFormProps) {
 
       console.log("[v0] Booking created successfully:", booking)
 
-      // Skip payment processing for Stripe as it's handled by StripeElements
+      // Skip payment processing for Stripe as it's handled by its component
+      let paymentResult = null
       if (paymentMethod !== "stripe") {
-        // Simulate payment processing for non-Stripe methods
-        const paymentResult = await simulatePayment()
+        // Simulate payment processing for other methods (like bank_transfer)
+        paymentResult = await simulatePayment()
 
         // Create payment record
         const { error: paymentError } = await supabase.from("payments").insert({
@@ -435,13 +415,18 @@ export function BookingForm({ user }: BookingFormProps) {
       // Set success state with booking data
       setSuccessData({
         booking: booking,
-        payment: paymentMethod !== "stripe" ? {
+        payment: paymentMethod === "stripe" ? {
+          transaction_id: "stripe_processing",
+          payment_method: paymentMethod,
+          amount: totalAmount,
+          created_at: new Date().toISOString()
+        } : paymentResult ? {
           transaction_id: paymentResult.transaction_id,
           payment_method: paymentMethod,
           amount: totalAmount,
           created_at: new Date().toISOString()
         } : {
-          transaction_id: "stripe_processing",
+          transaction_id: "pending",
           payment_method: paymentMethod,
           amount: totalAmount,
           created_at: new Date().toISOString()
@@ -461,6 +446,113 @@ export function BookingForm({ user }: BookingFormProps) {
     }
   }
 
+  const handlePaymentSuccess = async (method: string, transactionId: string) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Validate all required fields
+      if (!selectedContainer || !startDate || !endDate) {
+        setError("Please fill in all required fields")
+        setIsLoading(false)
+        return
+      }
+
+      if (!isDateRangeAvailable(startDate, endDate)) {
+        setError("Selected date range is not available. Please choose different dates.")
+        setIsLoading(false)
+        return
+      }
+
+      if (serviceType === "delivery") {
+        if (!useProfileAddress && (!deliveryStreetAddress.trim() || !deliveryCity.trim() || !deliveryState.trim() || !deliveryZipCode.trim())) {
+          setError("Please fill in all delivery address fields")
+          setIsLoading(false)
+          return
+        }
+      }
+
+      const deliveryAddress =
+        serviceType === "delivery"
+          ? useProfileAddress && profile
+            ? `${profile.street_address}, ${profile.city}, ${profile.state} ${profile.zip_code}`
+            : `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`
+          : null
+
+      // Update user profile with phone if available
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser()
+      if (currentUser?.user_metadata?.phone) {
+        await supabase.from("profiles").update({ phone: currentUser.user_metadata.phone }).eq("id", user.id)
+      }
+
+      // Create the booking
+      const { data: booking, error: bookingError } = await supabase
+        .from("bookings")
+        .insert({
+          user_id: user.id,
+          container_type_id: selectedContainer,
+          start_date: format(startDate, "yyyy-MM-dd"),
+          end_date: format(endDate, "yyyy-MM-dd"),
+          pickup_time: pickupTime,
+          delivery_address: deliveryAddress,
+          customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
+          service_type: serviceType,
+          total_amount: totalAmount,
+          notes: notes.trim() || null,
+          status: "confirmed",
+          payment_status: "paid",
+        })
+        .select()
+        .single()
+
+      if (bookingError) {
+        console.error("[v0] Booking creation error:", bookingError)
+        throw new Error(`Failed to create booking: ${bookingError.message}`)
+      }
+
+      console.log("[v0] Booking created successfully:", booking)
+
+      // Create payment record
+      const { error: paymentError } = await supabase.from("payments").insert({
+        booking_id: booking.id,
+        amount: totalAmount,
+        payment_method: method,
+        transaction_id: transactionId,
+        status: "completed",
+      })
+
+      if (paymentError) {
+        console.error("[v0] Payment creation error:", paymentError)
+        throw new Error(`Failed to create payment record: ${paymentError.message}`)
+      }
+
+      console.log("[v0] Payment record created successfully")
+
+      // Set success state with booking data
+      setSuccessData({
+        booking: booking,
+        payment: {
+          transaction_id: transactionId,
+          payment_method: method,
+          amount: totalAmount,
+          created_at: new Date().toISOString()
+        }
+      })
+      setIsSuccess(true)
+      setCurrentStep(7)
+    } catch (error: unknown) {
+      console.error("[v0] Payment success error:", error)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError("Failed to process payment. Please contact support.")
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -1232,32 +1324,35 @@ export function BookingForm({ user }: BookingFormProps) {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-6">
-                        {/* Payment Method Selection */}
+                        {/* Payment Method Toggle */}
                         <div className="space-y-3">
                           <Label>Payment Method</Label>
-                          <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                            <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                              <RadioGroupItem value="stripe" id="stripe" />
-                              <Label htmlFor="stripe" className="flex items-center cursor-pointer flex-1">
-                                <CreditCard className="mr-2 h-4 w-4" />
-                                Credit/Debit Card
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                              <RadioGroupItem value="paypal" id="paypal" />
-                              <Label htmlFor="paypal" className="flex items-center cursor-pointer flex-1">
-                                <Wallet className="mr-2 h-4 w-4" />
-                                PayPal
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                              <RadioGroupItem value="bank_transfer" id="bank_transfer" />
-                              <Label htmlFor="bank_transfer" className="flex items-center cursor-pointer flex-1">
-                                <Building className="mr-2 h-4 w-4" />
-                                Bank Transfer
-                              </Label>
-                            </div>
-                          </RadioGroup>
+                          <div className="flex bg-gray-100 rounded-lg p-1">
+                            <button
+                              type="button"
+                              onClick={() => setPaymentMethod("stripe")}
+                              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md transition-all ${
+                                paymentMethod === "stripe"
+                                  ? "bg-white shadow-sm text-gray-900"
+                                  : "text-gray-600 hover:text-gray-900"
+                              }`}
+                            >
+                              <CreditCard className="h-4 w-4" />
+                              <span>Credit/Debit Card</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPaymentMethod("paypal")}
+                              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md transition-all ${
+                                paymentMethod === "paypal"
+                                  ? "bg-white shadow-sm text-gray-900"
+                                  : "text-gray-600 hover:text-gray-900"
+                              }`}
+                            >
+                              <Smartphone className="h-4 w-4" />
+                              <span>PayPal</span>
+                            </button>
+                          </div>
                         </div>
 
                         {/* Stripe Elements */}
@@ -1270,7 +1365,7 @@ export function BookingForm({ user }: BookingFormProps) {
                               start_date: startDate?.toISOString(),
                               end_date: endDate?.toISOString(),
                               service_type: serviceType,
-                              customer_address: useProfileAddress ? `${profile?.address || ''}` : `${streetAddress}, ${city}, ${state} ${zipCode}`,
+                              customer_address: useProfileAddress ? `${profile?.street_address || ''}, ${profile?.city || ''}, ${profile?.state || ''} ${profile?.zip_code || ''}` : `${streetAddress}, ${city}, ${state} ${zipCode}`,
                               delivery_address: serviceType === 'delivery' ? `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}` : null,
                               total_amount: totalAmount,
                               pickup_time: pickupTime,
@@ -1294,21 +1389,56 @@ export function BookingForm({ user }: BookingFormProps) {
                           />
                         )}
 
-
-                        {/* Alternative Payment Methods */}
+                        {/* PayPal Section */}
                         {paymentMethod === "paypal" && (
-                          <div className="p-4 bg-blue-50 rounded-lg">
-                            <p className="text-sm text-blue-800">
-                              You will be redirected to PayPal to complete your payment securely.
-                            </p>
-                          </div>
-                        )}
-
-                        {paymentMethod === "bank_transfer" && (
-                          <div className="p-4 bg-green-50 rounded-lg">
-                            <p className="text-sm text-green-800">
-                              Bank transfer details will be provided after confirming your booking.
-                            </p>
+                          <div className="space-y-4">
+                            <PayPalScriptProvider 
+                              options={{ 
+                                clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "test",
+                                currency: "USD",
+                                intent: "capture"
+                              }}
+                            >
+                              <PayPalButtons
+                                createOrder={(data, actions) => {
+                                  return actions.order.create({
+                                    intent: "CAPTURE",
+                                    purchase_units: [
+                                      {
+                                        amount: {
+                                          value: totalAmount.toString(),
+                                          currency_code: "USD"
+                                        },
+                                        description: `Dumpster rental - ${containerTypes.find(c => c.id === selectedContainer)?.name || 'Container'} (${differenceInDays(endDate!, startDate!) + 1} days)`
+                                      }
+                                    ]
+                                  })
+                                }}
+                                onApprove={(data, actions) => {
+                                  return actions.order!.capture().then((details) => {
+                                    console.log('Payment completed:', details)
+                                    setIsSuccess(true)
+                                    setError(null)
+                                    // Handle successful payment
+                                    handlePaymentSuccess('paypal', details.id || 'paypal_transaction')
+                                  })
+                                }}
+                                onError={(err) => {
+                                  console.error('PayPal error:', err)
+                                  setError('Payment failed. Please try again.')
+                                }}
+                                onCancel={() => {
+                                  console.log('Payment cancelled')
+                                  setError('Payment was cancelled.')
+                                }}
+                                style={{
+                                  layout: 'vertical',
+                                  color: 'blue',
+                                  shape: 'rect',
+                                  label: 'paypal'
+                                }}
+                              />
+                            </PayPalScriptProvider>
                           </div>
                         )}
 
@@ -1465,20 +1595,8 @@ export function BookingForm({ user }: BookingFormProps) {
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           ) : currentStep === 6 ? (
-            // Only show submit button for non-Stripe payment methods
-            paymentMethod !== "stripe" && (
-              <Button
-                type="button"
-                size="lg"
-                disabled={
-                  isLoading || !selectedContainer || !startDate || !endDate || !isDateRangeAvailable(startDate, endDate)
-                }
-                className="flex items-center order-1 sm:order-2"
-                onClick={handlePaymentSubmit}
-              >
-                {isLoading ? "Processing Payment..." : `Pay ${formatCurrency(totalAmount)}`}
-              </Button>
-            )
+            // No submit button needed for Stripe as it handles its own submission
+            null
           ) : (
             <div className="flex flex-col sm:flex-row gap-4 order-1 sm:order-2 w-full sm:w-auto">
               <Button
@@ -1506,11 +1624,7 @@ export function BookingForm({ user }: BookingFormProps) {
                   setExtraTonnage(0)
                   setApplianceCount(0)
                   setNotes("")
-                  setPaymentMethod("credit_card")
-                  setCardNumber("")
-                  setExpiryDate("")
-                  setCvv("")
-                  setCardName("")
+                  setPaymentMethod("stripe")
                 }}
                 className="flex items-center"
               >

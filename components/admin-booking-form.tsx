@@ -299,13 +299,6 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                       </Label>
                     </div>
                     <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <RadioGroupItem value="paypal" id="paypal" />
-                      <Label htmlFor="paypal" className="flex items-center cursor-pointer flex-1">
-                        <Wallet className="mr-2 h-4 w-4" />
-                        PayPal
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg">
                       <RadioGroupItem value="bank_transfer" id="bank_transfer" />
                       <Label htmlFor="bank_transfer" className="flex items-center cursor-pointer flex-1">
                         <Building className="mr-2 h-4 w-4" />
@@ -340,14 +333,6 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                 )}
 
 
-                {/* Alternative Payment Methods */}
-                {paymentMethod === "paypal" && (
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      Payment will be processed through PayPal.
-                    </p>
-                  </div>
-                )}
 
                 {paymentMethod === "bank_transfer" && (
                   <div className="p-4 bg-green-50 rounded-lg">
