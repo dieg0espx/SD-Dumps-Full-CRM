@@ -244,7 +244,7 @@ export function SignaturePad({ onSignatureComplete, onClear, disabled = false }:
       </CardHeader>
       <CardContent className="space-y-4 px-1 sm:px-6">
         {/* Signature Canvas */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 sm:p-4 bg-gray-50">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 sm:p-4 bg-gray-50 flex justify-center">
           <canvas
             ref={canvasRef}
             className="w-full cursor-crosshair touch-none border border-gray-200 rounded"

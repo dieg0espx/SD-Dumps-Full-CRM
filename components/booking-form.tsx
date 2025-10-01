@@ -268,7 +268,7 @@ export function BookingForm({ user }: BookingFormProps) {
   const baseAmount = selectedContainerType?.price_per_day || 0
   const baseTotalAmount = baseAmount * totalDays
   const extraTonnageAmount = (extraTonnage || 0) * 125
-  const applianceAmount = (applianceCount || 0) * 30
+  const applianceAmount = (applianceCount || 0) * 25
   const totalAmount = baseTotalAmount + extraTonnageAmount + applianceAmount
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1190,7 +1190,7 @@ export function BookingForm({ user }: BookingFormProps) {
                       <Label htmlFor="applianceCount" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
                         Appliance Disposal
                       </Label>
-                      <p className="text-gray-600 mb-4 text-sm sm:text-base">{formatCurrency(30)} per appliance</p>
+                      <p className="text-gray-600 mb-4 text-sm sm:text-base">{formatCurrency(25)} per appliance</p>
                       <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-4">
                         <Input
                           id="applianceCount"
@@ -1204,7 +1204,7 @@ export function BookingForm({ user }: BookingFormProps) {
                         <span className="text-gray-600 text-sm sm:text-base">appliances</span>
                         {applianceCount > 0 && (
                           <div className="text-base sm:text-lg lg:text-xl font-semibold text-green-600">
-                            +{formatCurrency(applianceCount * 30)}
+                            +{formatCurrency(applianceCount * 25)}
                           </div>
                         )}
                       </div>
@@ -1378,64 +1378,89 @@ export function BookingForm({ user }: BookingFormProps) {
 
                   {/* Terms and Conditions */}
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-2">Terms and Conditions</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-2">Terms of Lease</h3>
                     
                     <div className="space-y-3">
                       <div>
-                        <h4 className="font-semibold text-gray-900">1. Rental Period</h4>
                         <p className="text-gray-700 leading-relaxed">
-                          The container rental period begins on the start date and ends on the end date specified above. 
-                          Any extension beyond the agreed rental period must be authorized in advance and may incur additional charges.
+                          San Diego Dumping Solutions will provide dumpster disposal service using our roll-off containers. 
+                          Service will be provided on the day requested when using our online ordering software. 
+                          Additional days on your rental period will be $25 Per Day, starting on the 4th day until the roll-off is picked up.
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="font-semibold text-gray-900">2. Weight Limits</h4>
+                        <h4 className="font-semibold text-gray-900">Additional Charges:</h4>
                         <p className="text-gray-700 leading-relaxed">
-                          Each container rental includes 2 tons of debris. Additional tonnage is charged at $125 per ton. 
-                          The customer is responsible for ensuring the container does not exceed weight limits.
+                          All customers are responsible for the total weight of the contents of their dumpster(s). 
+                          All customers are responsible for scheduling the removal of their dumpster(s). 
+                          All customers are responsible for ensuring their dumpster(s) are not overloaded. 
+                          Customers shall inspect the dumpster upon delivery for any existing damage. 
+                          Upon removal of the dumpster, San Diego Dumping Solutions shall be entitled to charge the customer 
+                          for the repair or replacement costs attributable to any damage to the dumpster while in the customer's possession. 
+                          The customer shall be liable for any repair or replacement costs. Upon removal, the customer authorizes 
+                          San Diego Dumping Solutions to collect any additional disposal and repair or replacement costs attributable to the customer.
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="font-semibold text-gray-900">3. Prohibited Items</h4>
+                        <h4 className="font-semibold text-gray-900">Weight Allowance:</h4>
                         <p className="text-gray-700 leading-relaxed">
-                          The following items are strictly prohibited: hazardous materials, chemicals, asbestos, 
-                          paint cans (unless empty and dry), tires, batteries, propane tanks, and any materials 
-                          deemed hazardous or illegal. Violation may result in additional fees and legal action.
+                          Exceeding stated weight allowance will result in an additional charge of $125 per ton
+                        </p>
+                        <ul className="list-disc list-inside text-gray-700 ml-4 mt-2">
+                          <li>17 yard - 4,000 lbs included ($125 per additional 2,000 pounds) - In no event will customer load debris weighing 12,000 lbs or more</li>
+                          <li>21 yard - 4,000 lbs included ($125 per additional 2,000 pounds) - In no event will customer load debris weighing 12,000 lbs or more</li>
+                        </ul>
+                        <p className="text-gray-700 leading-relaxed mt-2">
+                          Any weight above the max tonnage allowed will result in refusal of service and off-loading shall be required. 
+                          A dry run charge can range from $150 to up $200 per occurrence. Blocking or impeding retrieval of a roll-off 
+                          on the agreed collection date will result in a dry run charge.
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="font-semibold text-gray-900">4. Payment Terms</h4>
+                        <h4 className="font-semibold text-gray-900">Additional Service Charges:</h4>
+                        <ul className="list-disc list-inside text-gray-700 ml-4">
+                          <li>Cleaning due to loading of restricted or hazardous materials may be billed at a 3rd party rate plus a reasonable markup.</li>
+                          <li>Mattresses and box springs will be $25 additional, each.</li>
+                          <li>Appliances will be $25 additional, each.</li>
+                          <li>Electronics will be $25 additional, each.</li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Waste Material:</h4>
                         <p className="text-gray-700 leading-relaxed">
-                          Payment is due at the time of booking. The total amount includes rental fees, delivery/pickup 
-                          charges (if applicable), and any additional services selected. Late returns may incur daily charges.
+                          Non-Hazardous Solid Waste Only. Customer agrees not to put any waste that is liquid, or any waste that is, 
+                          or contains, radioactive, volatile, corrosive, highly flammable, explosive, biomedical, biohazardous, infectious, 
+                          toxic, and/or any hazardous wastes or substances ("Prohibited Waste") into roll-off containers. Prohibited Waste 
+                          includes, but is not limited to, tires, paint, batteries, paint cans, ashes, oil, vehicle parts, sewage sludge, etc.
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="font-semibold text-gray-900">5. Cancellation Policy</h4>
+                        <h4 className="font-semibold text-gray-900">Inspection/Rejection of Prohibited Waste:</h4>
                         <p className="text-gray-700 leading-relaxed">
-                          Cancellations must be made at least 24 hours before the scheduled delivery/pickup time. 
-                          Cancellations within 24 hours may be subject to a cancellation fee.
+                          Title to and liability for Prohibited Waste shall remain with Customer at all times. 
+                          San Diego Dumping Solutions shall have the right to inspect, analyze, and/or test any waste delivered by customer.
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="font-semibold text-gray-900">6. Customer Responsibilities</h4>
+                        <h4 className="font-semibold text-gray-900">Acknowledgement:</h4>
                         <p className="text-gray-700 leading-relaxed">
-                          The customer is responsible for ensuring adequate space for container placement, 
-                          proper loading of materials, and compliance with all local ordinances and regulations. 
-                          Customer is liable for any damage to property during the rental period.
+                          Customer acknowledges that San Diego Dumping Solutions shall not be liable for any damage to driving surfaces 
+                          resulting from San Diego Dumping Solutions trucks serving containers on the agreed upon areas and the surroundings. 
+                          Customer acknowledges that they are not allowed to move around any roll-offs with their personal equipment or a third party's equipment.
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="font-semibold text-gray-900">7. Liability</h4>
+                        <h4 className="font-semibold text-gray-900">Payment Terms:</h4>
                         <p className="text-gray-700 leading-relaxed">
-                          The customer assumes all liability for the container and its contents during the rental period. 
-                          SD Dumps is not responsible for any damage to property, injury to persons, or theft of container contents.
+                          Prepayment at the time of reservation is required by debit card or credit card, San Diego Dumping Solutions 
+                          will keep that card on file until the account is at a zero balance.
                         </p>
                       </div>
                     </div>
@@ -1444,8 +1469,7 @@ export function BookingForm({ user }: BookingFormProps) {
                   {/* Agreement Statement */}
                   <div className="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300 mt-6">
                     <p className="font-semibold text-gray-900">
-                      By signing below, I acknowledge that I have read, understood, and agree to be bound by all 
-                      the terms and conditions stated in this rental agreement.
+                      By signing, I am acknowledging that I have read and agree to terms listed in the entirety of the contract.
                     </p>
                   </div>
                 </div>
