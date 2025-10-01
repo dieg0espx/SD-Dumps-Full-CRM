@@ -178,10 +178,41 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
               id,
               size,
               price_per_day
+            ),
+            profiles (
+              full_name,
+              email
             )
           `)
           .eq('id', finalBookingId)
           .single()
+
+        // Send booking confirmation emails
+        try {
+          await fetch('/api/send-booking-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingId: updatedBooking.id,
+              customerName: updatedBooking.profiles?.full_name || user.email?.split('@')[0] || 'Customer',
+              customerEmail: updatedBooking.profiles?.email || user.email,
+              containerType: updatedBooking.container_types?.size || 'Container',
+              startDate: new Date(updatedBooking.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+              endDate: new Date(updatedBooking.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+              serviceType: updatedBooking.service_type,
+              totalAmount: updatedBooking.total_amount,
+              deliveryAddress: updatedBooking.delivery_address,
+              pickupTime: updatedBooking.pickup_time,
+              notes: updatedBooking.notes || undefined,
+            }),
+          })
+          console.log('✅ Booking confirmation emails sent')
+        } catch (emailError) {
+          console.error('⚠️ Email sending failed (non-critical):', emailError)
+          // Don't throw error - email failure shouldn't stop the booking process
+        }
 
         onSuccess(updatedBooking)
       }
