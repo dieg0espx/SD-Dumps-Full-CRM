@@ -271,17 +271,6 @@ export function BookingForm({ user }: BookingFormProps) {
   const applianceAmount = (applianceCount || 0) * 30
   const totalAmount = baseTotalAmount + extraTonnageAmount + applianceAmount
 
-  console.log("Price calculation:", {
-    totalDays,
-    baseAmount,
-    baseTotalAmount,
-    extraTonnageAmount,
-    applianceAmount,
-    totalAmount,
-    startDate: startDate?.toISOString(),
-    endDate: endDate?.toISOString(),
-  })
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Remove the automatic step check that was causing auto-redirect
@@ -314,22 +303,13 @@ export function BookingForm({ user }: BookingFormProps) {
       
       const cloudinaryConfig = getCloudinaryConfig()
       if (!cloudinaryConfig.isConfigured) {
-        console.warn('⚠️ Cloudinary not configured')
         setError('Cloudinary not configured. Please contact support.')
         return
       }
       
-      console.log('☁️ Uploading signature to Cloudinary...')
       const tempBookingId = `temp_${Date.now()}_${user.id.slice(0, 8)}`
-      
       const cloudinaryUrl = await uploadSignatureToCloudinary(base64Data, tempBookingId)
       setSignatureImgUrl(cloudinaryUrl)
-      
-      console.log('✅ ✅ ✅ SIGNATURE UPLOADED TO CLOUDINARY ✅ ✅ ✅')
-      console.log('\n' + '='.repeat(80))
-      console.log('CLOUDINARY SIGNATURE URL:')
-      console.log(cloudinaryUrl)
-      console.log('='.repeat(80) + '\n')
       
       setTimeout(() => {
         setCurrentStep(7)
@@ -421,21 +401,6 @@ export function BookingForm({ user }: BookingFormProps) {
         throw new Error(`Failed to create booking: ${bookingError.message}`)
       }
 
-      console.log("Booking created successfully:", {
-        bookingId: booking.id,
-        bookingStatus: booking.status,
-        signatureImgUrl: booking.signature_img_url
-      })
-
-      // Signature URL already stored in bookings table
-      if (signatureImgUrl) {
-        console.log('✅ ✅ ✅ SIGNATURE STORED IN BOOKINGS TABLE ✅ ✅ ✅')
-        console.log('\n' + '='.repeat(80))
-        console.log('CLOUDINARY URL STORED IN BOOKINGS TABLE:')
-        console.log(signatureImgUrl)
-        console.log('Booking ID:', booking.id)
-        console.log('='.repeat(80) + '\n')
-      }
 
       // Skip payment processing for Stripe as it's handled by its component
       let paymentResult = null
@@ -457,8 +422,6 @@ export function BookingForm({ user }: BookingFormProps) {
           throw new Error(`Failed to create payment record: ${paymentError.message}`)
         }
 
-        console.log("Payment record created successfully")
-
         // Update booking status
         const { error: updateError } = await supabase
           .from("bookings")
@@ -473,8 +436,6 @@ export function BookingForm({ user }: BookingFormProps) {
           console.error("Booking update error:", updateError)
           throw new Error(`Failed to update booking status: ${updateError.message}`)
         }
-
-        console.log("Booking status updated successfully")
       }
 
       // Set success state with booking data
@@ -585,21 +546,6 @@ export function BookingForm({ user }: BookingFormProps) {
         throw new Error(`Failed to create booking: ${bookingError.message}`)
       }
 
-      console.log("Booking created successfully:", {
-        bookingId: booking.id,
-        bookingStatus: booking.status,
-        signatureImgUrl: booking.signature_img_url
-      })
-
-      // Signature URL already stored in bookings table
-      if (signatureImgUrl) {
-        console.log('✅ ✅ ✅ SIGNATURE STORED IN BOOKINGS TABLE (PAYMENT SUCCESS) ✅ ✅ ✅')
-        console.log('\n' + '='.repeat(80))
-        console.log('CLOUDINARY URL STORED IN BOOKINGS TABLE:')
-        console.log(signatureImgUrl)
-        console.log('Booking ID:', booking.id)
-        console.log('='.repeat(80) + '\n')
-      }
 
       // Create payment record
       const { error: paymentError } = await supabase.from("payments").insert({
@@ -614,8 +560,6 @@ export function BookingForm({ user }: BookingFormProps) {
         console.error("Payment creation error:", paymentError)
         throw new Error(`Failed to create payment record: ${paymentError.message}`)
       }
-
-      console.log("[v0] Payment record created successfully")
 
       // Set success state with booking data
       setSuccessData({
@@ -1530,10 +1474,8 @@ export function BookingForm({ user }: BookingFormProps) {
                                 }}
                                 onApprove={(data, actions) => {
                                   return actions.order!.capture().then((details) => {
-                                    console.log('Payment completed:', details)
                                     setIsSuccess(true)
                                     setError(null)
-                                    // Handle successful payment
                                     handlePaymentSuccess('paypal', details.id || 'paypal_transaction')
                                   })
                                 }}
@@ -1542,7 +1484,6 @@ export function BookingForm({ user }: BookingFormProps) {
                                   setError('Payment failed. Please try again.')
                                 }}
                                 onCancel={() => {
-                                  console.log('Payment cancelled')
                                   setError('Payment was cancelled.')
                                 }}
                                 style={{

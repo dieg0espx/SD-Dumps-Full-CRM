@@ -9,12 +9,6 @@ export async function uploadSignatureToCloudinary(
   bookingId: string
 ): Promise<string> {
   try {
-    console.log('☁️ Uploading signature to Cloudinary via API:', {
-      base64Length: base64Data.length,
-      bookingId,
-      estimatedSizeKB: Math.round((base64Data.length * 3) / 4 / 1024)
-    })
-
     // Call the server-side API route
     const response = await fetch('/api/upload-signature', {
       method: 'POST',
@@ -34,15 +28,6 @@ export async function uploadSignatureToCloudinary(
 
     const result = await response.json()
 
-    console.log('✅ Signature uploaded to Cloudinary:', {
-      cloudinaryUrl: result.cloudinaryUrl,
-      publicId: result.publicId,
-      format: result.format,
-      width: result.width,
-      height: result.height,
-      bytes: result.bytes
-    })
-
     return result.cloudinaryUrl
   } catch (error) {
     console.error('❌ Cloudinary upload error:', error)
@@ -57,8 +42,6 @@ export async function uploadSignatureToCloudinary(
  */
 export async function deleteSignatureFromCloudinary(publicId: string): Promise<void> {
   try {
-    console.log('🗑️ Deleting signature from Cloudinary via API:', { publicId })
-    
     // Call the server-side API route for deletion
     const response = await fetch('/api/delete-signature', {
       method: 'DELETE',
@@ -75,9 +58,7 @@ export async function deleteSignatureFromCloudinary(publicId: string): Promise<v
 
     const result = await response.json()
     
-    if (result.success) {
-      console.log('✅ Signature deleted from Cloudinary:', { publicId })
-    } else {
+    if (!result.success) {
       console.warn('⚠️ Signature deletion result:', result)
     }
   } catch (error) {

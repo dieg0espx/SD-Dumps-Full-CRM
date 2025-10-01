@@ -75,8 +75,6 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         }
 
         // Create the booking
-        console.log('🔍 STRIPE DEBUG: bookingData.signature_img_url:', bookingData.signature_img_url)
-        
         const { data: booking, error: bookingError } = await supabase
           .from("bookings")
           .insert({
@@ -96,8 +94,6 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
           })
           .select()
           .single()
-        
-        console.log('✅ Booking created with signature_img_url:', booking?.signature_img_url)
 
         if (bookingError) throw bookingError
         finalBookingId = booking.id

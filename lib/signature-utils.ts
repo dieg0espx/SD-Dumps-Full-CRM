@@ -30,12 +30,6 @@ export function extractBase64FromDataUrl(dataUrl: string): string {
       throw new Error('Signature data too small - please draw a proper signature')
     }
     
-    console.log('✅ Extracted PNG base64 data:', {
-      base64Length: base64Data.length,
-      estimatedSizeKB: Math.round((base64Data.length * 3) / 4 / 1024),
-      preview: base64Data.substring(0, 50) + '...'
-    })
-    
     return base64Data
   } catch (error) {
     console.error('Error extracting base64 from data URL:', error)
