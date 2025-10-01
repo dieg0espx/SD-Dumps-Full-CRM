@@ -145,10 +145,13 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
       console.log('Payment confirmation result:', { 
         hasError: !!stripeError, 
         hasIntent: !!paymentIntent,
-        intentStatus: paymentIntent?.status 
+        intentStatus: paymentIntent?.status,
+        intentId: paymentIntent?.id,
+        intentAmount: paymentIntent?.amount
       })
 
       if (stripeError) {
+        console.error('❌ Stripe payment error:', stripeError)
         // Update booking status for failed payment
         await supabase
           .from('bookings')
@@ -170,10 +173,21 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         throw new Error(stripeError.message || 'Payment failed')
       }
 
-      // Check if paymentIntent exists
+      // Check if paymentIntent exists and has required properties
       if (!paymentIntent) {
         throw new Error('Payment intent is null. Please try again.')
       }
+
+      if (!paymentIntent.id) {
+        console.error('Payment intent missing ID:', paymentIntent)
+        throw new Error('Payment intent is invalid. Please try again.')
+      }
+
+      console.log('✅ Payment confirmed:', {
+        id: paymentIntent.id,
+        status: paymentIntent.status,
+        amount: paymentIntent.amount
+      })
 
       if (paymentIntent.status === 'succeeded') {
         // Update booking status directly
@@ -186,12 +200,15 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
           })
           .eq('id', finalBookingId)
 
-        // Create payment record
+        // Create payment record with safe property access
+        const transactionId = paymentIntent.id || `stripe_${Date.now()}`
+        const paymentAmount = (paymentIntent.amount || amount * 100) / 100
+
         await supabase.from('payments').insert({
           booking_id: finalBookingId,
-          amount: paymentIntent.amount / 100, // Convert from cents
+          amount: paymentAmount,
           payment_method: 'stripe',
-          transaction_id: paymentIntent.id,
+          transaction_id: transactionId,
           status: 'completed',
         })
 
