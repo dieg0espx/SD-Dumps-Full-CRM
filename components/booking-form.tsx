@@ -17,6 +17,9 @@ import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { StripeElements } from "@/components/stripe-elements"
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
+import { SignaturePad } from "@/components/signature-pad"
+import { extractBase64FromDataUrl, getSignatureInfo } from "@/lib/signature-utils"
+import { uploadSignatureToCloudinary, getCloudinaryConfig } from "@/lib/cloudinary"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -100,10 +103,14 @@ export function BookingForm({ user }: BookingFormProps) {
   const [successData, setSuccessData] = useState<any>(null)
   const [isMobile, setIsMobile] = useState(false)
 
+  // Signature state
+  const [signatureImgUrl, setSignatureImgUrl] = useState<string>("")
+
   const router = useRouter()
   const supabase = createClient()
 
-  const totalSteps = isSuccess ? 7 : 6
+
+  const totalSteps = isSuccess ? 8 : 7
 
   useEffect(() => {
     const checkMobile = () => {
@@ -139,8 +146,6 @@ export function BookingForm({ user }: BookingFormProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log("[v0] Loading container types...")
-
         // Load container types - explicitly filter out hidden ones
         const { data: containers, error: containerError } = await supabase
           .from("container_types")
@@ -149,11 +154,10 @@ export function BookingForm({ user }: BookingFormProps) {
           .order("price_per_day")
 
         if (containerError) {
-          console.error("[v0] Container error:", containerError)
+          console.error("Container error:", containerError)
           throw containerError
         }
 
-        console.log("[v0] Loaded containers:", containers)
         setContainerTypes(containers || [])
 
         // Load existing bookings for availability checking
@@ -163,11 +167,10 @@ export function BookingForm({ user }: BookingFormProps) {
           .in("status", ["confirmed", "pending"])
 
         if (bookingError) {
-          console.error("[v0] Booking error:", bookingError)
+          console.error("Booking error:", bookingError)
           throw bookingError
         }
 
-        console.log("[v0] Loaded bookings:", bookings)
         setExistingBookings(bookings || [])
 
         // Load user profile
@@ -178,13 +181,12 @@ export function BookingForm({ user }: BookingFormProps) {
           .single()
 
         if (profileError) {
-          console.error("[v0] Profile error:", profileError)
+          console.error("Profile error:", profileError)
         } else {
-          console.log("[v0] Loaded profile:", profile)
           setProfile(profile)
         }
       } catch (error) {
-        console.error("[v0] Error loading data:", error)
+        console.error("Error loading data:", error)
         setError("Failed to load container types. Please refresh the page.")
       } finally {
         setLoadingData(false)
@@ -269,7 +271,7 @@ export function BookingForm({ user }: BookingFormProps) {
   const applianceAmount = (applianceCount || 0) * 30
   const totalAmount = baseTotalAmount + extraTonnageAmount + applianceAmount
 
-  console.log("[v0] Price calculation:", {
+  console.log("Price calculation:", {
     totalDays,
     baseAmount,
     baseTotalAmount,
@@ -300,6 +302,47 @@ export function BookingForm({ user }: BookingFormProps) {
       transaction_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       status: "completed",
     }
+  }
+
+  const handleSignatureComplete = async (dataUrl: string) => {
+    try {
+      if (!dataUrl.startsWith('data:image/png;base64,')) {
+        throw new Error('Signature must be in PNG format')
+      }
+      
+      const base64Data = extractBase64FromDataUrl(dataUrl)
+      
+      const cloudinaryConfig = getCloudinaryConfig()
+      if (!cloudinaryConfig.isConfigured) {
+        console.warn('⚠️ Cloudinary not configured')
+        setError('Cloudinary not configured. Please contact support.')
+        return
+      }
+      
+      console.log('☁️ Uploading signature to Cloudinary...')
+      const tempBookingId = `temp_${Date.now()}_${user.id.slice(0, 8)}`
+      
+      const cloudinaryUrl = await uploadSignatureToCloudinary(base64Data, tempBookingId)
+      setSignatureImgUrl(cloudinaryUrl)
+      
+      console.log('✅ ✅ ✅ SIGNATURE UPLOADED TO CLOUDINARY ✅ ✅ ✅')
+      console.log('\n' + '='.repeat(80))
+      console.log('CLOUDINARY SIGNATURE URL:')
+      console.log(cloudinaryUrl)
+      console.log('='.repeat(80) + '\n')
+      
+      setTimeout(() => {
+        setCurrentStep(7)
+      }, 1000)
+      
+    } catch (error) {
+      console.error('❌ Signature upload error:', error)
+      setError(error instanceof Error ? error.message : 'Failed to upload signature')
+    }
+  }
+
+  const handleSignatureClear = () => {
+    setSignatureImgUrl("")
   }
 
   const handlePaymentSubmit = async () => {
@@ -345,32 +388,54 @@ export function BookingForm({ user }: BookingFormProps) {
         await supabase.from("profiles").update({ phone: currentUser.user_metadata.phone }).eq("id", user.id)
       }
 
-      // Create the booking
+      // Create the booking with signature URL
+      const insertData = {
+        user_id: user.id,
+        container_type_id: selectedContainer,
+        start_date: format(startDate, "yyyy-MM-dd"),
+        end_date: format(endDate, "yyyy-MM-dd"),
+        pickup_time: pickupTime,
+        delivery_address: deliveryAddress,
+        customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
+        service_type: serviceType,
+        total_amount: totalAmount,
+        notes: notes.trim() || null,
+        status: "pending",
+        payment_status: "pending",
+        signature_img_url: signatureImgUrl || null,
+      }
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
-        .insert({
-          user_id: user.id,
-          container_type_id: selectedContainer,
-          start_date: format(startDate, "yyyy-MM-dd"),
-          end_date: format(endDate, "yyyy-MM-dd"),
-          pickup_time: pickupTime,
-          delivery_address: deliveryAddress,
-          customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
-          service_type: serviceType,
-          total_amount: totalAmount,
-          notes: notes.trim() || null,
-          status: "pending",
-          payment_status: "pending",
-        })
+        .insert(insertData)
         .select()
         .single()
 
       if (bookingError) {
-        console.error("[v0] Booking creation error:", bookingError)
+        console.error("Booking creation error:", bookingError)
+        console.error("Full error details:", {
+          message: bookingError.message,
+          details: bookingError.details,
+          hint: bookingError.hint,
+          code: bookingError.code
+        })
         throw new Error(`Failed to create booking: ${bookingError.message}`)
       }
 
-      console.log("[v0] Booking created successfully:", booking)
+      console.log("Booking created successfully:", {
+        bookingId: booking.id,
+        bookingStatus: booking.status,
+        signatureImgUrl: booking.signature_img_url
+      })
+
+      // Signature URL already stored in bookings table
+      if (signatureImgUrl) {
+        console.log('✅ ✅ ✅ SIGNATURE STORED IN BOOKINGS TABLE ✅ ✅ ✅')
+        console.log('\n' + '='.repeat(80))
+        console.log('CLOUDINARY URL STORED IN BOOKINGS TABLE:')
+        console.log(signatureImgUrl)
+        console.log('Booking ID:', booking.id)
+        console.log('='.repeat(80) + '\n')
+      }
 
       // Skip payment processing for Stripe as it's handled by its component
       let paymentResult = null
@@ -388,11 +453,11 @@ export function BookingForm({ user }: BookingFormProps) {
         })
 
         if (paymentError) {
-          console.error("[v0] Payment creation error:", paymentError)
+          console.error("Payment creation error:", paymentError)
           throw new Error(`Failed to create payment record: ${paymentError.message}`)
         }
 
-        console.log("[v0] Payment record created successfully")
+        console.log("Payment record created successfully")
 
         // Update booking status
         const { error: updateError } = await supabase
@@ -405,11 +470,11 @@ export function BookingForm({ user }: BookingFormProps) {
           .eq("id", booking.id)
 
         if (updateError) {
-          console.error("[v0] Booking update error:", updateError)
+          console.error("Booking update error:", updateError)
           throw new Error(`Failed to update booking status: ${updateError.message}`)
         }
 
-        console.log("[v0] Booking status updated successfully")
+        console.log("Booking status updated successfully")
       }
 
       // Set success state with booking data
@@ -433,9 +498,9 @@ export function BookingForm({ user }: BookingFormProps) {
         }
       })
       setIsSuccess(true)
-      setCurrentStep(7)
+      setCurrentStep(8)
     } catch (error: unknown) {
-      console.error("[v0] Payment error:", error)
+      console.error("Payment error:", error)
       if (error instanceof Error) {
         setError(error.message)
       } else {
@@ -487,32 +552,54 @@ export function BookingForm({ user }: BookingFormProps) {
         await supabase.from("profiles").update({ phone: currentUser.user_metadata.phone }).eq("id", user.id)
       }
 
-      // Create the booking
+      // Create the booking with signature URL
+      const insertData = {
+        user_id: user.id,
+        container_type_id: selectedContainer,
+        start_date: format(startDate, "yyyy-MM-dd"),
+        end_date: format(endDate, "yyyy-MM-dd"),
+        pickup_time: pickupTime,
+        delivery_address: deliveryAddress,
+        customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
+        service_type: serviceType,
+        total_amount: totalAmount,
+        notes: notes.trim() || null,
+        status: "confirmed",
+        payment_status: "paid",
+        signature_img_url: signatureImgUrl || null,
+      }
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
-        .insert({
-          user_id: user.id,
-          container_type_id: selectedContainer,
-          start_date: format(startDate, "yyyy-MM-dd"),
-          end_date: format(endDate, "yyyy-MM-dd"),
-          pickup_time: pickupTime,
-          delivery_address: deliveryAddress,
-          customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
-          service_type: serviceType,
-          total_amount: totalAmount,
-          notes: notes.trim() || null,
-          status: "confirmed",
-          payment_status: "paid",
-        })
+        .insert(insertData)
         .select()
         .single()
 
       if (bookingError) {
-        console.error("[v0] Booking creation error:", bookingError)
+        console.error("Booking creation error:", bookingError)
+        console.error("Full error details:", {
+          message: bookingError.message,
+          details: bookingError.details,
+          hint: bookingError.hint,
+          code: bookingError.code
+        })
         throw new Error(`Failed to create booking: ${bookingError.message}`)
       }
 
-      console.log("[v0] Booking created successfully:", booking)
+      console.log("Booking created successfully:", {
+        bookingId: booking.id,
+        bookingStatus: booking.status,
+        signatureImgUrl: booking.signature_img_url
+      })
+
+      // Signature URL already stored in bookings table
+      if (signatureImgUrl) {
+        console.log('✅ ✅ ✅ SIGNATURE STORED IN BOOKINGS TABLE (PAYMENT SUCCESS) ✅ ✅ ✅')
+        console.log('\n' + '='.repeat(80))
+        console.log('CLOUDINARY URL STORED IN BOOKINGS TABLE:')
+        console.log(signatureImgUrl)
+        console.log('Booking ID:', booking.id)
+        console.log('='.repeat(80) + '\n')
+      }
 
       // Create payment record
       const { error: paymentError } = await supabase.from("payments").insert({
@@ -524,7 +611,7 @@ export function BookingForm({ user }: BookingFormProps) {
       })
 
       if (paymentError) {
-        console.error("[v0] Payment creation error:", paymentError)
+        console.error("Payment creation error:", paymentError)
         throw new Error(`Failed to create payment record: ${paymentError.message}`)
       }
 
@@ -541,9 +628,9 @@ export function BookingForm({ user }: BookingFormProps) {
         }
       })
       setIsSuccess(true)
-      setCurrentStep(7)
+      setCurrentStep(8)
     } catch (error: unknown) {
-      console.error("[v0] Payment success error:", error)
+      console.error("Payment success error:", error)
       if (error instanceof Error) {
         setError(error.message)
       } else {
@@ -584,6 +671,10 @@ export function BookingForm({ user }: BookingFormProps) {
         return true
       case 5:
         return true
+      case 6:
+        return signatureImgUrl !== ""
+      case 7:
+        return paymentMethod !== ""
       default:
         return true
     }
@@ -645,8 +736,9 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 3 && "Service & Address"}
             {currentStep === 4 && "Additional Services"}
             {currentStep === 5 && "Review & Book"}
-            {currentStep === 6 && "Payment"}
-            {currentStep === 7 && "Booking Confirmed!"}
+            {currentStep === 6 && "Digital Signature"}
+            {currentStep === 7 && "Payment"}
+            {currentStep === 8 && "Booking Confirmed!"}
           </h2>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">
             {currentStep === 1 && "Choose the perfect container size for your project"}
@@ -654,8 +746,9 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 3 && "Configure service options and addresses"}
             {currentStep === 4 && "Add optional services"}
             {currentStep === 5 && "Review and confirm your booking"}
-            {currentStep === 6 && "Complete your payment securely"}
-            {currentStep === 7 && "Your booking has been successfully confirmed"}
+            {currentStep === 6 && "Sign to confirm your booking agreement"}
+            {currentStep === 7 && "Complete your payment securely"}
+            {currentStep === 8 && "Your booking has been successfully confirmed"}
           </p>
         </div>
       </div>
@@ -1266,6 +1359,26 @@ export function BookingForm({ user }: BookingFormProps) {
 
         {currentStep === 6 && (
           <div className="space-y-6">
+            <Card className="border-0">
+              <CardHeader className="text-center pb-6">
+                <CardTitle className="text-2xl">Digital Signature</CardTitle>
+                <CardDescription className="text-lg">
+                  Please sign below to confirm your booking agreement and terms of service
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SignaturePad
+                  onSignatureComplete={handleSignatureComplete}
+                  onClear={handleSignatureClear}
+                  disabled={isLoading}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {currentStep === 7 && (
+          <div className="space-y-6">
             {/* Order Summary */}
             <Card className="border-0">
               <CardHeader className="text-center pb-6">
@@ -1371,10 +1484,11 @@ export function BookingForm({ user }: BookingFormProps) {
                               pickup_time: pickupTime,
                               notes: notes,
                               phone: profile?.phone,
+                              signature_img_url: signatureImgUrl,
                             }}
                             onSuccess={(bookingData) => {
                               setIsSuccess(true)
-                              setCurrentStep(7)
+                              setCurrentStep(8)
                               setSuccessData({
                                 booking: bookingData,
                                 payment: {
@@ -1456,7 +1570,7 @@ export function BookingForm({ user }: BookingFormProps) {
           </div>
         )}
 
-        {currentStep === 7 && isSuccess && successData && (
+        {currentStep === 8 && isSuccess && successData && (
           <div className="space-y-6 relative z-10">
             <Card className="border-0">
               <CardHeader className="text-center pb-6">
@@ -1595,6 +1709,16 @@ export function BookingForm({ user }: BookingFormProps) {
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           ) : currentStep === 6 ? (
+            <Button 
+              type="button" 
+              onClick={nextStep} 
+              disabled={!canProceedToNextStep()} 
+              className="flex items-center order-1 sm:order-2"
+            >
+              Continue to Payment
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : currentStep === 7 ? (
             // No submit button needed for Stripe as it handles its own submission
             null
           ) : (
@@ -1625,6 +1749,7 @@ export function BookingForm({ user }: BookingFormProps) {
                   setApplianceCount(0)
                   setNotes("")
                   setPaymentMethod("stripe")
+                  setSignatureImgUrl("")
                 }}
                 className="flex items-center"
               >
