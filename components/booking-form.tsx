@@ -563,7 +563,8 @@ export function BookingForm({ user }: BookingFormProps) {
 
       // Send booking confirmation emails
       try {
-        await fetch('/api/send-booking-email', {
+        console.log('📧 Attempting to send booking confirmation emails...')
+        const emailResponse = await fetch('/api/send-booking-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -582,7 +583,15 @@ export function BookingForm({ user }: BookingFormProps) {
             notes: notes.trim() || undefined,
           }),
         })
-        console.log('✅ Booking confirmation emails sent')
+        
+        if (!emailResponse.ok) {
+          const errorData = await emailResponse.json()
+          console.error('❌ Email API error:', errorData)
+          throw new Error(`Email API returned ${emailResponse.status}: ${errorData.error}`)
+        }
+        
+        const emailResult = await emailResponse.json()
+        console.log('✅ Booking confirmation emails sent successfully:', emailResult)
       } catch (emailError) {
         console.error('⚠️ Email sending failed (non-critical):', emailError)
         // Don't throw error - email failure shouldn't stop the booking process
@@ -1565,7 +1574,44 @@ export function BookingForm({ user }: BookingFormProps) {
                               phone: profile?.phone,
                               signature_img_url: signatureImgUrl,
                             }}
-                            onSuccess={(bookingData) => {
+                            onSuccess={async (bookingData) => {
+                              // Send booking confirmation emails
+                              try {
+                                console.log('📧 Attempting to send booking confirmation emails (Stripe)...')
+                                const emailResponse = await fetch('/api/send-booking-email', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({
+                                    bookingId: bookingData.id,
+                                    customerName: profile?.full_name || user.email?.split('@')[0] || 'Customer',
+                                    customerEmail: user.email,
+                                    containerType: bookingData.container_types?.size || containerTypes.find(c => c.id === selectedContainer)?.size || 'Container',
+                                    startDate: format(startDate!, "MMMM dd, yyyy"),
+                                    endDate: format(endDate!, "MMMM dd, yyyy"),
+                                    serviceType: serviceType,
+                                    totalAmount: totalAmount,
+                                    deliveryAddress: serviceType === 'delivery' ? `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}` : null,
+                                    pickupTime: pickupTime,
+                                    notes: notes.trim() || undefined,
+                                  }),
+                                })
+                                
+                                if (!emailResponse.ok) {
+                                  const errorData = await emailResponse.json()
+                                  console.error('❌ Email API error:', errorData)
+                                  throw new Error(`Email API returned ${emailResponse.status}: ${errorData.error}`)
+                                }
+                                
+                                const emailResult = await emailResponse.json()
+                                console.log('✅ Booking confirmation emails sent successfully:', emailResult)
+                              } catch (emailError) {
+                                console.error('⚠️ Email sending failed (non-critical):', emailError)
+                                // Don't throw error - email failure shouldn't stop the booking process
+                              }
+
+                              // Show success page
                               setIsSuccess(true)
                               setCurrentStep(8)
                               setSuccessData({
@@ -1660,6 +1706,22 @@ export function BookingForm({ user }: BookingFormProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
+                  {/* Email Confirmation Notice */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="h-5 w-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <div>
+                        <p className="font-medium text-blue-900">Confirmation emails sent!</p>
+                        <p className="text-sm text-blue-700 mt-1">
+                          A confirmation email has been sent to <strong>{user.email}</strong> with your booking details. 
+                          Our team has also been notified and will contact you 24 hours before your scheduled service.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Booking Confirmation */}
                   <Card className="border border-gray-200">
                     <CardHeader>
