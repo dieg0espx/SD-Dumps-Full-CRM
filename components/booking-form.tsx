@@ -637,18 +637,18 @@ export function BookingForm({ user }: BookingFormProps) {
 
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6 sm:mb-8">
+    <div className="w-full max-w-7xl mx-auto px-1 sm:px-6 lg:px-8">
+      <div className="mb-4 sm:mb-6 lg:mb-8">
         {!isSuccess && (
           <div className="relative">
-            <div className="flex items-center justify-center overflow-x-auto pb-2">
-                            <div className="flex items-center justify-center w-[90%] max-w-md">
+            <div className="flex items-center justify-center overflow-x-auto pb-2 px-1">
+              <div className="flex items-center justify-center min-w-max">
                 {Array.from({ length: totalSteps }, (_, i) => (
                   <div key={i} className="flex items-center">
-                    <div className="relative flex items-center justify-center -mx-1 sm:-mx-2">
+                    <div className="relative flex items-center justify-center">
                       <div
                         className={cn(
-                          "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold border-2 transition-all duration-200 z-10 bg-white",
+                          "w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center text-xs sm:text-sm lg:text-base font-semibold border-2 transition-all duration-200 z-10 bg-white",
                           i + 1 <= currentStep
                             ? "bg-blue-600 text-white border-blue-600"
                             : "bg-white text-gray-400 border-gray-300",
@@ -658,7 +658,7 @@ export function BookingForm({ user }: BookingFormProps) {
                       </div>
                     </div>
                     {i < totalSteps - 1 && (
-                      <div className="h-0.5 w-8 sm:w-12">
+                      <div className="h-0.5 w-4 sm:w-6 md:w-8 lg:w-12 xl:w-16">
                         <div
                           className={cn(
                             "h-full transition-all duration-200",
@@ -669,12 +669,12 @@ export function BookingForm({ user }: BookingFormProps) {
                     )}
                   </div>
                 ))}
-                </div>
               </div>
+            </div>
           </div>
         )}
-        <div className="mt-4 sm:mt-6 text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+        <div className="mt-3 sm:mt-4 lg:mt-6 text-center px-2">
+          <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
             {currentStep === 1 && "Select Container"}
             {currentStep === 2 && "Choose Dates"}
             {currentStep === 3 && "Service & Address"}
@@ -684,7 +684,7 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 7 && "Payment"}
             {currentStep === 8 && "Booking Confirmed!"}
           </h2>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+          <p className="text-gray-600 mt-1 text-xs sm:text-sm md:text-base lg:text-lg max-w-3xl mx-auto">
             {currentStep === 1 && "Choose the perfect container size for your project"}
             {currentStep === 2 && "Select your rental dates"}
             {currentStep === 3 && "Configure service options and addresses"}
@@ -699,71 +699,71 @@ export function BookingForm({ user }: BookingFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {currentStep === 1 && (
-          <Card className="border-0">
-            <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl">Select Container Type</CardTitle>
-              <CardDescription className="text-lg">
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="text-center pb-4 sm:pb-6 px-2 sm:px-6">
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Select Container Type</CardTitle>
+              <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">
                 Choose the container size that best fits your project
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-2 sm:px-6">
               {containerTypes.length === 0 ? (
-                <div className="text-center p-8">
-                  <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-2 text-lg">No container types available</p>
-                  <p className="text-gray-400">Please contact support or try refreshing the page.</p>
+                <div className="text-center p-4 sm:p-6 lg:p-8">
+                  <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-2 text-base sm:text-lg">No container types available</p>
+                  <p className="text-gray-400 text-sm sm:text-base">Please contact support or try refreshing the page.</p>
                 </div>
               ) : (
                 <RadioGroup value={selectedContainer} onValueChange={setSelectedContainer}>
-                  <div className="grid gap-4 sm:gap-6">
+                  <div className="grid gap-3 sm:gap-4 lg:gap-6">
                     {containerTypes.map((container) => (
                       <div key={container.id} className="relative">
                         <RadioGroupItem value={container.id} id={container.id} className="sr-only" />
                         <Label
                           htmlFor={container.id}
                           className={cn(
-                            "block cursor-pointer rounded-xl border-2 p-4 sm:p-6 transition-all duration-200",
+                            "block cursor-pointer rounded-xl border-2 p-3 sm:p-4 lg:p-6 transition-all duration-200",
                             selectedContainer === container.id
-                              ? "border-blue-600 bg-blue-50"
-                              : "border-gray-200 bg-white hover:border-gray-300",
+                              ? "border-blue-600 bg-blue-50 shadow-md"
+                              : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm",
                           )}
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="flex items-center space-x-3 sm:space-x-4">
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+                            <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
                               <div
                                 className={cn(
-                                  "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0",
+                                  "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center flex-shrink-0",
                                   selectedContainer === container.id
                                     ? "bg-blue-600 text-white"
                                     : "bg-gray-100 text-gray-600",
                                 )}
                               >
-                                <Truck className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <Truck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="text-lg sm:text-xl font-bold text-gray-900">{container.size}</div>
-                                <div className="text-gray-600 mt-1 text-sm sm:text-base">{container.description}</div>
-                                <div className="flex flex-col sm:flex-row sm:items-center mt-2 gap-2 sm:gap-4">
-                                  <div className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 break-words">{container.size}</div>
+                                <div className="text-gray-600 mt-1 text-xs sm:text-sm lg:text-base break-words">{container.description}</div>
+                                <div className="flex flex-col sm:flex-row sm:items-center mt-2 gap-1 sm:gap-2 md:gap-3">
+                                  <div className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block">
                                     Available: {container.available_quantity} units
                                   </div>
-                                  <div className="text-xs sm:text-sm text-green-600 bg-green-100 px-2 py-1 rounded">
+                                  <div className="text-xs sm:text-sm text-green-600 bg-green-100 px-2 py-1 rounded inline-block">
                                     Includes 2 tons
                                   </div>
                                 </div>
                               </div>
                             </div>
-                            <div className="text-center sm:text-right">
-                              <div className="text-2xl sm:text-3xl font-bold text-gray-900">
+                            <div className="text-left sm:text-center lg:text-right lg:flex-shrink-0">
+                              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                                 {formatCurrency(container.price_per_day)}
                               </div>
-                              <div className="text-xs sm:text-sm text-gray-500">per rental</div>
+                              <div className="text-xs sm:text-sm lg:text-base text-gray-500">per rental</div>
                             </div>
                           </div>
                           {selectedContainer === container.id && (
-                            <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
-                              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4">
+                              <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                                <svg className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                   <path
                                     fillRule="evenodd"
                                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -784,22 +784,22 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 2 && (
-          <Card className="border-0">
-            <CardHeader className="text-center pb-4 sm:pb-6">
-              <CardTitle className="text-xl sm:text-2xl">Select Rental Period</CardTitle>
-              <CardDescription className="text-base sm:text-lg">
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="text-center pb-4 sm:pb-6 px-2 sm:px-6">
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Select Rental Period</CardTitle>
+              <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">
                 Choose your start and end dates for the container rental
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-6">
-              <div className="bg-blue-50 rounded-xl p-3 sm:p-6 border border-blue-200">
-                <div className="flex items-center justify-center mb-2 sm:mb-4">
-                  <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                    <CalendarIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+            <CardContent className="space-y-4 sm:space-y-6 px-2 sm:px-6">
+              <div className="bg-blue-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-blue-200">
+                <div className="flex items-center justify-center mb-3 sm:mb-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-600 rounded-full flex items-center justify-center">
+                    <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
                   </div>
                 </div>
-                <div className="text-center mb-2 sm:mb-4">
-                  <Label className="text-sm sm:text-lg font-semibold text-gray-900">Select Date Range</Label>
+                <div className="text-center mb-3 sm:mb-4">
+                  <Label className="text-sm sm:text-lg lg:text-xl font-semibold text-gray-900">Select Date Range</Label>
                 </div>
                 {currentStep === 2 && (
                   <Popover>
@@ -807,20 +807,20 @@ export function BookingForm({ user }: BookingFormProps) {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full h-12 sm:h-14 justify-center text-left font-medium text-sm sm:text-base lg:text-lg border-2 hover:border-blue-300 transition-colors px-3 sm:px-4",
+                          "w-full h-12 sm:h-14 lg:h-16 justify-center text-left font-medium text-sm sm:text-base lg:text-lg border-2 hover:border-blue-300 transition-colors px-2 sm:px-4",
                           (!startDate || !endDate) && "text-muted-foreground",
                           startDate && endDate && "border-blue-600 bg-blue-50 text-blue-900",
                         )}
                       >
-                        <CalendarIcon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                        <span className="truncate">
+                        <CalendarIcon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 flex-shrink-0" />
+                        <span className="truncate text-xs sm:text-sm sm:text-base lg:text-lg">
                           {startDate && endDate
                             ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}`
                             : "Click to select your rental dates"}
                         </span>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)] sm:max-w-none z-50" align="center" side="bottom">
+                    <PopoverContent className="w-auto p-0 max-w-[calc(100vw-1rem)] sm:max-w-none z-50" align="center" side="bottom">
                       <Calendar
                         mode="range"
                         selected={{ from: startDate, to: endDate }}
@@ -843,7 +843,7 @@ export function BookingForm({ user }: BookingFormProps) {
                           unavailable: { backgroundColor: "#fee2e2", color: "#dc2626" },
                           limited: { backgroundColor: "#fef3c7", color: "#d97706" },
                         }}
-                        className="rounded-md border"
+                        className="rounded-md border shadow-lg"
                       />
                     </PopoverContent>
                   </Popover>
@@ -852,13 +852,13 @@ export function BookingForm({ user }: BookingFormProps) {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full h-12 sm:h-14 justify-center text-left font-medium text-sm sm:text-base lg:text-lg border-2 px-3 sm:px-4",
+                      "w-full h-12 sm:h-14 lg:h-16 justify-center text-left font-medium text-sm sm:text-base lg:text-lg border-2 px-2 sm:px-4",
                       startDate && endDate ? "border-blue-600 bg-blue-50 text-blue-900" : "border-gray-300 text-gray-500"
                     )}
                     disabled
                   >
-                    <CalendarIcon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                    <span className="truncate">
+                    <CalendarIcon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 flex-shrink-0" />
+                    <span className="truncate text-xs sm:text-sm sm:text-base lg:text-lg">
                       {startDate && endDate
                         ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}`
                         : "No dates selected"}
@@ -868,22 +868,22 @@ export function BookingForm({ user }: BookingFormProps) {
               </div>
 
               {selectedContainer && (
-                <div className="bg-gray-50 p-3 sm:p-6 rounded-xl border">
-                  <h4 className="font-semibold mb-2 sm:mb-4 text-gray-900 flex items-center text-sm sm:text-base">
+                <div className="bg-gray-50 p-4 sm:p-6 rounded-xl border">
+                  <h4 className="font-semibold mb-3 sm:mb-4 text-gray-900 flex items-center text-sm sm:text-base lg:text-lg">
                     <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
                     Availability Legend
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
                     <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white rounded-lg border">
-                      <div className="w-4 h-4 sm:w-6 sm:h-6 bg-white border-2 border-gray-300 rounded flex-shrink-0"></div>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 sm:w-5 sm:h-5 bg-white border-2 border-gray-300 rounded flex-shrink-0"></div>
                       <span className="font-medium text-gray-700 text-xs sm:text-sm lg:text-base">Available</span>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                      <div className="w-4 h-4 sm:w-6 sm:h-6 bg-yellow-200 rounded flex-shrink-0"></div>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 sm:w-5 sm:h-5 bg-yellow-200 rounded flex-shrink-0"></div>
                       <span className="font-medium text-yellow-800 text-xs sm:text-sm lg:text-base">Limited</span>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-red-50 rounded-lg border border-red-200">
-                      <div className="w-4 h-4 sm:w-6 sm:h-6 bg-red-200 rounded flex-shrink-0"></div>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 sm:w-5 sm:h-5 bg-red-200 rounded flex-shrink-0"></div>
                       <span className="font-medium text-red-800 text-xs sm:text-sm lg:text-base">Fully Booked</span>
                     </div>
                   </div>
@@ -891,11 +891,11 @@ export function BookingForm({ user }: BookingFormProps) {
               )}
 
               {totalDays > 1 && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-6 text-center">
-                  <div className="text-lg sm:text-2xl font-bold text-green-800 mb-1">
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 lg:p-8 text-center">
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-800 mb-1 sm:mb-2">
                     {totalDays} Day{totalDays > 1 ? "s" : ""}
                   </div>
-                  <div className="text-green-600 text-sm sm:text-base">Selected rental period</div>
+                  <div className="text-green-600 text-sm sm:text-base lg:text-lg">Selected rental period</div>
                 </div>
               )}
             </CardContent>
@@ -903,39 +903,39 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 3 && (
-          <div className="space-y-6">
-            <Card className="border-0">
-              <CardHeader className="text-center pb-6">
-                <CardTitle className="text-2xl">Service Options</CardTitle>
-                <CardDescription className="text-lg">Choose how you'd like to handle your container</CardDescription>
+          <div className="space-y-4 sm:space-y-6">
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="text-center pb-4 sm:pb-6 px-2 sm:px-6">
+                <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Service Options</CardTitle>
+                <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">Choose how you'd like to handle your container</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 sm:px-6">
                 <RadioGroup value={serviceType} onValueChange={setServiceType}>
-                  <div className="grid gap-4">
+                  <div className="grid gap-3 sm:gap-4 lg:gap-6">
                     <div className="relative">
                       <RadioGroupItem value="pickup" id="pickup" className="sr-only" />
                       <Label
                         htmlFor="pickup"
                         className={cn(
-                          "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200",
+                          "block cursor-pointer rounded-xl border-2 p-4 sm:p-6 transition-all duration-200",
                           serviceType === "pickup"
-                            ? "border-blue-600 bg-blue-50"
-                            : "border-gray-200 bg-white hover:border-gray-300",
+                            ? "border-blue-600 bg-blue-50 shadow-md"
+                            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm",
                         )}
                       >
-                        <div className="flex items-center space-x-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                           <div
                             className={cn(
-                              "w-12 h-12 rounded-full flex items-center justify-center",
+                              "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0",
                               serviceType === "pickup" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600",
                             )}
                           >
-                            <Truck className="w-6 h-6" />
+                            <Truck className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                           </div>
-                          <div className="flex-1">
-                            <div className="text-xl font-bold text-gray-900">Pickup Service</div>
-                            <div className="text-gray-600 mt-1">You pick up and return the container yourself</div>
-                            <div className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded mt-2 inline-block">
+                          <div className="flex-1 text-center sm:text-left">
+                            <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Pickup Service</div>
+                            <div className="text-gray-600 mt-1 text-sm sm:text-base">You pick up and return the container yourself</div>
+                            <div className="text-xs sm:text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded mt-2 inline-block">
                               Most economical option
                             </div>
                           </div>
@@ -948,25 +948,25 @@ export function BookingForm({ user }: BookingFormProps) {
                       <Label
                         htmlFor="delivery"
                         className={cn(
-                          "block cursor-pointer rounded-xl border-2 p-6 transition-all duration-200",
+                          "block cursor-pointer rounded-xl border-2 p-4 sm:p-6 transition-all duration-200",
                           serviceType === "delivery"
-                            ? "border-blue-600 bg-blue-50"
-                            : "border-gray-200 bg-white hover:border-gray-300",
+                            ? "border-blue-600 bg-blue-50 shadow-md"
+                            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm",
                         )}
                       >
-                        <div className="flex items-center space-x-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                           <div
                             className={cn(
-                              "w-12 h-12 rounded-full flex items-center justify-center",
+                              "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0",
                               serviceType === "delivery" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600",
                             )}
                           >
-                            <MapPin className="w-6 h-6" />
+                            <MapPin className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                           </div>
-                          <div className="flex-1">
-                            <div className="text-xl font-bold text-gray-900">Delivery Service</div>
-                            <div className="text-gray-600 mt-1">We deliver and pick up the container for you</div>
-                            <div className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded mt-2 inline-block">
+                          <div className="flex-1 text-center sm:text-left">
+                            <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Delivery Service</div>
+                            <div className="text-gray-600 mt-1 text-sm sm:text-base">We deliver and pick up the container for you</div>
+                            <div className="text-xs sm:text-sm text-green-600 bg-green-100 px-2 py-1 rounded mt-2 inline-block">
                               Most convenient option
                             </div>
                           </div>
@@ -976,8 +976,8 @@ export function BookingForm({ user }: BookingFormProps) {
                   </div>
                 </RadioGroup>
 
-                <div className="mt-6 bg-gray-50 rounded-xl p-6 border">
-                  <Label htmlFor="pickupTime" className="text-lg font-semibold text-gray-900 mb-3 block">
+                <div className="mt-4 sm:mt-6 bg-gray-50 rounded-xl p-4 sm:p-6 border">
+                  <Label htmlFor="pickupTime" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-3 block">
                     Preferred Time
                   </Label>
                   <Input
@@ -985,9 +985,9 @@ export function BookingForm({ user }: BookingFormProps) {
                     type="time"
                     value={pickupTime}
                     onChange={(e) => setPickupTime(e.target.value)}
-                    className="h-12 text-lg border-2 focus:border-blue-600"
+                    className="h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg border-2 focus:border-blue-600"
                   />
-                  <p className="text-sm text-gray-500 mt-2">We'll do our best to accommodate your preferred time</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-2">We'll do our best to accommodate your preferred time</p>
                 </div>
               </CardContent>
             </Card>
@@ -995,17 +995,17 @@ export function BookingForm({ user }: BookingFormProps) {
 
 
             {serviceType === "delivery" && (
-              <Card className="border border-gray-200 border-l-4 border-l-blue-600">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center">
-                    <Truck className="w-5 h-5 mr-2 text-blue-600" />
+              <Card className="border border-gray-200 border-l-4 border-l-blue-600 shadow-lg">
+                <CardHeader className="px-2 sm:px-6">
+                  <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center">
+                    <Truck className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
                     Delivery Address
                   </CardTitle>
-                  <CardDescription className="text-sm">Where should we deliver the container?</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm lg:text-base">Where should we deliver the container?</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4 sm:space-y-6 px-2 sm:px-6">
                   {profile && profile.street_address && (
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="bg-blue-50 rounded-lg p-3 sm:p-4 border border-blue-200">
                       <div className="flex items-center space-x-3">
                         <input
                           type="checkbox"
@@ -1014,12 +1014,12 @@ export function BookingForm({ user }: BookingFormProps) {
                           onChange={(e) => setUseProfileAddress(e.target.checked)}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <Label htmlFor="useProfileAddress" className="text-sm font-medium text-gray-900 cursor-pointer">
+                        <Label htmlFor="useProfileAddress" className="text-xs sm:text-sm font-medium text-gray-900 cursor-pointer">
                           Use my profile address
                         </Label>
                       </div>
                       {useProfileAddress && (
-                        <div className="mt-3 text-sm text-gray-600">
+                        <div className="mt-3 text-xs sm:text-sm text-gray-600">
                           <p>{profile.street_address}</p>
                           <p>{profile.city}, {profile.state} {profile.zip_code}</p>
                         </div>
@@ -1030,7 +1030,7 @@ export function BookingForm({ user }: BookingFormProps) {
                   {!useProfileAddress && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="deliveryStreetAddress" className="text-base font-medium">
+                        <Label htmlFor="deliveryStreetAddress" className="text-sm sm:text-base lg:text-lg font-medium">
                           Street Address *
                         </Label>
                         <Input
@@ -1038,13 +1038,13 @@ export function BookingForm({ user }: BookingFormProps) {
                           placeholder="123 Main Street"
                           value={deliveryStreetAddress}
                           onChange={(e) => setDeliveryStreetAddress(e.target.value)}
-                          className="h-12 text-base border-2 focus:border-blue-600"
+                          className="h-10 sm:h-12 lg:h-14 text-sm sm:text-base border-2 focus:border-blue-600"
                           required
                         />
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="deliveryCity" className="text-base font-medium">
+                          <Label htmlFor="deliveryCity" className="text-sm sm:text-base lg:text-lg font-medium">
                             City *
                           </Label>
                           <Input
@@ -1052,12 +1052,12 @@ export function BookingForm({ user }: BookingFormProps) {
                             placeholder="City"
                             value={deliveryCity}
                             onChange={(e) => setDeliveryCity(e.target.value)}
-                            className="h-12 text-base border-2 focus:border-blue-600"
+                            className="h-10 sm:h-12 lg:h-14 text-sm sm:text-base border-2 focus:border-blue-600"
                             required
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="deliveryState" className="text-base font-medium">
+                          <Label htmlFor="deliveryState" className="text-sm sm:text-base lg:text-lg font-medium">
                             State *
                           </Label>
                           <Input
@@ -1065,12 +1065,12 @@ export function BookingForm({ user }: BookingFormProps) {
                             placeholder="State"
                             value={deliveryState}
                             onChange={(e) => setDeliveryState(e.target.value)}
-                            className="h-12 text-base border-2 focus:border-blue-600"
+                            className="h-10 sm:h-12 lg:h-14 text-sm sm:text-base border-2 focus:border-blue-600"
                             required
                           />
                         </div>
-                        <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-                          <Label htmlFor="deliveryZipCode" className="text-base font-medium">
+                        <div className="space-y-2 sm:col-span-2 xl:col-span-1">
+                          <Label htmlFor="deliveryZipCode" className="text-sm sm:text-base lg:text-lg font-medium">
                             ZIP Code *
                           </Label>
                           <Input
@@ -1078,7 +1078,7 @@ export function BookingForm({ user }: BookingFormProps) {
                             placeholder="12345"
                             value={deliveryZipCode}
                             onChange={(e) => setDeliveryZipCode(e.target.value)}
-                            className="h-12 text-base border-2 focus:border-blue-600"
+                            className="h-10 sm:h-12 lg:h-14 text-sm sm:text-base border-2 focus:border-blue-600"
                             required
                           />
                         </div>
@@ -1092,17 +1092,17 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 4 && (
-          <Card className="border border-gray-200">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-xl">Additional Services</CardTitle>
-              <CardDescription className="text-base">Enhance your rental with optional services</CardDescription>
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="text-center pb-4 sm:pb-6 px-2 sm:px-6">
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Additional Services</CardTitle>
+              <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">Enhance your rental with optional services</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-8">
-              <div className="grid gap-6">
-                <div className="bg-orange-50 rounded-xl p-6 border border-orange-200">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <CardContent className="space-y-6 sm:space-y-8 px-2 sm:px-6">
+              <div className="grid gap-4 sm:gap-6 lg:gap-8">
+                <div className="bg-orange-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-orange-200">
+                  <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -1111,12 +1111,12 @@ export function BookingForm({ user }: BookingFormProps) {
                         />
                       </svg>
                     </div>
-                    <div className="flex-1">
-                      <Label htmlFor="extraTonnage" className="text-lg font-semibold text-gray-900 block mb-2">
+                    <div className="flex-1 text-center sm:text-left">
+                      <Label htmlFor="extraTonnage" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
                         Extra Tonnage
                       </Label>
-                      <p className="text-gray-600 mb-4">Beyond included 2 tons - {formatCurrency(125)} per ton</p>
-                      <div className="flex items-center space-x-4">
+                      <p className="text-gray-600 mb-4 text-sm sm:text-base">Beyond included 2 tons - {formatCurrency(125)} per ton</p>
+                      <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-4">
                         <Input
                           id="extraTonnage"
                           type="number"
@@ -1124,24 +1124,24 @@ export function BookingForm({ user }: BookingFormProps) {
                           max="10"
                           value={extraTonnage}
                           onChange={(e) => setExtraTonnage(Number(e.target.value))}
-                          className="w-24 h-12 text-center text-lg border-2 focus:border-orange-600"
+                          className="w-20 sm:w-24 h-10 sm:h-12 text-center text-sm sm:text-base lg:text-lg border-2 focus:border-orange-600"
                         />
-                        <span className="text-gray-600">tons</span>
+                        <span className="text-gray-600 text-sm sm:text-base">tons</span>
                         {extraTonnage > 0 && (
-                          <div className="text-lg font-semibold text-orange-600">
+                          <div className="text-base sm:text-lg lg:text-xl font-semibold text-orange-600">
                             +{formatCurrency(extraTonnage * 125)}
                           </div>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500 mt-2">Each container includes 2 tons of debris</p>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-2">Each container includes 2 tons of debris</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-green-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-green-200">
+                  <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -1150,12 +1150,12 @@ export function BookingForm({ user }: BookingFormProps) {
                         />
                       </svg>
                     </div>
-                    <div className="flex-1">
-                      <Label htmlFor="applianceCount" className="text-lg font-semibold text-gray-900 block mb-2">
+                    <div className="flex-1 text-center sm:text-left">
+                      <Label htmlFor="applianceCount" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
                         Appliance Disposal
                       </Label>
-                      <p className="text-gray-600 mb-4">{formatCurrency(30)} per appliance</p>
-                      <div className="flex items-center space-x-4">
+                      <p className="text-gray-600 mb-4 text-sm sm:text-base">{formatCurrency(30)} per appliance</p>
+                      <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-4">
                         <Input
                           id="applianceCount"
                           type="number"
@@ -1163,23 +1163,23 @@ export function BookingForm({ user }: BookingFormProps) {
                           max="20"
                           value={applianceCount}
                           onChange={(e) => setApplianceCount(Number(e.target.value))}
-                          className="w-24 h-12 text-center text-lg border-2 focus:border-green-600"
+                          className="w-20 sm:w-24 h-10 sm:h-12 text-center text-sm sm:text-base lg:text-lg border-2 focus:border-green-600"
                         />
-                        <span className="text-gray-600">appliances</span>
+                        <span className="text-gray-600 text-sm sm:text-base">appliances</span>
                         {applianceCount > 0 && (
-                          <div className="text-lg font-semibold text-green-600">
+                          <div className="text-base sm:text-lg lg:text-xl font-semibold text-green-600">
                             +{formatCurrency(applianceCount * 30)}
                           </div>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500 mt-2">Refrigerators, washers, dryers, etc.</p>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-2">Refrigerators, washers, dryers, etc.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-6 border">
-                <Label htmlFor="notes" className="text-lg font-semibold text-gray-900 block mb-3">
+              <div className="bg-gray-50 rounded-xl p-4 sm:p-6 lg:p-8 border">
+                <Label htmlFor="notes" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-3">
                   Additional Notes
                 </Label>
                 <Textarea
@@ -1187,67 +1187,67 @@ export function BookingForm({ user }: BookingFormProps) {
                   placeholder="Enter any special instructions, access requirements, or other notes..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="min-h-[120px] text-base border-2 focus:border-blue-600 resize-none"
+                  className="min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] text-sm sm:text-base border-2 focus:border-blue-600 resize-none"
                 />
-                <p className="text-sm text-gray-500 mt-2">Help us serve you better with any special requirements</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-2">Help us serve you better with any special requirements</p>
               </div>
             </CardContent>
           </Card>
         )}
 
         {currentStep === 5 && selectedContainer && totalDays > 0 && (
-          <Card className="border border-gray-200">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-xl">Order Summary</CardTitle>
-              <CardDescription className="text-base">Review your booking details before proceeding</CardDescription>
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="text-center pb-4 sm:pb-6 px-2 sm:px-6">
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Order Summary</CardTitle>
+              <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">Review your booking details before proceeding</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                  <div className="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200">
-                    <h4 className="text-lg sm:text-xl font-bold text-blue-900 mb-4 flex items-center">
-                      <Truck className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+            <CardContent className="px-2 sm:px-6">
+              <div className="space-y-6 sm:space-y-8">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+                  <div className="bg-blue-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-blue-200">
+                    <h4 className="text-base sm:text-lg lg:text-xl font-bold text-blue-900 mb-3 sm:mb-4 flex items-center">
+                      <Truck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 mr-2" />
                       Container Details
                     </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm sm:text-base">Container:</span>
-                        <span className="font-semibold text-gray-900 text-sm sm:text-base">
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+                        <span className="text-gray-600 text-xs sm:text-sm lg:text-base">Container:</span>
+                        <span className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base break-words">
                           {containerTypes.find((ct) => ct.id === selectedContainer)?.size}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm sm:text-base">Rental Period:</span>
-                        <span className="font-semibold text-gray-900 text-sm sm:text-base">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+                        <span className="text-gray-600 text-xs sm:text-sm lg:text-base">Rental Period:</span>
+                        <span className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">
                           {totalDays} day{totalDays > 1 ? "s" : ""}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm sm:text-base">Service:</span>
-                        <span className="font-semibold text-gray-900 text-sm sm:text-base capitalize">{serviceType}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+                        <span className="text-gray-600 text-xs sm:text-sm lg:text-base">Service:</span>
+                        <span className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base capitalize">{serviceType}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm sm:text-base">Preferred Time:</span>
-                        <span className="font-semibold text-gray-900 text-sm sm:text-base">{pickupTime}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+                        <span className="text-gray-600 text-xs sm:text-sm lg:text-base">Preferred Time:</span>
+                        <span className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">{pickupTime}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm sm:text-base">Dates:</span>
-                        <span className="font-semibold text-gray-900 text-sm sm:text-base">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+                        <span className="text-gray-600 text-xs sm:text-sm lg:text-base">Dates:</span>
+                        <span className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">
                           {startDate && endDate && `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd")}`}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-200">
-                    <h4 className="text-lg sm:text-xl font-bold text-green-900 mb-4 flex items-center">
-                      <MapPin className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                  <div className="bg-green-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-green-200">
+                    <h4 className="text-base sm:text-lg lg:text-xl font-bold text-green-900 mb-3 sm:mb-4 flex items-center">
+                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 mr-2" />
                       Address Information
                     </h4>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div>
-                        <span className="text-sm font-semibold text-green-800 block mb-1">Billing Address:</span>
-                        <div className="text-gray-700 text-sm sm:text-base">
+                        <span className="text-xs sm:text-sm font-semibold text-green-800 block mb-1">Billing Address:</span>
+                        <div className="text-gray-700 text-xs sm:text-sm lg:text-base break-words">
                           {streetAddress}
                           <br />
                           {city}, {state} {zipCode}
@@ -1255,8 +1255,8 @@ export function BookingForm({ user }: BookingFormProps) {
                       </div>
                       {serviceType === "delivery" && (
                         <div>
-                          <span className="text-sm font-semibold text-green-800 block mb-1">Delivery Address:</span>
-                          <div className="text-gray-700 text-sm sm:text-base">
+                          <span className="text-xs sm:text-sm font-semibold text-green-800 block mb-1">Delivery Address:</span>
+                          <div className="text-gray-700 text-xs sm:text-sm lg:text-base break-words">
                             {deliveryStreetAddress}
                             <br />
                             {deliveryCity}, {deliveryState} {deliveryZipCode}
@@ -1267,31 +1267,31 @@ export function BookingForm({ user }: BookingFormProps) {
                   </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-                  <h4 className="text-xl font-bold text-gray-900 mb-6 text-center">Pricing Breakdown</h4>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                      <span className="text-lg text-gray-700">
+                <div className="bg-gray-50 rounded-xl p-4 sm:p-6 lg:p-8 border-2 border-gray-200">
+                  <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Pricing Breakdown</h4>
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 gap-1 sm:gap-2">
+                      <span className="text-sm sm:text-base lg:text-lg text-gray-700">
                         Base Price ({totalDays} day{totalDays > 1 ? "s" : ""}):
                       </span>
-                      <span className="text-lg font-semibold text-gray-900">{formatCurrency(baseTotalAmount)}</span>
+                      <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(baseTotalAmount)}</span>
                     </div>
                     {extraTonnage > 0 && (
-                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span className="text-gray-700">Extra Tonnage ({extraTonnage} tons):</span>
-                        <span className="font-semibold text-gray-900">{formatCurrency(extraTonnageAmount)}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 gap-1 sm:gap-2">
+                        <span className="text-sm sm:text-base lg:text-lg text-gray-700">Extra Tonnage ({extraTonnage} tons):</span>
+                        <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(extraTonnageAmount)}</span>
                       </div>
                     )}
                     {applianceCount > 0 && (
-                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span className="text-gray-700">Appliance Disposal ({applianceCount} items):</span>
-                        <span className="font-semibold text-gray-900">{formatCurrency(applianceAmount)}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 gap-1 sm:gap-2">
+                        <span className="text-sm sm:text-base lg:text-lg text-gray-700">Appliance Disposal ({applianceCount} items):</span>
+                        <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(applianceAmount)}</span>
                       </div>
                     )}
-                    <div className="">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xl font-bold">Total Amount:</span>
-                        <span className="text-2xl font-bold">{formatCurrency(totalAmount)}</span>
+                    <div className="pt-2">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+                        <span className="text-lg sm:text-xl lg:text-2xl font-bold">Total Amount:</span>
+                        <span className="text-xl sm:text-2xl lg:text-3xl font-bold">{formatCurrency(totalAmount)}</span>
                       </div>
                     </div>
                   </div>
@@ -1418,13 +1418,7 @@ export function BookingForm({ user }: BookingFormProps) {
 
             {/* Digital Signature */}
             <Card className="border-0">
-              <CardHeader className="text-center pb-6">
-                <CardTitle className="text-2xl">Digital Signature</CardTitle>
-                <CardDescription className="text-lg">
-                  Please sign below to confirm your acceptance of the rental agreement
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="px-0 sm:px-6">
                 <SignaturePad
                   onSignatureComplete={handleSignatureComplete}
                   onClear={handleSignatureClear}
@@ -1436,22 +1430,22 @@ export function BookingForm({ user }: BookingFormProps) {
         )}
 
         {currentStep === 7 && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Order Summary */}
-            <Card className="border-0">
-              <CardHeader className="text-center pb-6">
-                <CardTitle className="text-2xl">Payment Information</CardTitle>
-                <CardDescription className="text-lg">Complete your booking with secure payment</CardDescription>
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="text-center pb-4 sm:pb-6 px-2 sm:px-6">
+                <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Payment Information</CardTitle>
+                <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">Complete your booking with secure payment</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
+              <CardContent className="px-2 sm:px-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Order Summary */}
                   <Card className="border border-gray-200">
-                    <CardHeader>
+                    <CardHeader className="px-2 sm:px-6">
                       <CardTitle>Order Summary</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
+                    <CardContent className="px-2 sm:px-6">
+                      <div className="space-y-2 sm:space-y-3">
                         <div className="flex justify-between">
                           <span>Container:</span>
                           <span>
@@ -1489,14 +1483,14 @@ export function BookingForm({ user }: BookingFormProps) {
 
                   {/* Payment Form */}
                   <Card className="border border-gray-200">
-                    <CardHeader>
+                    <CardHeader className="px-2 sm:px-6">
                       <CardTitle>Payment Method</CardTitle>
                       <CardDescription>Choose your payment method and enter details</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
+                    <CardContent className="px-2 sm:px-6">
+                      <div className="space-y-4 sm:space-y-6">
                         {/* Payment Method Toggle */}
-                        <div className="space-y-3">
+                        <div className="space-y-2 sm:space-y-3">
                           <Label>Payment Method</Label>
                           <div className="flex bg-gray-100 rounded-lg p-1">
                             <button
@@ -1563,7 +1557,7 @@ export function BookingForm({ user }: BookingFormProps) {
 
                         {/* PayPal Section */}
                         {paymentMethod === "paypal" && (
-                          <div className="space-y-4">
+                          <div className="space-y-3 sm:space-y-4">
                             <PayPalScriptProvider 
                               options={{ 
                                 clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "test",
@@ -1646,7 +1640,7 @@ export function BookingForm({ user }: BookingFormProps) {
                       <CardDescription>Booking #{successData.booking.id.slice(0, 8)}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
+                      <div className="space-y-3 sm:space-y-4">
                         <div className="flex items-start gap-3">
                           <CalendarIcon className="h-5 w-5 text-gray-400 mt-0.5" />
                           <div>
@@ -1746,38 +1740,44 @@ export function BookingForm({ user }: BookingFormProps) {
 
         {error && <div className="text-red-600 text-sm">{error}</div>}
 
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 px-2 sm:px-0">
           <Button
             type="button"
             variant="outline"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center bg-transparent order-2 sm:order-1"
+            className="flex items-center justify-center bg-transparent order-2 sm:order-1 h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
           >
-            <ChevronLeft className="w-4 h-4 mr-2" />
+            <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
             Previous
           </Button>
 
           {currentStep < totalSteps ? (
-            <Button type="button" onClick={nextStep} disabled={!canProceedToNextStep()} className="flex items-center order-1 sm:order-2">
+            <Button 
+              type="button" 
+              onClick={nextStep} 
+              disabled={!canProceedToNextStep()} 
+              className="flex items-center justify-center order-1 sm:order-2 h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
+            >
               Next
-              <ChevronRight className="w-4 h-4 ml-2" />
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
             </Button>
           ) : currentStep === 6 ? (
             <Button 
               type="button" 
               onClick={nextStep} 
               disabled={!canProceedToNextStep()} 
-              className="flex items-center order-1 sm:order-2"
+              className="flex items-center justify-center order-1 sm:order-2 h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
             >
-              Continue to Payment
-              <ChevronRight className="w-4 h-4 ml-2" />
+              <span className="hidden sm:inline">Continue to Payment</span>
+              <span className="sm:hidden">Payment</span>
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
             </Button>
           ) : currentStep === 7 ? (
             // No submit button needed for Stripe as it handles its own submission
             null
           ) : (
-            <div className="flex flex-col sm:flex-row gap-4 order-1 sm:order-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:gap-4 order-1 sm:order-2 w-full sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
@@ -1806,9 +1806,10 @@ export function BookingForm({ user }: BookingFormProps) {
                   setPaymentMethod("stripe")
                   setSignatureImgUrl("")
                 }}
-                className="flex items-center"
+                className="flex items-center justify-center h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
               >
-                Book Another Container
+                <span className="hidden sm:inline">Book Another Container</span>
+                <span className="sm:hidden">Book Another</span>
               </Button>
               <Button
                 type="button"
@@ -1816,9 +1817,10 @@ export function BookingForm({ user }: BookingFormProps) {
                   // This will trigger a page refresh to show the updated bookings list
                   window.location.reload()
                 }}
-                className="flex items-center"
+                className="flex items-center justify-center h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
               >
-                View My Bookings
+                <span className="hidden sm:inline">View My Bookings</span>
+                <span className="sm:hidden">My Bookings</span>
               </Button>
             </div>
           )}

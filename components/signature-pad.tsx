@@ -37,7 +37,7 @@ export function SignaturePad({ onSignatureComplete, onClear, disabled = false }:
     if (!container) return
 
     const rect = container.getBoundingClientRect()
-    const width = rect.width - 32 // Account for padding
+    const width = rect.width - 8 // Account for minimal mobile padding
     const height = 200 // Fixed height for signature area
 
     // Set canvas size
@@ -233,7 +233,7 @@ export function SignaturePad({ onSignatureComplete, onClear, disabled = false }:
 
   return (
     <Card className="border border-gray-200">
-      <CardHeader>
+      <CardHeader className="px-1 sm:px-6">
         <CardTitle className="text-lg flex items-center">
           <Check className="w-5 h-5 mr-2 text-blue-600" />
           Digital Signature
@@ -242,9 +242,9 @@ export function SignaturePad({ onSignatureComplete, onClear, disabled = false }:
           Please sign below to confirm your booking agreement
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-1 sm:px-6">
         {/* Signature Canvas */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 sm:p-4 bg-gray-50">
           <canvas
             ref={canvasRef}
             className="w-full cursor-crosshair touch-none border border-gray-200 rounded"
