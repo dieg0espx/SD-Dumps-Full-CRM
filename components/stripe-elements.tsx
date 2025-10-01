@@ -149,7 +149,7 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         throw new Error(stripeError.message || 'Payment failed')
       }
 
-      if (paymentIntent.status === 'succeeded') {
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Update booking status directly
         await supabase
           .from('bookings')
@@ -215,6 +215,9 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         }
 
         onSuccess(updatedBooking)
+      } else {
+        // Payment intent exists but status is not succeeded
+        throw new Error(`Payment ${paymentIntent?.status || 'failed'}. Please try again.`)
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Payment failed'
