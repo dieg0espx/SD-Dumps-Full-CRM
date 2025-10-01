@@ -111,10 +111,25 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         }),
       })
 
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create payment intent')
+      }
+
       const { clientSecret, error: apiError } = await response.json()
 
       if (apiError) {
         throw new Error(apiError)
+      }
+
+      if (!clientSecret) {
+        throw new Error('Failed to create payment intent. Please try again.')
+      }
+
+      // Get card element
+      const cardElement = elements.getElement(CardNumberElement)
+      if (!cardElement) {
+        throw new Error('Card information is invalid. Please check your card details.')
       }
 
       // Confirm payment
@@ -122,10 +137,16 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         clientSecret,
         {
           payment_method: {
-            card: elements.getElement(CardNumberElement)!,
+            card: cardElement,
           },
         }
       )
+
+      console.log('Payment confirmation result:', { 
+        hasError: !!stripeError, 
+        hasIntent: !!paymentIntent,
+        intentStatus: paymentIntent?.status 
+      })
 
       if (stripeError) {
         // Update booking status for failed payment
@@ -147,6 +168,11 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         })
 
         throw new Error(stripeError.message || 'Payment failed')
+      }
+
+      // Check if paymentIntent exists
+      if (!paymentIntent) {
+        throw new Error('Payment intent is null. Please try again.')
       }
 
       if (paymentIntent.status === 'succeeded') {

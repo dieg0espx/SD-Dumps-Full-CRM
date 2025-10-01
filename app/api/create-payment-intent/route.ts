@@ -106,13 +106,18 @@ export async function POST(request: NextRequest) {
       receipt_email: user.email,
     })
 
+    if (!paymentIntent.client_secret) {
+      throw new Error('Failed to generate payment client secret')
+    }
+
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
     })
   } catch (error) {
     console.error('Error creating payment intent:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error'
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
