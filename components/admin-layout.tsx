@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { useRouter, usePathname } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
-import { LogOut, UserIcon, Calendar, Package, Users, CreditCard, Plus, BarChart3, MessageCircle } from "lucide-react"
+import { LogOut, UserIcon, Calendar, Package, Users, CreditCard, Plus, BarChart3, MessageCircle, FileText } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +30,7 @@ const navigation = [
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Chat", href: "/admin/chat", icon: MessageCircle },
   { name: "Payments", href: "/admin/payments", icon: CreditCard },
+  { name: "Contracts", href: "/admin/contracts", icon: FileText },
 ]
 
 export function AdminLayout({ user, children }: AdminLayoutProps) {
