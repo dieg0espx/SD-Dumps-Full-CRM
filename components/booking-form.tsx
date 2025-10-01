@@ -680,7 +680,7 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 3 && "Service & Address"}
             {currentStep === 4 && "Additional Services"}
             {currentStep === 5 && "Review & Book"}
-            {currentStep === 6 && "Digital Signature"}
+            {currentStep === 6 && "Rental Agreement"}
             {currentStep === 7 && "Payment"}
             {currentStep === 8 && "Booking Confirmed!"}
           </h2>
@@ -690,7 +690,7 @@ export function BookingForm({ user }: BookingFormProps) {
             {currentStep === 3 && "Configure service options and addresses"}
             {currentStep === 4 && "Add optional services"}
             {currentStep === 5 && "Review and confirm your booking"}
-            {currentStep === 6 && "Sign to confirm your booking agreement"}
+            {currentStep === 6 && "Review the rental agreement and sign below"}
             {currentStep === 7 && "Complete your payment securely"}
             {currentStep === 8 && "Your booking has been successfully confirmed"}
           </p>
