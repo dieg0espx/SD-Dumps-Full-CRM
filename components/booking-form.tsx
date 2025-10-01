@@ -1303,11 +1303,125 @@ export function BookingForm({ user }: BookingFormProps) {
 
         {currentStep === 6 && (
           <div className="space-y-6">
+            {/* Rental Contract */}
+            <Card className="border-0">
+              <CardHeader className="border-b border-gray-200 bg-gray-50">
+                <CardTitle className="text-2xl">Container Rental Agreement</CardTitle>
+                <CardDescription className="text-base">
+                  Please read the following terms and conditions carefully before signing
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="prose max-w-none space-y-4 text-sm text-gray-700">
+                  {/* Rental Details Section */}
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h3 className="font-semibold text-lg text-blue-900 mb-3">Rental Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-700">Container Type:</span>
+                        <span className="ml-2 text-gray-900">
+                          {containerTypes.find((ct) => ct.id === selectedContainer)?.size}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Rental Period:</span>
+                        <span className="ml-2 text-gray-900">
+                          {startDate && endDate ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}` : "N/A"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Service Type:</span>
+                        <span className="ml-2 text-gray-900 capitalize">{serviceType}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Total Amount:</span>
+                        <span className="ml-2 text-gray-900 font-semibold">{formatCurrency(totalAmount)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Terms and Conditions */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg text-gray-900 mb-2">Terms and Conditions</h3>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-semibold text-gray-900">1. Rental Period</h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          The container rental period begins on the start date and ends on the end date specified above. 
+                          Any extension beyond the agreed rental period must be authorized in advance and may incur additional charges.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900">2. Weight Limits</h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          Each container rental includes 2 tons of debris. Additional tonnage is charged at $125 per ton. 
+                          The customer is responsible for ensuring the container does not exceed weight limits.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900">3. Prohibited Items</h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          The following items are strictly prohibited: hazardous materials, chemicals, asbestos, 
+                          paint cans (unless empty and dry), tires, batteries, propane tanks, and any materials 
+                          deemed hazardous or illegal. Violation may result in additional fees and legal action.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900">4. Payment Terms</h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          Payment is due at the time of booking. The total amount includes rental fees, delivery/pickup 
+                          charges (if applicable), and any additional services selected. Late returns may incur daily charges.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900">5. Cancellation Policy</h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          Cancellations must be made at least 24 hours before the scheduled delivery/pickup time. 
+                          Cancellations within 24 hours may be subject to a cancellation fee.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900">6. Customer Responsibilities</h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          The customer is responsible for ensuring adequate space for container placement, 
+                          proper loading of materials, and compliance with all local ordinances and regulations. 
+                          Customer is liable for any damage to property during the rental period.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900">7. Liability</h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          The customer assumes all liability for the container and its contents during the rental period. 
+                          SD Dumps is not responsible for any damage to property, injury to persons, or theft of container contents.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Agreement Statement */}
+                  <div className="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300 mt-6">
+                    <p className="font-semibold text-gray-900">
+                      By signing below, I acknowledge that I have read, understood, and agree to be bound by all 
+                      the terms and conditions stated in this rental agreement.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Digital Signature */}
             <Card className="border-0">
               <CardHeader className="text-center pb-6">
                 <CardTitle className="text-2xl">Digital Signature</CardTitle>
                 <CardDescription className="text-lg">
-                  Please sign below to confirm your booking agreement and terms of service
+                  Please sign below to confirm your acceptance of the rental agreement
                 </CardDescription>
               </CardHeader>
               <CardContent>
