@@ -561,6 +561,33 @@ export function BookingForm({ user }: BookingFormProps) {
         throw new Error(`Failed to create payment record: ${paymentError.message}`)
       }
 
+      // Send booking confirmation emails
+      try {
+        await fetch('/api/send-booking-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            customerName: profile?.full_name || user.email?.split('@')[0] || 'Customer',
+            customerEmail: user.email,
+            containerType: selectedContainerType?.size || 'Container',
+            startDate: format(startDate, "MMMM dd, yyyy"),
+            endDate: format(endDate, "MMMM dd, yyyy"),
+            serviceType: serviceType,
+            totalAmount: totalAmount,
+            deliveryAddress: deliveryAddress,
+            pickupTime: pickupTime,
+            notes: notes.trim() || undefined,
+          }),
+        })
+        console.log('✅ Booking confirmation emails sent')
+      } catch (emailError) {
+        console.error('⚠️ Email sending failed (non-critical):', emailError)
+        // Don't throw error - email failure shouldn't stop the booking process
+      }
+
       // Set success state with booking data
       setSuccessData({
         booking: booking,

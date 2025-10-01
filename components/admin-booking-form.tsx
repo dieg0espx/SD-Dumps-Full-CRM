@@ -172,6 +172,32 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
         })
         .eq("id", createdBooking.id)
 
+      // Send booking confirmation emails
+      try {
+        await fetch('/api/send-booking-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            bookingId: createdBooking.id,
+            customerName: selectedUserData?.full_name || selectedUserData?.email?.split('@')[0] || 'Customer',
+            customerEmail: selectedUserData?.email,
+            containerType: selectedContainer?.size || 'Container',
+            startDate: format(startDate as Date, "MMMM dd, yyyy"),
+            endDate: format(endDate as Date, "MMMM dd, yyyy"),
+            serviceType: serviceType,
+            totalAmount: createdBooking.total_amount,
+            deliveryAddress: serviceType === "delivery" ? deliveryAddress : null,
+            notes: notes.trim() || undefined,
+          }),
+        })
+        console.log('✅ Booking confirmation emails sent')
+      } catch (emailError) {
+        console.error('⚠️ Email sending failed (non-critical):', emailError)
+        // Don't throw error - email failure shouldn't stop the booking process
+      }
+
       // Redirect to admin dashboard after successful payment
       setTimeout(() => {
         router.push("/admin")
