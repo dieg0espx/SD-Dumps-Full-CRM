@@ -1,10 +1,14 @@
 "use client"
 
-import { X, Calendar, Package, User, CreditCard, Clock } from "lucide-react"
+import { X, Calendar, Package, User, CreditCard, Clock, DollarSign } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
 import { formatPhoneNumber } from "@/lib/phone-utils"
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -19,9 +23,16 @@ interface BookingDetailsSidebarProps {
   booking: any
   isOpen: boolean
   onClose: () => void
+  isAdmin?: boolean
+  onUpdate?: () => void
 }
 
-export function BookingDetailsSidebar({ booking, isOpen, onClose }: BookingDetailsSidebarProps) {
+export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = false, onUpdate }: BookingDetailsSidebarProps) {
+  const [chargeAmount, setChargeAmount] = useState("")
+  const [chargeDescription, setChargeDescription] = useState("")
+  const [isCharging, setIsCharging] = useState(false)
+  const { toast } = useToast()
+
   if (!isOpen || !booking) return null
 
   const getStatusColor = (status: string) => {
@@ -36,6 +47,71 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose }: BookingDetai
         return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const handleChargeCard = async () => {
+    if (!chargeAmount || parseFloat(chargeAmount) <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount to charge",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!chargeDescription.trim()) {
+      toast({
+        title: "Missing Description",
+        description: "Please enter a description for this charge",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsCharging(true)
+
+    try {
+      const response = await fetch('/api/charge-booking-card', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          amount: parseFloat(chargeAmount),
+          description: chargeDescription.trim(),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to charge card')
+      }
+
+      toast({
+        title: "Charge Successful",
+        description: `$${parseFloat(chargeAmount).toFixed(2)} charged successfully`,
+      })
+
+      // Reset form
+      setChargeAmount("")
+      setChargeDescription("")
+
+      // Refresh booking data
+      if (onUpdate) {
+        onUpdate()
+      }
+    } catch (error) {
+      console.error('Charge card error:', error)
+      toast({
+        title: "Charge Failed",
+        description: error instanceof Error ? error.message : "Failed to charge card",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCharging(false)
     }
   }
 
@@ -150,8 +226,77 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose }: BookingDetai
                   <p className="text-sm">
                     <span className="font-medium">Payment Status:</span> {booking.payment_status || "Pending"}
                   </p>
+                  {booking.payment_method_id && (
+                    <p className="text-sm">
+                      <span className="font-medium">Payment Method:</span> <span className="text-green-600">Card on File</span>
+                    </p>
+                  )}
                 </div>
               </div>
+
+              {/* Admin: Charge Additional Amount */}
+              {isAdmin && booking.payment_method_id && (
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-blue-500" />
+                    <span className="font-medium text-blue-700">Charge Additional Amount</span>
+                  </div>
+                  <div className="pl-6 space-y-3">
+                    <p className="text-sm text-gray-600">
+                      Charge extra fees (damages, extra days, tonnage, etc.) to the customer's saved card.
+                    </p>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="charge-amount">Amount ($)</Label>
+                      <Input
+                        id="charge-amount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        value={chargeAmount}
+                        onChange={(e) => setChargeAmount(e.target.value)}
+                        disabled={isCharging}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="charge-description">Description *</Label>
+                      <Input
+                        id="charge-description"
+                        type="text"
+                        placeholder="e.g., Extra tonnage fee, Damage charge, etc."
+                        value={chargeDescription}
+                        onChange={(e) => setChargeDescription(e.target.value)}
+                        disabled={isCharging}
+                      />
+                    </div>
+                    
+                    <Button
+                      onClick={handleChargeCard}
+                      disabled={isCharging || !chargeAmount || !chargeDescription}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isCharging ? "Processing..." : `Charge $${chargeAmount || "0.00"}`}
+                    </Button>
+                    
+                    <p className="text-xs text-gray-500">
+                      The customer will be charged immediately and receive a receipt via email.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* No Payment Method Warning */}
+              {isAdmin && !booking.payment_method_id && booking.payment_status === 'paid' && (
+                <div className="space-y-3 border-t pt-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ No payment method saved for this booking. Additional charges cannot be processed automatically.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Additional Services */}
               {(booking.extra_tonnage > 0 || booking.appliance_count > 0 || booking.extra_days > 0) && (

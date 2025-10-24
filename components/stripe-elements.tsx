@@ -13,10 +13,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { CreditCard, Lock } from 'lucide-react'
+import { CreditCard, Lock, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null
 
 const cardElementOptions = {
   style: {
@@ -31,7 +33,8 @@ const cardElementOptions = {
       color: '#9e2146',
     },
   },
-  hidePostalCode: false,
+  // Note: hidePostalCode is not supported for individual card elements
+  // Only use it with the unified CardElement
 }
 
 interface StripeElementsProps {
@@ -50,8 +53,19 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
   const supabase = createClient()
 
   const handleSubmit = async () => {
+    console.log('🔵 [Stripe] Card setup submission started (NOT charging yet)')
 
     if (!stripe || !elements) {
+      console.error('❌ [Stripe] Stripe or Elements not loaded')
+      setError('Payment system not ready. Please wait a moment and try again.')
+      return
+    }
+
+    // Verify card elements are mounted
+    const cardElement = elements.getElement(CardNumberElement)
+    if (!cardElement) {
+      console.error('❌ [Stripe] Card element not mounted')
+      setError('Card information not ready. Please ensure all card fields are filled.')
       return
     }
 
@@ -60,21 +74,25 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
 
     try {
       // Get authenticated user
+      console.log('🔵 [Stripe] Checking user authentication...')
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
+        console.error('❌ [Stripe] User not authenticated:', authError)
         throw new Error('User not authenticated')
       }
+      console.log('✅ [Stripe] User authenticated:', user.id)
 
       let finalBookingId = bookingId
 
       // Create booking if it doesn't exist
       if (bookingId === "temp" || !bookingId) {
+        console.log('🔵 [Stripe] Creating new booking...')
         // Update user profile with phone number if provided
         if (bookingData.phone) {
           await supabase.from("profiles").update({ phone: bookingData.phone }).eq("id", user.id)
         }
 
-        // Create the booking
+        // Create the booking with pending payment
         const { data: booking, error: bookingError } = await supabase
           .from("bookings")
           .insert({
@@ -89,46 +107,66 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
             pickup_time: bookingData.pickup_time,
             notes: bookingData.notes,
             status: "pending",
-            payment_status: "pending",
+            payment_status: "pending", // Card saved but not charged yet (will be updated to "paid" when admin charges)
             signature_img_url: bookingData.signature_img_url || null,
           })
           .select()
           .single()
 
-        if (bookingError) throw bookingError
+        if (bookingError) {
+          console.error('❌ [Stripe] Booking creation failed:', bookingError)
+          throw bookingError
+        }
         finalBookingId = booking.id
+        console.log('✅ [Stripe] Booking created:', finalBookingId)
       }
 
-      // Create payment intent
-      const response = await fetch('/api/create-payment-intent', {
+      // Create Setup Intent (to save card, not charge)
+      console.log('🔵 [Stripe] Creating setup intent to save card...')
+      const response = await fetch('/api/setup-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          amount,
-          bookingId: finalBookingId,
-        }),
       })
+
+      if (!response.ok) {
+        console.error('❌ [Stripe] Setup intent API error:', response.status)
+        const errorData = await response.json()
+        console.error('Error details:', errorData)
+        throw new Error(errorData.error || 'Failed to create setup intent')
+      }
 
       const { clientSecret, error: apiError } = await response.json()
 
       if (apiError) {
+        console.error('❌ [Stripe] API returned error:', apiError)
         throw new Error(apiError)
       }
 
-      // Confirm payment
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+      console.log('✅ [Stripe] Setup intent created, confirming card setup...')
+
+      // Get the card element
+      const cardNumberElement = elements.getElement(CardNumberElement)
+      
+      if (!cardNumberElement) {
+        console.error('❌ [Stripe] Card element not found')
+        throw new Error('Card information not properly loaded. Please refresh and try again.')
+      }
+
+      // Confirm card setup (saves card, doesn't charge)
+      const { error: stripeError, setupIntent } = await stripe.confirmCardSetup(
         clientSecret,
         {
           payment_method: {
-            card: elements.getElement(CardNumberElement)!,
+            card: cardNumberElement,
           },
         }
       )
 
       if (stripeError) {
-        // Update booking status for failed payment
+        console.error('❌ [Stripe] Card setup failed:', stripeError)
+        // Update booking status for failed card setup
         await supabase
           .from('bookings')
           .update({
@@ -137,40 +175,34 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
           })
           .eq('id', finalBookingId)
 
-        // Create payment record for failed payment
-        await supabase.from('payments').insert({
-          booking_id: finalBookingId,
-          amount: amount,
-          payment_method: 'stripe',
-          transaction_id: `failed_${Date.now()}`,
-          status: 'failed',
-        })
-
-        throw new Error(stripeError.message || 'Payment failed')
+        throw new Error(stripeError.message || 'Card setup failed')
       }
 
-      if (paymentIntent.status === 'succeeded') {
-        // Update booking status directly
-        await supabase
+      console.log('✅ [Stripe] Card setup confirmed:', setupIntent.status)
+      console.log('📦 [Stripe] Payment Method ID:', setupIntent.payment_method)
+
+      if (setupIntent.status === 'succeeded') {
+        console.log('🔵 [Stripe] Saving payment method to booking...')
+        // Update booking with payment method (card saved, but NOT charged)
+        const { error: updateError } = await supabase
           .from('bookings')
           .update({
-            payment_status: 'paid',
-            status: 'confirmed',
+            payment_method_id: setupIntent.payment_method as string, // Save for admin to charge later
+            payment_status: 'pending', // Waiting for admin to charge
+            status: 'pending', // Waiting for admin to charge
             updated_at: new Date().toISOString(),
           })
           .eq('id', finalBookingId)
 
-        // Create payment record
-        await supabase.from('payments').insert({
-          booking_id: finalBookingId,
-          amount: paymentIntent.amount / 100, // Convert from cents
-          payment_method: 'stripe',
-          transaction_id: paymentIntent.id,
-          status: 'completed',
-        })
+        if (updateError) {
+          console.error('❌ [Stripe] Failed to update booking:', updateError)
+          throw new Error('Failed to save payment method')
+        }
+        console.log('✅ [Stripe] Payment method saved to booking')
 
         // Fetch the updated booking data
-        const { data: updatedBooking } = await supabase
+        console.log('🔵 [Stripe] Fetching updated booking data...')
+        const { data: updatedBooking, error: fetchError } = await supabase
           .from('bookings')
           .select(`
             *,
@@ -183,13 +215,23 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
           .eq('id', finalBookingId)
           .single()
 
+        if (fetchError) {
+          console.error('❌ [Stripe] Failed to fetch booking:', fetchError)
+        } else {
+          console.log('✅ [Stripe] Booking data fetched:', updatedBooking)
+        }
+
+        console.log('🎉 [Stripe] Card saved successfully! Admin can now charge. Calling onSuccess...')
         onSuccess(updatedBooking)
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment failed'
+      console.error('❌ [Stripe] Card setup process failed:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Card setup failed'
+      console.error('Error message:', errorMessage)
       setError(errorMessage)
       onError(errorMessage)
     } finally {
+      console.log('🔵 [Stripe] Card setup process complete, setting loading to false')
       setIsLoading(false)
     }
   }
@@ -248,23 +290,40 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         onClick={handleSubmit}
       >
         {isLoading ? (
-          'Processing Payment...'
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Saving Card...
+          </>
         ) : (
           <>
             <Lock className="mr-2 h-4 w-4" />
-            Pay Securely with Stripe
+            Save Card & Complete Booking
           </>
         )}
       </Button>
 
-      <div className="text-xs text-gray-500 text-center">
-        <p>Powered by Stripe</p>
+      <div className="text-xs text-gray-500 text-center space-y-1">
+        <p className="font-medium text-blue-600">Your card will NOT be charged yet</p>
+        <p>Your card will be securely saved, and the final charge will only be made once the total amount is confirmed.</p>
+        <p className="text-xs mt-2">Securely processed with Stripe.</p>
       </div>
     </div>
   )
 }
 
 export function StripeElements({ amount, bookingId, bookingData, onSuccess, onError }: StripeElementsProps) {
+  if (!stripePromise) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-red-600">
+            <p>Stripe is not configured. Please add your Stripe publishable key to the environment variables.</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Elements stripe={stripePromise}>
       <PaymentForm

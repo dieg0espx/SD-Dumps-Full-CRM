@@ -1,10 +1,20 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { ConditionalLayout } from '@/components/ConditionalLayout'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+}
 
 export const metadata: Metadata = {
   title: {
@@ -78,15 +88,6 @@ export const metadata: Metadata = {
   category: 'construction services',
   classification: 'business',
   referrer: 'origin-when-cross-origin',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
-  ],
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
   icons: {
     icon: [
       { url: '/favicon/favicon.ico' },
@@ -135,7 +136,7 @@ html {
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#ffffff" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <ConditionalLayout>
           {children}
         </ConditionalLayout>

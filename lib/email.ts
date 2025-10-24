@@ -1,24 +1,37 @@
 import nodemailer from 'nodemailer'
 
-// Create transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-})
+// Check if SMTP is configured
+const isEmailConfigured = !!(
+  process.env.SMTP_HOST &&
+  process.env.SMTP_USER &&
+  process.env.SMTP_PASS
+)
 
-// Verify connection
-transporter.verify((error) => {
-  if (error) {
-    console.error('❌ Email transporter error:', error)
-  } else {
-    console.log('✅ Email server is ready to send messages')
-  }
-})
+// Create transporter only if configured
+let transporter: nodemailer.Transporter | null = null
+
+if (isEmailConfigured) {
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  })
+
+  // Verify connection
+  transporter.verify((error) => {
+    if (error) {
+      console.error('❌ Email transporter error:', error)
+    } else {
+      console.log('✅ Email server is ready to send messages')
+    }
+  })
+} else {
+  console.warn('⚠️ Email not configured - emails will be skipped')
+}
 
 interface BookingEmailData {
   bookingId: string
@@ -282,6 +295,12 @@ export function generateAdminEmail(data: BookingEmailData): string {
 
 // Send booking confirmation emails
 export async function sendBookingEmails(data: BookingEmailData) {
+  // If email is not configured, skip sending
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping email notification')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
   try {
     // Send email to client
     await transporter.sendMail({

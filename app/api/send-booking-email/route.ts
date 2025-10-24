@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // Send emails
     console.log('📧 Calling sendBookingEmails function...')
-    await sendBookingEmails({
+    const result = await sendBookingEmails({
       bookingId: data.bookingId,
       customerName: data.customerName,
       customerEmail: data.customerEmail,
@@ -41,6 +41,15 @@ export async function POST(request: NextRequest) {
       notes: data.notes,
     })
 
+    if (result.skipped) {
+      console.log('⚠️ Emails skipped:', result.reason)
+      return NextResponse.json({ 
+        success: true,
+        skipped: true,
+        message: result.reason || 'Email not configured'
+      })
+    }
+
     console.log('✅ Booking emails sent successfully!')
     return NextResponse.json({ 
       success: true,
@@ -52,10 +61,20 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('❌ Error in send-booking-email API:', error)
+    
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('Error name:', error.name)
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    
+    // Return detailed error for debugging
     return NextResponse.json(
       { 
         error: 'Failed to send emails',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        emailConfigured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
       },
       { status: 500 }
     )

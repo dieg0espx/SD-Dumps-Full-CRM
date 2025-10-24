@@ -586,18 +586,27 @@ export function BookingForm({ user }: BookingFormProps) {
         
         if (!emailResponse.ok) {
           const errorData = await emailResponse.json()
-          console.error('❌ Email API error:', errorData)
-          throw new Error(`Email API returned ${emailResponse.status}: ${errorData.error}`)
+          console.warn('⚠️ Email notification failed:', errorData)
+          console.log('Note: Booking was successful, but email notification could not be sent.')
+          if (!errorData.emailConfigured) {
+            console.log('Email is not configured. Set SMTP environment variables to enable email notifications.')
+          }
+          // Continue to show success page despite email failure
+        } else {
+          const emailResult = await emailResponse.json()
+          if (emailResult.skipped) {
+            console.log('ℹ️ Email notification skipped:', emailResult.message)
+          } else {
+            console.log('✅ Booking confirmation emails sent successfully:', emailResult)
+          }
         }
-        
-        const emailResult = await emailResponse.json()
-        console.log('✅ Booking confirmation emails sent successfully:', emailResult)
       } catch (emailError) {
-        console.error('⚠️ Email sending failed (non-critical):', emailError)
+        console.warn('⚠️ Email notification failed (non-critical):', emailError)
+        console.log('Note: Your booking was successful, but we could not send the confirmation email.')
         // Don't throw error - email failure shouldn't stop the booking process
       }
 
-      // Set success state with booking data
+      // Set success state with booking data (always execute, regardless of email status)
       setSuccessData({
         booking: booking,
         payment: {
@@ -1580,7 +1589,7 @@ export function BookingForm({ user }: BookingFormProps) {
                           </div>
                         </div>
 
-                        {/* Stripe Elements */}
+                        {/* Stripe Payment */}
                         {paymentMethod === "stripe" && (
                           <StripeElements
                             amount={totalAmount}
@@ -1624,18 +1633,27 @@ export function BookingForm({ user }: BookingFormProps) {
                                 
                                 if (!emailResponse.ok) {
                                   const errorData = await emailResponse.json()
-                                  console.error('❌ Email API error:', errorData)
-                                  throw new Error(`Email API returned ${emailResponse.status}: ${errorData.error}`)
+                                  console.warn('⚠️ Email notification failed:', errorData)
+                                  console.log('Note: Booking was successful, but email notification could not be sent.')
+                                  if (!errorData.emailConfigured) {
+                                    console.log('Email is not configured. Set SMTP environment variables to enable email notifications.')
+                                  }
+                                  // Continue to show success page despite email failure
+                                } else {
+                                  const emailResult = await emailResponse.json()
+                                  if (emailResult.skipped) {
+                                    console.log('ℹ️ Email notification skipped:', emailResult.message)
+                                  } else {
+                                    console.log('✅ Booking confirmation emails sent successfully:', emailResult)
+                                  }
                                 }
-                                
-                                const emailResult = await emailResponse.json()
-                                console.log('✅ Booking confirmation emails sent successfully:', emailResult)
                               } catch (emailError) {
-                                console.error('⚠️ Email sending failed (non-critical):', emailError)
+                                console.warn('⚠️ Email notification failed (non-critical):', emailError)
+                                console.log('Note: Your booking was successful, but we could not send the confirmation email.')
                                 // Don't throw error - email failure shouldn't stop the booking process
                               }
 
-                              // Show success page
+                              // Show success page (always execute, regardless of email status)
                               setIsSuccess(true)
                               setCurrentStep(8)
                               setSuccessData({
@@ -1799,28 +1817,33 @@ export function BookingForm({ user }: BookingFormProps) {
                     </CardContent>
                   </Card>
 
-                  {/* Payment Details */}
-                  <Card className="border border-gray-200">
+                  {/* Payment Information */}
+                  <Card className="border border-blue-100 bg-blue-50">
                     <CardHeader>
-                      <CardTitle>Payment Details</CardTitle>
+                      <CardTitle className="text-blue-900">Payment Information</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span>Amount Paid:</span>
-                          <span className="font-semibold">{formatCurrency(successData.payment.amount)}</span>
+                          <span className="text-blue-800">Booking Amount:</span>
+                          <span className="font-semibold text-blue-900">{formatCurrency(successData.payment.amount)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Payment Method:</span>
-                          <span className="capitalize">{successData.payment.payment_method.replace("_", " ")}</span>
+                          <span className="text-blue-800">Payment Method:</span>
+                          <span className="text-blue-900">Card Saved (Stripe)</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Transaction ID:</span>
-                          <span className="font-mono text-sm">{successData.payment.transaction_id}</span>
+                          <span className="text-blue-800">Status:</span>
+                          <span className="font-medium text-yellow-700">Awaiting Final Charge</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Payment Date:</span>
-                          <span>{format(new Date(successData.payment.created_at), "PPP")}</span>
+                          <span className="text-blue-800">Booking Date:</span>
+                          <span className="text-blue-900">{format(new Date(successData.payment.created_at), "PPP")}</span>
+                        </div>
+                        <div className="mt-4 p-3 bg-blue-100 rounded-lg border border-blue-200">
+                          <p className="text-xs text-blue-800">
+                            <strong>Note:</strong> Your card has been securely saved but not charged yet. The final amount will be charged once the total is confirmed by our team.
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -1833,15 +1856,16 @@ export function BookingForm({ user }: BookingFormProps) {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3 text-sm text-gray-600">
-                        <p>✅ Your booking has been confirmed and payment processed</p>
-                        <p>📧 You'll receive a confirmation email with all the details</p>
-                        <p>📞 Our team will contact you 24 hours before your scheduled date</p>
+                        <p>• Your booking request has been received and your card is securely saved</p>
+                        <p>• Our team will review and charge the final amount once confirmed</p>
+                        <p>• You'll receive a confirmation email with all the details</p>
+                        <p>• Our team will contact you to confirm your booking details</p>
                         {successData.booking.service_type === "delivery" ? (
-                          <p>🚚 We'll deliver the container to your specified address</p>
+                          <p>• We'll deliver the container to your specified address on the scheduled date</p>
                         ) : (
-                          <p>🏢 Please visit our location to pick up your container</p>
+                          <p>• You can pick up your container at our location on the scheduled date</p>
                         )}
-                        <p>📱 You can track your booking status in your account</p>
+                        <p>• You can track your booking status in your account</p>
                       </div>
                     </CardContent>
                   </Card>
