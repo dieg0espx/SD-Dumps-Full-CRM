@@ -37,7 +37,7 @@ export default function AdminPaymentsPage() {
     console.log("[v0] Admin payments - Completed payments count:", paymentsData?.length || 0)
 
     // Combine pending bookings and completed payments
-    let allItems = []
+    let allItems: any[] = []
 
     // Add pending bookings (items that need to be charged)
     if (pendingBookings && pendingBookings.length > 0) {
