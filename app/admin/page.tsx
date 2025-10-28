@@ -46,7 +46,7 @@ export default async function AdminDashboardPage() {
   console.log("[v0] Admin dashboard - Total users:", totalUsers)
   console.log("[v0] Admin dashboard - Recent bookings:", bookings?.length || 0)
 
-  let recentBookings = []
+  let recentBookings: any[] = []
   if (bookings && bookings.length > 0) {
     const userIds = [...new Set(bookings.map((b) => b.user_id))]
     const containerTypeIds = [...new Set(bookings.map((b) => b.container_type_id))]

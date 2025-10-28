@@ -147,14 +147,14 @@ export async function POST(request: NextRequest) {
       // Create individual payment records for each fee
       console.log('🔵 [Charge Booking Card] Creating payment records for fees...')
       
-      let paymentRecords = []
+      let paymentRecords: any[] = []
       
       if (fees && fees.length > 0) {
         // Create a single payment record with total amount, but store individual fees in notes
         console.log('🔵 [Charge Booking Card] Creating single payment with individual fees...')
         
         // Create detailed description with individual fees
-        const feesDescription = fees.map(fee => `${fee.description}: $${fee.amount.toFixed(2)}`).join(', ')
+        const feesDescription = fees.map((fee: any) => `${fee.description}: $${fee.amount.toFixed(2)}`).join(', ')
         const combinedNotes = `Individual fees: ${feesDescription}`
         
         const { data: newPayment, error: paymentInsertError } = await supabase

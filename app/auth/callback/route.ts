@@ -33,7 +33,7 @@ export async function GET(request: Request) {
               full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
               role: 'user'
             })
-            .select('role')
+            .select('role, full_name')
             .single()
           
           if (!createError) {

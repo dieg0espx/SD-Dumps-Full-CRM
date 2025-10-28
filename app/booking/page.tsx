@@ -91,7 +91,7 @@ export default function BookingDashboard() {
           const hasFees = totalPayments > booking.total_amount
 
           // Calculate fees based on the difference between total payments and booking amount
-          let fees = []
+          let fees: any[] = []
           if (totalPayments > booking.total_amount) {
             const feeAmount = totalPayments - booking.total_amount
             console.log('🔍 [Booking Debug] Payment analysis:', {

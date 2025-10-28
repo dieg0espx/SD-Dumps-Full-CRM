@@ -31,7 +31,7 @@ export default async function AdminContractsPage() {
   console.log("Bookings with signatures:", bookings)
   console.log("Bookings error:", bookingsError)
 
-  let enrichedBookings = []
+  let enrichedBookings: any[] = []
   if (bookings && bookings.length > 0) {
     const userIds = [...new Set(bookings.map((b) => b.user_id))]
     const containerTypeIds = [...new Set(bookings.map((b) => b.container_type_id))]

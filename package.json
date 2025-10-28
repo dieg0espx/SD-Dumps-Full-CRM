@@ -79,6 +79,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^22",
+    "@types/nodemailer": "^7.0.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.36.0",
