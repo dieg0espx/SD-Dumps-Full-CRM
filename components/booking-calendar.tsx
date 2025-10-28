@@ -22,9 +22,11 @@ import {
 
 interface BookingCalendarProps {
   bookings: any[]
+  isAdmin?: boolean
+  onBookingUpdate?: () => void
 }
 
-export function BookingCalendar({ bookings }: BookingCalendarProps) {
+export function BookingCalendar({ bookings, isAdmin = false, onBookingUpdate }: BookingCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedBooking, setSelectedBooking] = useState<any>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -227,7 +229,13 @@ export function BookingCalendar({ bookings }: BookingCalendarProps) {
         </CardContent>
       </Card>
 
-      <BookingDetailsSidebar booking={selectedBooking} isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
+      <BookingDetailsSidebar 
+        booking={selectedBooking} 
+        isOpen={isSidebarOpen} 
+        onClose={handleCloseSidebar} 
+        isAdmin={isAdmin}
+        onUpdate={onBookingUpdate}
+      />
     </>
   )
 }

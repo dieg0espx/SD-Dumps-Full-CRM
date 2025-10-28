@@ -1,11 +1,11 @@
 "use client"
 
 import { createClient } from "@/lib/supabase/client"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { BookingForm } from "@/components/booking-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Truck, Clock, MapPin, Users, MessageSquare, User, Plus, LogOut, CreditCard, Menu, X } from "lucide-react"
+import { Calendar, Truck, Clock, MapPin, Users, MessageSquare, User, Plus, LogOut, CreditCard, Menu, X, Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { ChatInterface } from "@/components/chat-interface"
@@ -13,6 +13,7 @@ import { ProfileForm } from "@/components/profile-form"
 import { ClientPaymentHistory } from "@/components/client-payment-history"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 
 const formatCurrency = (amount: number) => {
@@ -34,6 +35,11 @@ export default function BookingDashboard() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<NavigationItem>('new-booking')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showBookingDialog, setShowBookingDialog] = useState(false)
+  const [selectedBooking, setSelectedBooking] = useState<any>(null)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -69,7 +75,107 @@ export default function BookingDashboard() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
 
-      setBookings(bookings || [])
+      // Fetch payments for each booking to get fee information
+      const bookingsWithFees = await Promise.all(
+        (bookings || []).map(async (booking) => {
+          const { data: payments, error: paymentsError } = await supabase
+            .from("payments")
+            .select("*")
+            .eq("booking_id", booking.id)
+            .order("created_at", { ascending: true })
+
+          // Calculate total payments amount
+          const totalPayments = (payments || []).reduce((sum, payment) => sum + (payment.amount || 0), 0)
+
+          // If total payments > booking amount, there are additional fees
+          const hasFees = totalPayments > booking.total_amount
+
+          // Calculate fees based on the difference between total payments and booking amount
+          let fees = []
+          if (totalPayments > booking.total_amount) {
+            const feeAmount = totalPayments - booking.total_amount
+            console.log('🔍 [Booking Debug] Payment analysis:', {
+              bookingAmount: booking.total_amount,
+              totalPayments: totalPayments,
+              feeAmount: feeAmount,
+              paymentsCount: (payments || []).length,
+              payments: payments
+            })
+            
+            // If there are multiple payments, use the additional ones
+            if ((payments || []).length > 1) {
+              fees = (payments || []).slice(1)
+              console.log('🔍 [Booking Debug] Using multiple payments as fees:', fees)
+            } else {
+              // Check if the single payment has a detailed description that we can parse
+              const singlePayment = (payments || [])[0]
+              if (singlePayment && singlePayment.notes && singlePayment.notes.includes(':')) {
+                // Try to parse individual fees from the description
+                console.log('🔍 [Booking Debug] Parsing fees from description:', singlePayment.notes)
+                
+                // Parse individual fees from the description
+                let feesText = ''
+                if (singlePayment.notes.includes('Individual fees:')) {
+                  feesText = singlePayment.notes.split('Individual fees:')[1]?.trim() || ''
+                } else if (singlePayment.notes.includes('Extra fees:')) {
+                  feesText = singlePayment.notes.split('Extra fees:')[1]?.trim() || ''
+                } else {
+                  feesText = singlePayment.notes
+                }
+                
+                if (feesText.includes(',')) {
+                  // Multiple fees separated by commas
+                  const feeItems = feesText.split(',').map(f => f.trim())
+                  
+                  fees = feeItems.map((item, index) => {
+                    const [description, amountStr] = item.split(':').map(s => s.trim())
+                    const amount = amountStr ? parseFloat(amountStr.replace('$', '')) || 0 : feeAmount / feeItems.length
+                    
+                    return {
+                      id: `parsed_fee_${index}`,
+                      amount: amount,
+                      description: description || `Fee ${index + 1}`,
+                      created_at: singlePayment.created_at || new Date().toISOString(),
+                      notes: 'Individual fee from combined payment'
+                    }
+                  })
+                } else {
+                  // Single fee description
+                  const [description, amountStr] = feesText.split(':').map(s => s.trim())
+                  const amount = amountStr ? parseFloat(amountStr.replace('$', '')) || feeAmount : feeAmount
+                  
+                  fees = [{
+                    id: 'parsed_fee',
+                    amount: amount,
+                    description: description || 'Additional fees',
+                    created_at: singlePayment.created_at || new Date().toISOString(),
+                    notes: 'Individual fee from combined payment'
+                  }]
+                }
+              } else {
+                // Single payment that includes fees - create a virtual fee record
+                fees = [{
+                  id: 'calculated_fee',
+                  amount: feeAmount,
+                  description: 'Additional fees (legacy)',
+                  created_at: (payments || [])[0]?.created_at || new Date().toISOString(),
+                  notes: 'This fee was added before the new individual fee system. Individual fee details are not available.'
+                }]
+              }
+            }
+          }
+          
+          return {
+            ...booking,
+            fees: fees,
+            hasFees: hasFees,
+            totalPayments: totalPayments
+          }
+        })
+      )
+
+
+      setBookings(bookingsWithFees || [])
 
       // Fetch user's payments
       const { data: payments } = await supabase
@@ -93,6 +199,39 @@ export default function BookingDashboard() {
 
     checkAuth()
   }, [router, supabase.auth])
+
+  const handleOpenBookingDialog = (booking: any) => {
+    setSelectedBooking(booking)
+    setShowBookingDialog(true)
+  }
+
+  const handleCloseBookingDialog = () => {
+    setShowBookingDialog(false)
+    setSelectedBooking(null)
+  }
+
+  // Touch handlers for swipe functionality
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientY)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientY)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    
+    const distance = touchStart - touchEnd
+    const isUpSwipe = distance > 50
+    const isDownSwipe = distance < -50
+
+    if (isUpSwipe || isDownSwipe) {
+      // Close dialog on swipe
+      handleCloseBookingDialog()
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -195,7 +334,11 @@ export default function BookingDashboard() {
             ) : (
               <div className="space-y-4 sm:space-y-6">
                 {bookings.map((booking: any) => (
-                  <Card key={booking.id}>
+                  <Card 
+                    key={booking.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow duration-200"
+                    onClick={() => handleOpenBookingDialog(booking)}
+                  >
                     <CardHeader>
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                         <div>
@@ -239,7 +382,18 @@ export default function BookingDashboard() {
                           <h4 className="font-medium text-gray-900 mb-2">Payment</h4>
                           <div className="space-y-1 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">Total Amount:</span> {formatCurrency(booking.total_amount)}
+                              <span className="font-medium">Booking Amount:</span> {formatCurrency(booking.total_amount)}
+                            </div>
+                            {booking.fees && booking.fees.length > 0 && (
+                              <div>
+                                <span className="font-medium">Additional Fees:</span> {formatCurrency(booking.fees.reduce((sum: number, fee: any) => sum + (fee.amount || 0), 0))}
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-medium">Total Amount:</span> 
+                              <span className="font-semibold text-green-600 ml-1">
+                                {formatCurrency((booking.total_amount || 0) + (booking.fees?.reduce((sum: number, fee: any) => sum + (fee.amount || 0), 0) || 0))}
+                              </span>
                             </div>
                             <div>
                               <span className="font-medium">Booked:</span> {format(new Date(booking.created_at), "PPP")}
@@ -259,6 +413,14 @@ export default function BookingDashboard() {
                           <p className="text-sm text-gray-600">{booking.notes}</p>
                         </div>
                       )}
+                      
+                      {/* Click indicator */}
+                      <div className="mt-4 flex justify-end">
+                        <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          Click to view details
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -508,6 +670,181 @@ export default function BookingDashboard() {
           {renderContent()}
         </div>
       </div>
+
+      {/* My Bookings Dialog */}
+      <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+        <DialogContent 
+          ref={dialogRef}
+          className="sm:max-w-4xl max-h-[85vh] overflow-y-auto transition-transform duration-200 ease-out"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-green-600" />
+              My Bookings
+            </DialogTitle>
+            <DialogDescription>
+              Complete booking information and status
+            </DialogDescription>
+            {/* Scroll indicator for mobile */}
+            <div className="sm:hidden flex justify-center mt-2">
+              <div className="w-8 h-1 bg-gray-300 rounded-full"></div>
+            </div>
+            <div className="text-xs text-gray-500 text-center mt-1">
+              Scroll to see all details
+            </div>
+          </DialogHeader>
+
+          {selectedBooking && (
+            <div className="space-y-6 pb-4">
+              {/* Booking Information */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Booking Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Container Type:</span>
+                    <p className="text-gray-900">{selectedBooking.container_types?.name || "N/A"}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Size:</span>
+                    <p className="text-gray-900">{selectedBooking.container_types?.size || "N/A"}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Description:</span>
+                    <p className="text-gray-900">{selectedBooking.container_types?.description || "N/A"}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Service Type:</span>
+                    <p className="text-gray-900">{selectedBooking.service_type || "N/A"}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Start Date:</span>
+                    <p className="text-gray-900">
+                      {selectedBooking.start_date 
+                        ? format(new Date(selectedBooking.start_date), "MMMM do, yyyy")
+                        : "N/A"
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">End Date:</span>
+                    <p className="text-gray-900">
+                      {selectedBooking.end_date 
+                        ? format(new Date(selectedBooking.end_date), "MMMM do, yyyy")
+                        : "N/A"
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Pickup Time:</span>
+                    <p className="text-gray-900">{selectedBooking.pickup_time || "N/A"}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Status:</span>
+                    <p className="text-gray-900">{selectedBooking.status || "N/A"}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <span className="font-medium text-gray-700">Delivery Address:</span>
+                    <p className="text-gray-900">{selectedBooking.delivery_address || "N/A"}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <span className="font-medium text-gray-700">Notes:</span>
+                    <p className="text-gray-900">{selectedBooking.notes || "No notes"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Information */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Payment Information</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">Booking Amount:</span>
+                      <p className="text-gray-900 font-semibold">{formatCurrency(selectedBooking.total_amount || 0)}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Payment Status:</span>
+                      <p className="text-gray-900">{selectedBooking.payment_status || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Booking ID:</span>
+                      <p className="text-gray-900 font-mono text-xs">{selectedBooking.id}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Created:</span>
+                      <p className="text-gray-900">
+                        {selectedBooking.created_at 
+                          ? format(new Date(selectedBooking.created_at), "MMMM do, yyyy 'at' h:mm a")
+                          : "N/A"
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Fees Section */}
+                  {selectedBooking.fees && selectedBooking.fees.length > 0 && (
+                    <div className="border-t pt-4">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">Additional Fees</h4>
+                      <div className="space-y-2">
+                        {selectedBooking.fees.map((fee: any, index: number) => (
+                          <div key={fee.id || index} className="bg-white rounded-lg p-3 border">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {fee.description || fee.notes || `Fee #${index + 1}`}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Added on {fee.created_at ? format(new Date(fee.created_at), "MMM do, yyyy") : "N/A"}
+                                </p>
+                              </div>
+                              <p className="text-sm font-semibold text-orange-600 ml-4">
+                                {formatCurrency(fee.amount || 0)}
+                              </p>
+                            </div>
+                            {fee.notes && fee.notes !== fee.description && !fee.notes.includes('Individual fee from combined payment') && (
+                              <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                                <span className="font-medium">Admin Notes:</span> {fee.notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        <div className="flex justify-between items-center bg-blue-50 rounded-lg p-3 border border-blue-200">
+                          <span className="text-sm font-medium text-gray-900">Total Fees:</span>
+                          <span className="text-sm font-semibold text-blue-600">
+                            {formatCurrency(selectedBooking.fees.reduce((sum: number, fee: any) => sum + (fee.amount || 0), 0))}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total Amount */}
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center bg-green-50 rounded-lg p-3 border border-green-200">
+                      <span className="text-base font-bold text-gray-900">Total Amount:</span>
+                      <span className="text-lg font-bold text-green-600">
+                        {formatCurrency((selectedBooking.total_amount || 0) + (selectedBooking.fees?.reduce((sum: number, fee: any) => sum + (fee.amount || 0), 0) || 0))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              onClick={handleCloseBookingDialog}
+              className="w-full sm:w-auto"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

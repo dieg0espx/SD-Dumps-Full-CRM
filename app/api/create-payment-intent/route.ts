@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
       amount: Math.round(amount * 100), // Convert to cents
       currency: currency,
       customer: customerId,
+      setup_future_usage: 'off_session', // Save payment method for future admin charges
       description: `Container Rental - ${containerTypeName}`,
       metadata: {
         bookingId: bookingId.toString(),

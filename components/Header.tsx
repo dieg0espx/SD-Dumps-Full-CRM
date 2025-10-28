@@ -1,12 +1,34 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Phone, Menu, X } from 'lucide-react'
+import { Phone, Menu, X, User } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setIsLoggedIn(!!user)
+    }
+
+    checkUser()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session?.user)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -47,11 +69,20 @@ export default function Header() {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/auth/login">
-              <button className="bg-main text-white px-6 py-2 rounded-lg hover:bg-main/90 transition-colors">
-                Login
-              </button>
-            </Link>
+            {isLoggedIn ? (
+              <Link href="/booking">
+                <button className="flex items-center space-x-2 bg-main text-white px-6 py-2 rounded-lg hover:bg-main/90 transition-colors">
+                  <User className="w-4 h-4" />
+                  <span>My Account</span>
+                </button>
+              </Link>
+            ) : (
+              <Link href="/auth/login">
+                <button className="bg-main text-white px-6 py-2 rounded-lg hover:bg-main/90 transition-colors">
+                  Login
+                </button>
+              </Link>
+            )}
             <button 
               onClick={handleCallUs}
               className="flex items-center space-x-2 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
@@ -110,11 +141,20 @@ export default function Header() {
               </Link>
             </div>
             <div className="px-4 py-4 border-t border-gray-200 space-y-3">
-              <Link href="/auth/login" onClick={closeMobileMenu}>
-                <button className="w-full bg-main text-white px-4 py-3 rounded-lg hover:bg-main/90 transition-colors font-medium">
-                  Login
-                </button>
-              </Link>
+              {isLoggedIn ? (
+                <Link href="/booking" onClick={closeMobileMenu}>
+                  <button className="w-full flex items-center justify-center space-x-2 bg-main text-white px-4 py-3 rounded-lg hover:bg-main/90 transition-colors font-medium">
+                    <User className="w-4 h-4" />
+                    <span>My Account</span>
+                  </button>
+                </Link>
+              ) : (
+                <Link href="/auth/login" onClick={closeMobileMenu}>
+                  <button className="w-full bg-main text-white px-4 py-3 rounded-lg hover:bg-main/90 transition-colors font-medium">
+                    Login
+                  </button>
+                </Link>
+              )}
               <button 
                 onClick={handleCallUs}
                 className="w-full flex items-center justify-center space-x-2 border border-gray-300 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
