@@ -48,7 +48,7 @@ export default function AdminCalendarPage() {
     console.log("[v0] Admin calendar - Error:", bookingsError)
 
     // Fetch related data separately if bookings exist
-    let enrichedBookings = []
+    let enrichedBookings: any[] = []
     if (bookings && bookings.length > 0) {
       // Get unique user IDs and container type IDs
       const userIds = [...new Set(bookings.map((b) => b.user_id))]

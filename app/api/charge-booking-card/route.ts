@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       // Create individual payment records for each fee
       console.log('🔵 [Charge Booking Card] Creating payment records for fees...')
       
-      let paymentRecords = []
+      let paymentRecords: any[] = []
       
       if (fees && fees.length > 0) {
         // Create a single payment record with total amount, but store individual fees in notes
