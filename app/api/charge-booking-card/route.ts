@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         console.log('🔵 [Charge Booking Card] Creating single payment with individual fees...')
         
         // Create detailed description with individual fees
-        const feesDescription = fees.map(fee => `${fee.description}: $${fee.amount.toFixed(2)}`).join(', ')
+        const feesDescription = fees.map((fee: any) => `${fee.description}: $${fee.amount.toFixed(2)}`).join(', ')
         const combinedNotes = `Individual fees: ${feesDescription}`
         
         const { data: newPayment, error: paymentInsertError } = await supabase
