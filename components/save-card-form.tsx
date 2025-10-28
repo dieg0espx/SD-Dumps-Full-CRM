@@ -117,7 +117,6 @@ function SaveCardFormInner({ onSuccess, onCancel }: SaveCardFormInnerProps) {
 
       console.log('✅ Card setup confirmed:', setupIntent.status)
       console.log('📦 Payment Method ID:', setupIntent.payment_method)
-      console.log('📦 Customer ID:', setupIntent.customer)
 
       if (setupIntent.status === 'succeeded') {
         console.log('🎉 Card saved successfully!')
