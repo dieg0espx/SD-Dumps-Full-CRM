@@ -1,6 +1,28 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+function getBaseUrl(request: Request): string {
+  const { origin } = new URL(request.url)
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const isLocalEnv = process.env.NODE_ENV === 'development'
+  
+  if (isLocalEnv) {
+    return origin
+  }
+  
+  // In production, prefer forwarded host or use environment variable
+  if (forwardedHost) {
+    return `https://${forwardedHost}`
+  } else if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL
+  } else if (origin.includes('localhost')) {
+    // Fallback: if origin is localhost in production, use a default
+    return 'https://your-domain.vercel.app' // Replace with your actual domain
+  }
+  
+  return origin
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
@@ -49,19 +71,12 @@ export async function GET(request: Request) {
         }
       }
       
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-      
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${redirectPath}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${redirectPath}`)
-      } else {
-        return NextResponse.redirect(`${origin}${redirectPath}`)
-      }
+      const baseUrl = getBaseUrl(request)
+      return NextResponse.redirect(`${baseUrl}${redirectPath}`)
     }
   }
   
   // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  const baseUrl = getBaseUrl(request)
+  return NextResponse.redirect(`${baseUrl}/auth/auth-code-error`)
 }
