@@ -22,7 +22,7 @@ if (isEmailConfigured) {
   })
 
   // Verify connection
-  transporter.verify((error) => {
+  transporter.verify((error: any) => {
     if (error) {
       console.error('❌ Email transporter error:', error)
     } else {
