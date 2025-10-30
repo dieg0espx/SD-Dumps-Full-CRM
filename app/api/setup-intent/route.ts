@@ -6,10 +6,8 @@ if (!process.env.STRIPE_SECRET_KEY) {
   console.error('❌ [Setup Intent] Missing STRIPE_SECRET_KEY environment variable')
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  // Use a stable, current API version. You can omit apiVersion to use the account default.
-  apiVersion: '2024-06-20',
-})
+// Use account default API version to avoid type mismatch errors during build
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
 /**
  * POST: Create a Setup Intent to save a payment method for future use
