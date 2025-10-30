@@ -47,6 +47,76 @@ interface BookingEmailData {
   notes?: string
 }
 
+interface GuestInquiryEmailData {
+  customerName: string
+  customerEmail: string
+  phone?: string | null
+  containerType: string
+  startDate: string
+  endDate: string
+  serviceType: string
+  deliveryAddress?: string | null
+  notes?: string | null
+}
+
+function generateGuestInquiryEmail(data: GuestInquiryEmailData): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+    .row:last-child { border-bottom: none; }
+    .label { font-weight: bold; color: #6b7280; }
+    .value { color: #111827; }
+  </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>New Guest Booking Request</h2>
+        <p style="margin: 6px 0 0 0">No account – follow-up required</p>
+      </div>
+      <div class="card">
+        <div class="row"><span class="label">Name</span><span class="value">${data.customerName}</span></div>
+        <div class="row"><span class="label">Email</span><span class="value">${data.customerEmail}</span></div>
+        ${data.phone ? `<div class="row"><span class="label">Phone</span><span class="value">${data.phone}</span></div>` : ''}
+      </div>
+      <div class="card">
+        <div class="row"><span class="label">Container</span><span class="value">${data.containerType}</span></div>
+        <div class="row"><span class="label">Service</span><span class="value" style="text-transform: capitalize">${data.serviceType}</span></div>
+        <div class="row"><span class="label">Start</span><span class="value">${data.startDate}</span></div>
+        <div class="row"><span class="label">End</span><span class="value">${data.endDate}</span></div>
+        ${data.deliveryAddress ? `<div class="row"><span class="label">Delivery Address</span><span class="value">${data.deliveryAddress}</span></div>` : ''}
+      </div>
+      ${data.notes ? `<div class="card"><div class="label" style="margin-bottom: 8px">Notes</div><div class="value">${data.notes}</div></div>` : ''}
+    </div>
+  </body>
+  </html>
+  `
+}
+
+export async function sendGuestInquiryEmail(data: GuestInquiryEmailData) {
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping guest inquiry email')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
+  await transporter.sendMail({
+    from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+    to: process.env.CONTACT_EMAIL,
+    subject: `New Guest Booking Request`,
+    html: generateGuestInquiryEmail(data),
+    replyTo: data.customerEmail,
+  })
+
+  return { success: true }
+}
+
 // Client email template
 export function generateClientEmail(data: BookingEmailData): string {
   return `

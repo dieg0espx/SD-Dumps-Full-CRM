@@ -43,9 +43,10 @@ interface StripeElementsProps {
   bookingData: any
   onSuccess: (bookingData?: any) => void
   onError: (error: string) => void
+  allowGuest?: boolean
 }
 
-function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: StripeElementsProps) {
+function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError, allowGuest = false as any }: any) {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
@@ -74,13 +75,23 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
 
     try {
       // Get authenticated user
-      console.log('🔵 [Stripe] Checking user authentication...')
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
-        console.error('❌ [Stripe] User not authenticated:', authError)
-        throw new Error('User not authenticated')
+      let userId: string | null = null
+      if (!allowGuest) {
+        console.log('🔵 [Stripe] Checking user authentication...')
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+          console.error('❌ [Stripe] User not authenticated:', authError)
+          throw new Error('User not authenticated')
+        }
+        userId = user.id
+        console.log('✅ [Stripe] User authenticated:', user.id)
+      } else {
+        userId = process.env.NEXT_PUBLIC_GUEST_USER_ID as string
+        if (!userId) {
+          console.error('❌ [Stripe] Guest user ID not configured (NEXT_PUBLIC_GUEST_USER_ID)')
+          throw new Error('Guest checkout is not configured. Please set NEXT_PUBLIC_GUEST_USER_ID.')
+        }
       }
-      console.log('✅ [Stripe] User authenticated:', user.id)
 
       let finalBookingId = bookingId
 
@@ -88,15 +99,15 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
       if (bookingId === "temp" || !bookingId) {
         console.log('🔵 [Stripe] Creating new booking...')
         // Update user profile with phone number if provided
-        if (bookingData.phone) {
-          await supabase.from("profiles").update({ phone: bookingData.phone }).eq("id", user.id)
+        if (!allowGuest && bookingData.phone) {
+          await supabase.from("profiles").update({ phone: bookingData.phone }).eq("id", userId as string)
         }
 
         // Create the booking with pending payment
         const { data: booking, error: bookingError } = await supabase
           .from("bookings")
           .insert({
-            user_id: user.id,
+            user_id: userId,
             container_type_id: bookingData.container_type_id,
             start_date: bookingData.start_date,
             end_date: bookingData.end_date,
@@ -128,6 +139,14 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          allowGuest,
+          guest: allowGuest ? {
+            name: (bookingData.guest_full_name || ''),
+            email: (bookingData.guest_email || ''),
+            phone: (bookingData.phone || ''),
+          } : null,
+        }),
       })
 
       if (!response.ok) {
@@ -311,7 +330,7 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
   )
 }
 
-export function StripeElements({ amount, bookingId, bookingData, onSuccess, onError }: StripeElementsProps) {
+export function StripeElements({ amount, bookingId, bookingData, onSuccess, onError, allowGuest }: StripeElementsProps) {
   if (!stripePromise) {
     return (
       <Card>
@@ -332,6 +351,7 @@ export function StripeElements({ amount, bookingId, bookingData, onSuccess, onEr
         bookingData={bookingData}
         onSuccess={onSuccess}
         onError={onError}
+        allowGuest={allowGuest}
       />
     </Elements>
   )
