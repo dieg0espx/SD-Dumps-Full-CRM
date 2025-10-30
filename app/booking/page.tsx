@@ -33,6 +33,7 @@ export default function BookingDashboard() {
   const [bookings, setBookings] = useState<any[]>([])
   const [payments, setPayments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAuthChoice, setShowAuthChoice] = useState(false)
   const [activeTab, setActiveTab] = useState<NavigationItem>('new-booking')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showBookingDialog, setShowBookingDialog] = useState(false)
@@ -50,7 +51,9 @@ export default function BookingDashboard() {
       } = await supabase.auth.getUser()
 
       if (!user) {
-        router.push("/auth/login")
+        // Show choice screen instead of redirecting
+        setShowAuthChoice(true)
+        setLoading(false)
         return
       }
 
@@ -491,8 +494,30 @@ export default function BookingDashboard() {
     )
   }
 
-  if (!user) {
-    return null
+  if (!user && showAuthChoice) {
+    return (
+      <div className="min-h-[calc(100vh-70px)] bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-lg w-full bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8 text-center">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Get Started</h1>
+          <p className="text-gray-600 mt-2">Choose how you want to book your dumpster.</p>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={() => router.push("/auth/login")}
+              className="w-full inline-flex items-center justify-center px-4 py-3 rounded-lg bg-black text-white hover:bg-black/80 transition-colors"
+            >
+              Sign in / Create account
+            </button>
+            <button
+              onClick={() => router.push("/guest-booking")}
+              className="w-full inline-flex items-center justify-center px-4 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Continue as guest
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-4">Guests can request a booking without creating an account.</p>
+        </div>
+      </div>
+    )
   }
 
   const { title, description } = getHeaderTitle()

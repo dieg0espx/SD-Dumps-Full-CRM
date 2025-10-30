@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -69,7 +69,15 @@ interface Booking {
   status: string
 }
 
-export function BookingForm({ user }: BookingFormProps) {
+type GuestInfo = { fullName?: string; email?: string; phone?: string }
+
+interface ExtendedBookingFormProps extends BookingFormProps {
+  guestMode?: boolean
+  guestInfo?: GuestInfo
+  initialContainerTypes?: any[]
+}
+
+export function BookingForm({ user, guestMode = false, guestInfo, initialContainerTypes }: ExtendedBookingFormProps) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [containerTypes, setContainerTypes] = useState<ContainerType[]>([])
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
@@ -93,6 +101,11 @@ export function BookingForm({ user }: BookingFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingData, setLoadingData] = useState(true)
+  const topRef = useRef<HTMLDivElement | null>(null)
+  const [guestFullName, setGuestFullName] = useState("")
+  const [guestEmail, setGuestEmail] = useState("")
+  const [guestPhone, setGuestPhone] = useState("")
+  const isGuestUserConfigured = !!process.env.NEXT_PUBLIC_GUEST_USER_ID
   const [currentStep, setCurrentStep] = useState<number>(1)
 
   // Payment form state
@@ -146,19 +159,23 @@ export function BookingForm({ user }: BookingFormProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load container types - explicitly filter out hidden ones
-        const { data: containers, error: containerError } = await supabase
-          .from("container_types")
-          .select("*")
-          .eq("is_hidden", false)
-          .order("price_per_day")
+        // Load container types unless provided by parent
+        if (initialContainerTypes && initialContainerTypes.length > 0) {
+          setContainerTypes(initialContainerTypes)
+        } else {
+          const { data: containers, error: containerError } = await supabase
+            .from("container_types")
+            .select("*")
+            .eq("is_hidden", false)
+            .order("price_per_day")
 
-        if (containerError) {
-          console.error("Container error:", containerError)
-          throw containerError
+          if (containerError) {
+            console.error("Container error:", containerError)
+            throw containerError
+          }
+
+          setContainerTypes(containers || [])
         }
-
-        setContainerTypes(containers || [])
 
         // Load existing bookings for availability checking
         const { data: bookings, error: bookingError } = await supabase
@@ -173,17 +190,21 @@ export function BookingForm({ user }: BookingFormProps) {
 
         setExistingBookings(bookings || [])
 
-        // Load user profile
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("id, email, full_name, phone, company, street_address, city, state, zip_code, country, role, is_admin")
-          .eq("id", user.id)
-          .single()
+        // Load user profile (skip in guest mode)
+        if (!guestMode) {
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("id, email, full_name, phone, company, street_address, city, state, zip_code, country, role, is_admin")
+            .eq("id", user.id)
+            .single()
 
-        if (profileError) {
-          console.error("Profile error:", profileError)
+          if (profileError) {
+            console.error("Profile error:", profileError)
+          } else {
+            setProfile(profile)
+          }
         } else {
-          setProfile(profile)
+          setProfile(null)
         }
       } catch (error) {
         console.error("Error loading data:", error)
@@ -194,7 +215,7 @@ export function BookingForm({ user }: BookingFormProps) {
     }
 
     loadData()
-  }, [supabase])
+  }, [supabase, guestMode, user?.id, initialContainerTypes])
 
   const isDateUnavailable = (date: Date) => {
     if (!selectedContainer) return false
@@ -361,16 +382,16 @@ export function BookingForm({ user }: BookingFormProps) {
           : null
 
       // Update user profile with phone if available
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser()
-      if (currentUser?.user_metadata?.phone) {
-        await supabase.from("profiles").update({ phone: currentUser.user_metadata.phone }).eq("id", user.id)
+      if (!guestMode) {
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        if (currentUser?.user_metadata?.phone) {
+          await supabase.from("profiles").update({ phone: currentUser.user_metadata.phone }).eq("id", user.id)
+        }
       }
 
       // Create the booking with signature URL
       const insertData = {
-        user_id: user.id,
+        user_id: guestMode ? (process.env.NEXT_PUBLIC_GUEST_USER_ID as string) : user.id,
         container_type_id: selectedContainer,
         start_date: format(startDate, "yyyy-MM-dd"),
         end_date: format(endDate, "yyyy-MM-dd"),
@@ -379,7 +400,14 @@ export function BookingForm({ user }: BookingFormProps) {
         customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
         service_type: serviceType,
         total_amount: totalAmount,
-        notes: notes.trim() || null,
+        notes: (() => {
+          const base = notes.trim() || ""
+          if (guestMode) {
+            const extra = [`Guest Name: ${guestFullName || ""}`, `Guest Email: ${guestEmail || ""}`, `Guest Phone: ${guestPhone || ""}`].filter(Boolean).join(" | ")
+            return [base, extra].filter(Boolean).join("\n") || null
+          }
+          return base || null
+        })(),
         status: "pending",
         payment_status: "pending",
         signature_img_url: signatureImgUrl || null,
@@ -663,11 +691,30 @@ export function BookingForm({ user }: BookingFormProps) {
       case 6:
         return signatureImgUrl !== ""
       case 7:
+        if (guestMode) {
+          const hasName = guestFullName.trim().length > 1
+          const hasEmail = /.+@.+\..+/.test(guestEmail)
+          const hasPhone = guestPhone.trim().length >= 7
+          return paymentMethod !== "" && hasName && hasEmail && hasPhone && isGuestUserConfigured
+        }
         return paymentMethod !== ""
       default:
         return true
     }
   }
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    // Prefer scrolling the component into view; fallback to window scroll
+    if (topRef && topRef.current) {
+      try {
+        topRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+        return
+      } catch (_) {}
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [currentStep])
 
   if (loadingData) {
     return (
@@ -683,11 +730,13 @@ export function BookingForm({ user }: BookingFormProps) {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-1 sm:px-6 lg:px-8">
+      <div ref={topRef} />
       <div className="mb-4 sm:mb-6 lg:mb-8">
         {!isSuccess && (
           <div className="relative">
-            <div className="flex items-center justify-center overflow-x-auto pb-2 px-1">
-              <div className="flex items-center justify-center min-w-max">
+            <div className="flex items-center justify-center overflow-x-auto lg:overflow-visible pb-3 px-6 md:px-10">
+              <div className="flex items-center justify-center min-w-max pl-8 pr-8 md:pl-12 md:pr-12">
+                <div className="w-4 md:w-6 flex-shrink-0" />
                 {Array.from({ length: totalSteps }, (_, i) => (
                   <div key={i} className="flex items-center">
                     <div className="relative flex items-center justify-center">
@@ -714,6 +763,7 @@ export function BookingForm({ user }: BookingFormProps) {
                     )}
                   </div>
                 ))}
+                <div className="w-4 md:w-6 flex-shrink-0" />
               </div>
             </div>
           </div>
@@ -744,13 +794,14 @@ export function BookingForm({ user }: BookingFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {currentStep === 1 && (
-          <Card className="border-0 shadow-lg">
-            <CardHeader className="text-center pb-4 sm:pb-6 px-2 sm:px-6">
-              <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Select Container Type</CardTitle>
-              <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">
-                Choose the container size that best fits your project
-              </CardDescription>
-            </CardHeader>
+          <>
+            {guestMode && (
+              <div className="mb-4 sm:mb-6 rounded-xl border-2 border-blue-200 bg-blue-50 p-4 sm:p-5 text-center">
+                <h3 className="text-base sm:text-lg font-semibold text-blue-900">Book as Guest</h3>
+                <p className="text-sm sm:text-base text-blue-800 mt-1">No account required. Share your details and we’ll follow up to confirm.</p>
+              </div>
+            )}
+            <Card className="border-0 shadow-lg">
             <CardContent className="px-2 sm:px-6">
               {containerTypes.length === 0 ? (
                 <div className="text-center p-4 sm:p-6 lg:p-8">
@@ -826,6 +877,7 @@ export function BookingForm({ user }: BookingFormProps) {
               )}
             </CardContent>
           </Card>
+          </>
         )}
 
         {currentStep === 2 && (
@@ -968,7 +1020,7 @@ export function BookingForm({ user }: BookingFormProps) {
                             : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm",
                         )}
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 lg:space-x-8">
                           <div
                             className={cn(
                               "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0",
@@ -999,7 +1051,7 @@ export function BookingForm({ user }: BookingFormProps) {
                             : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm",
                         )}
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 lg:space-x-8">
                           <div
                             className={cn(
                               "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0",
@@ -1557,6 +1609,44 @@ export function BookingForm({ user }: BookingFormProps) {
                       <CardDescription>Choose your payment method and enter details</CardDescription>
                     </CardHeader>
                     <CardContent className="px-2 sm:px-6">
+                {guestMode && (
+                  <div className="mb-6 bg-white border-2 border-gray-200 rounded-xl p-4 sm:p-6">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Your Contact</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input
+                          placeholder="John Doe"
+                          className="mt-1 w-full rounded-md border-2 border-gray-300 bg-white focus:border-blue-500 focus:ring-blue-500 h-11 px-3"
+                          value={guestFullName}
+                          onChange={(e) => setGuestFullName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                        <input
+                          type="email"
+                          placeholder="you@example.com"
+                          className="mt-1 w-full rounded-md border-2 border-gray-300 bg-white focus:border-blue-500 focus:ring-blue-500 h-11 px-3"
+                          value={guestEmail}
+                          onChange={(e) => setGuestEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Phone</label>
+                        <input
+                          placeholder="(555) 123-4567"
+                          className="mt-1 w-full rounded-md border-2 border-gray-300 bg-white focus:border-blue-500 focus:ring-blue-500 h-11 px-3"
+                          value={guestPhone}
+                          onChange={(e) => setGuestPhone(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
                       <div className="space-y-4 sm:space-y-6">
                         {/* Payment Method Toggle */}
                         <div className="space-y-2 sm:space-y-3">
@@ -1604,9 +1694,12 @@ export function BookingForm({ user }: BookingFormProps) {
                               total_amount: totalAmount,
                               pickup_time: pickupTime,
                               notes: notes,
-                              phone: profile?.phone,
+                              phone: guestMode ? guestPhone : profile?.phone,
+                              guest_full_name: guestMode ? guestFullName : undefined,
+                              guest_email: guestMode ? guestEmail : undefined,
                               signature_img_url: signatureImgUrl,
                             }}
+                            allowGuest={guestMode}
                             onSuccess={async (bookingData) => {
                               // Send booking confirmation emails
                               try {
@@ -1618,8 +1711,8 @@ export function BookingForm({ user }: BookingFormProps) {
                                   },
                                   body: JSON.stringify({
                                     bookingId: bookingData.id,
-                                    customerName: profile?.full_name || user.email?.split('@')[0] || 'Customer',
-                                    customerEmail: user.email,
+                                    customerName: guestMode ? (guestFullName || 'Guest') : (profile?.full_name || user.email?.split('@')[0] || 'Customer'),
+                                    customerEmail: guestMode ? guestEmail : user.email,
                                     containerType: bookingData.container_types?.size || containerTypes.find(c => c.id === selectedContainer)?.size || 'Container',
                                     startDate: format(startDate!, "MMMM dd, yyyy"),
                                     endDate: format(endDate!, "MMMM dd, yyyy"),
@@ -1914,52 +2007,54 @@ export function BookingForm({ user }: BookingFormProps) {
             // No submit button needed for Stripe as it handles its own submission
             null
           ) : (
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:gap-4 order-1 sm:order-2 w-full sm:w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsSuccess(false)
-                  setSuccessData(null)
-                  setCurrentStep(1)
-                  // Reset form
-                  setSelectedContainer("")
-                  setStartDate(undefined)
-                  setEndDate(undefined)
-                  setServiceType("pickup")
-                  setPickupTime("09:00")
-                  setStreetAddress("")
-                  setCity("")
-                  setState("")
-                  setZipCode("")
-                  setDeliveryStreetAddress("")
-                  setDeliveryCity("")
-                  setDeliveryState("")
-                  setDeliveryZipCode("")
-                  setUseProfileAddress(false)
-                  setExtraTonnage(0)
-                  setApplianceCount(0)
-                  setNotes("")
-                  setPaymentMethod("stripe")
-                  setSignatureImgUrl("")
-                }}
-                className="flex items-center justify-center h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
-              >
-                <span className="hidden sm:inline">Book Another Container</span>
-                <span className="sm:hidden">Book Another</span>
-              </Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  // This will trigger a page refresh to show the updated bookings list
-                  window.location.reload()
-                }}
-                className="flex items-center justify-center h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
-              >
-                <span className="hidden sm:inline">View My Bookings</span>
-                <span className="sm:hidden">My Bookings</span>
-              </Button>
-            </div>
+            !guestMode && (
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:gap-4 order-1 sm:order-2 w-full sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsSuccess(false)
+                    setSuccessData(null)
+                    setCurrentStep(1)
+                    // Reset form
+                    setSelectedContainer("")
+                    setStartDate(undefined)
+                    setEndDate(undefined)
+                    setServiceType("pickup")
+                    setPickupTime("09:00")
+                    setStreetAddress("")
+                    setCity("")
+                    setState("")
+                    setZipCode("")
+                    setDeliveryStreetAddress("")
+                    setDeliveryCity("")
+                    setDeliveryState("")
+                    setDeliveryZipCode("")
+                    setUseProfileAddress(false)
+                    setExtraTonnage(0)
+                    setApplianceCount(0)
+                    setNotes("")
+                    setPaymentMethod("stripe")
+                    setSignatureImgUrl("")
+                  }}
+                  className="flex items-center justify-center h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
+                >
+                  <span className="hidden sm:inline">Book Another Container</span>
+                  <span className="sm:hidden">Book Another</span>
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    // refresh to show updated bookings list for logged-in users
+                    window.location.reload()
+                  }}
+                  className="flex items-center justify-center h-10 sm:h-12 lg:h-14 text-sm sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8"
+                >
+                  <span className="hidden sm:inline">View My Bookings</span>
+                  <span className="sm:hidden">My Bookings</span>
+                </Button>
+              </div>
+            )
           )}
         </div>
       </form>

@@ -39,7 +39,7 @@ interface StripeElementsProps {
   onError: (error: string) => void
 }
 
-function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: StripeElementsProps) {
+function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError, allowGuest = false as any }: any) {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
@@ -57,10 +57,15 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
     setError(null)
 
     try {
-      // Get authenticated user
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
-        throw new Error('User not authenticated')
+      let userId: string | null = null
+      if (!allowGuest) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+          throw new Error('User not authenticated')
+        }
+        userId = user.id
+      } else {
+        userId = process.env.NEXT_PUBLIC_GUEST_USER_ID as string
       }
 
       let finalBookingId = bookingId
@@ -68,15 +73,15 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError }: Str
       // Create booking if it doesn't exist
       if (bookingId === "temp" || !bookingId) {
         // Update user profile with phone number if provided
-        if (bookingData.phone) {
-          await supabase.from("profiles").update({ phone: bookingData.phone }).eq("id", user.id)
+        if (!allowGuest && bookingData.phone) {
+          await supabase.from("profiles").update({ phone: bookingData.phone }).eq("id", userId as string)
         }
 
         // Create the booking
         const { data: booking, error: bookingError } = await supabase
           .from("bookings")
           .insert({
-            user_id: user.id,
+            user_id: userId,
             container_type_id: bookingData.container_type_id,
             start_date: bookingData.start_date,
             end_date: bookingData.end_date,

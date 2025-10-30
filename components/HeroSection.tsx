@@ -16,12 +16,12 @@ export default function HeroSection() {
             Fast, reliable, and affordable dumpster rentals for your home renovation, construction project, or cleanup needs.
           </p>
                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-12 px-4">
-             <Link href="/booking" className="w-full sm:w-auto">
-               <button className="bg-black text-white px-6 sm:px-8 py-3 rounded-lg hover:bg-black/80 transition-colors flex items-center justify-center text-sm sm:text-base w-full sm:w-auto">
-                 Get Started
-                 <ChevronRight className="w-4 h-4 ml-2" />
-               </button>
-             </Link>
+            <Link href="/booking" className="w-full sm:w-auto">
+              <button className="bg-black text-white px-6 sm:px-8 py-3 rounded-lg hover:bg-black/80 transition-colors flex items-center justify-center text-sm sm:text-base w-full sm:w-auto">
+                Get Started
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </button>
+            </Link>
              <Link href="/contact" className="w-full sm:w-auto">
                <button className="border border-gray-300 text-gray-700 px-6 sm:px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base w-full sm:w-auto">
                  Contact
