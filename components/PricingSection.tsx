@@ -1,7 +1,11 @@
+'use client'
+
 import React from 'react'
 import { Check } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function PricingSection() {
+  const router = useRouter()
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,7 +53,10 @@ export default function PricingSection() {
                 <span className="text-sm text-gray-600">Drop-off and pick-up included</span>
               </div>
             </div>
-            <button className="w-full border border-gray-300 text-gray-700 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base">
+            <button
+              onClick={() => router.push('/booking')}
+              className="w-full border border-gray-300 text-gray-700 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+            >
               Choose Plan
             </button>
           </div>
@@ -95,7 +102,10 @@ export default function PricingSection() {
                 <span className="text-sm text-gray-600">Priority support</span>
               </div>
             </div>
-            <button className="w-full bg-main text-white py-3 rounded-lg hover:bg-main/90 transition-colors">
+            <button
+              onClick={() => router.push('/booking')}
+              className="w-full bg-main text-white py-3 rounded-lg hover:bg-main/90 transition-colors"
+            >
               Choose Plan
             </button>
           </div>
@@ -134,7 +144,10 @@ export default function PricingSection() {
                 <span className="text-sm text-gray-600">Call for quote</span>
               </div>
             </div>
-            <button className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => router.push('/contact')}
+              className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+            >
               Contact Us
             </button>
           </div>

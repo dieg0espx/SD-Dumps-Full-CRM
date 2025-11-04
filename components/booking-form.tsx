@@ -729,7 +729,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
 
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-1 sm:px-6 lg:px-8">
+    <div className="w-full mx-auto px-1 sm:px-6 lg:px-8">
       <div ref={topRef} />
       <div className="mb-4 sm:mb-6 lg:mb-8">
         {!isSuccess && (
