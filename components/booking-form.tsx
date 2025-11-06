@@ -1029,7 +1029,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                           >
                             <Truck className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                           </div>
-                          <div className="flex-1 text-center sm:text-left">
+                          <div className="flex-1 text-center sm:text-left ml-5">
                             <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Pickup Service</div>
                             <div className="text-gray-600 mt-1 text-sm sm:text-base">You pick up and return the container yourself</div>
                             <div className="text-xs sm:text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded mt-2 inline-block">
@@ -1060,7 +1060,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                           >
                             <MapPin className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                           </div>
-                          <div className="flex-1 text-center sm:text-left">
+                          <div className="flex-1 text-center sm:text-left ml-5">
                             <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Delivery Service</div>
                             <div className="text-gray-600 mt-1 text-sm sm:text-base">We deliver and pick up the container for you</div>
                             <div className="text-xs sm:text-sm text-green-600 bg-green-100 px-2 py-1 rounded mt-2 inline-block">
@@ -1208,7 +1208,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                         />
                       </svg>
                     </div>
-                    <div className="flex-1 text-center sm:text-left">
+                    <div className="flex-1 text-center sm:text-left ml-5">
                       <Label htmlFor="extraTonnage" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
                         Extra Tonnage
                       </Label>
@@ -1247,7 +1247,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                         />
                       </svg>
                     </div>
-                    <div className="flex-1 text-center sm:text-left">
+                    <div className="flex-1 text-center sm:text-left ml-5">
                       <Label htmlFor="applianceCount" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
                         Appliance Disposal
                       </Label>

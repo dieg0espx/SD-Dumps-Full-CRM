@@ -59,6 +59,15 @@ interface GuestInquiryEmailData {
   notes?: string | null
 }
 
+interface ContactFormData {
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  service?: string
+  message: string
+}
+
 function generateGuestInquiryEmail(data: GuestInquiryEmailData): string {
   return `
 <!DOCTYPE html>
@@ -112,6 +121,64 @@ export async function sendGuestInquiryEmail(data: GuestInquiryEmailData) {
     subject: `New Guest Booking Request`,
     html: generateGuestInquiryEmail(data),
     replyTo: data.customerEmail,
+  })
+
+  return { success: true }
+}
+
+// Contact form email template
+function generateContactFormEmail(data: ContactFormData): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+    .row:last-child { border-bottom: none; }
+    .label { font-weight: bold; color: #6b7280; }
+    .value { color: #111827; }
+    .message-box { background: #f9fafb; padding: 16px; border-radius: 8px; margin-top: 16px; border-left: 4px solid #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>New Contact Form Submission</h2>
+      <p style="margin: 6px 0 0 0">From your website contact page</p>
+    </div>
+    <div class="card">
+      <div class="row"><span class="label">Name</span><span class="value">${data.firstName} ${data.lastName}</span></div>
+      <div class="row"><span class="label">Email</span><span class="value">${data.email}</span></div>
+      ${data.phone ? `<div class="row"><span class="label">Phone</span><span class="value">${data.phone}</span></div>` : ''}
+      ${data.service ? `<div class="row"><span class="label">Service Type</span><span class="value">${data.service}</span></div>` : ''}
+    </div>
+    <div class="card">
+      <div class="label" style="margin-bottom: 8px">Message</div>
+      <div class="message-box">${data.message}</div>
+    </div>
+  </div>
+</body>
+</html>
+  `
+}
+
+// Send contact form email
+export async function sendContactFormEmail(data: ContactFormData) {
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping contact form email')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
+  await transporter.sendMail({
+    from: `"SD Dumps Contact Form" <${process.env.SMTP_FROM}>`,
+    to: process.env.CONTACT_EMAIL,
+    subject: `New Contact Form Submission from ${data.firstName} ${data.lastName}`,
+    html: generateContactFormEmail(data),
+    replyTo: data.email,
   })
 
   return { success: true }
