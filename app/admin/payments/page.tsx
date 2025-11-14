@@ -19,11 +19,11 @@ export default function AdminPaymentsPage() {
     
     // Fetch all bookings with card saved (pending payment)
     // These are bookings that have payment_method_id but payment_status is still "pending"
+    // Also include awaiting_card status (phone bookings waiting for customer to complete)
     const { data: pendingBookings, error: bookingsError } = await supabase
       .from("bookings")
       .select("*")
-      .eq("payment_status", "pending")
-      .not("payment_method_id", "is", null)
+      .or("and(payment_status.eq.pending,payment_method_id.not.is.null),status.eq.awaiting_card")
       .order("created_at", { ascending: false })
 
     console.log("[v0] Admin payments - Pending bookings (card saved):", pendingBookings?.length || 0)
@@ -56,10 +56,12 @@ export default function AdminPaymentsPage() {
         id: `booking_${booking.id}`,
         booking_id: booking.id,
         amount: booking.total_amount,
-        status: 'pending',
-        payment_status: 'pending',
+        status: booking.status === 'awaiting_card' ? 'awaiting_card' : 'pending',
+        payment_status: booking.payment_status || 'pending',
         created_at: booking.created_at,
-        transaction_id: `PENDING-${booking.id.slice(0, 8).toUpperCase()}`,
+        transaction_id: booking.status === 'awaiting_card'
+          ? `⏳ AWAITING CARD - ${booking.id.slice(0, 8).toUpperCase()}`
+          : `PENDING-${booking.id.slice(0, 8).toUpperCase()}`,
         payment_method: 'stripe',
         bookings: {
           ...booking,
@@ -67,6 +69,7 @@ export default function AdminPaymentsPage() {
           container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
         },
         is_pending_booking: true,
+        is_awaiting_card: booking.status === 'awaiting_card',
       }))
 
       allItems = [...allItems, ...pendingItems]

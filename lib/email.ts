@@ -397,3 +397,273 @@ export async function sendBookingEmails(data: BookingEmailData) {
   }
 }
 
+// Phone Booking Email Templates
+interface PhoneBookingEmailData {
+  customerName: string
+  customerEmail: string
+  paymentLink: string
+  containerType: string
+  startDate: string
+  endDate: string
+  totalAmount: number
+  expiresAt: string
+}
+
+// Customer email for phone booking
+function generatePhoneBookingCustomerEmail(data: PhoneBookingEmailData): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card h2 { color: #2563eb; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .detail-row:last-child { border-bottom: none; }
+    .label { font-weight: bold; color: #6b7280; }
+    .value { color: #111827; }
+    .button { display: inline-block; background: #2563eb; color: white; padding: 15px 40px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-size: 16px; font-weight: bold; }
+    .alert { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 20px 0; color: #92400e; }
+    .warning { background: #fee2e2; border-left: 4px solid #dc2626; padding: 15px; border-radius: 4px; margin: 20px 0; color: #991b1b; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Complete Your Booking</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">One More Step Required</p>
+    </div>
+
+    <div class="content">
+      <p style="font-size: 16px; margin-top: 0;">Hi <strong>${data.customerName}</strong>,</p>
+      <p>Thank you for booking with SD Dumps! We've reserved a container for you. To complete your booking, please click the button below to securely save your payment information.</p>
+
+      <div class="card">
+        <h2>📦 Your Booking Details</h2>
+        <div class="detail-row">
+          <span class="label">Container Type:</span>
+          <span class="value">${data.containerType}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Start Date:</span>
+          <span class="value">${data.startDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">End Date:</span>
+          <span class="value">${data.endDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Total Amount:</span>
+          <span class="value" style="color: #059669; font-weight: bold;">$${data.totalAmount.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <div class="alert">
+        <p style="margin: 0; font-weight: bold;">💳 Important: Your card will NOT be charged yet!</p>
+        <p style="margin: 10px 0 0 0;">
+          We only need to securely save your payment method. You'll be charged when your rental begins.
+        </p>
+      </div>
+
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${data.paymentLink}" class="button">Complete My Booking</a>
+      </p>
+
+      <div class="warning">
+        <p style="margin: 0; font-weight: bold;">⏰ This link expires on ${data.expiresAt}</p>
+        <p style="margin: 10px 0 0 0;">
+          Please complete your booking within 7 days. After that, this link will expire and your reservation will be cancelled.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>🔒 What You'll Need</h2>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #4b5563;">
+          <li>A valid credit or debit card</li>
+          <li>5 minutes to review your booking details</li>
+          <li>Your digital signature</li>
+        </ul>
+      </div>
+
+      <p style="color: #6b7280; font-size: 14px;">
+        If you have any questions or didn't request this booking, please contact us immediately.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>SD Dumps</strong></p>
+      <p>Professional Waste Management Services</p>
+      <p style="margin: 10px 0;">
+        📧 ${process.env.SMTP_FROM} | 📞 Contact Us
+      </p>
+      <p style="font-size: 12px; color: #9ca3af;">
+        This is an automated message. Please do not reply directly to this email.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `
+}
+
+// Admin notification when customer completes payment link
+function generatePhoneBookingCompletedEmail(data: {
+  customerName: string
+  customerEmail: string
+  bookingId: string
+  containerType: string
+  totalAmount: number
+}): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card h2 { color: #059669; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .detail-row:last-child { border-bottom: none; }
+    .label { font-weight: bold; color: #6b7280; }
+    .value { color: #111827; }
+    .success { background: #d1fae5; border-left: 4px solid #059669; padding: 15px; border-radius: 4px; margin: 20px 0; color: #065f46; }
+    .button { display: inline-block; background: #059669; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Phone Booking Completed!</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">Customer has saved their card</p>
+    </div>
+
+    <div class="content">
+      <div class="success">
+        <p style="margin: 0; font-weight: bold;">🎉 Great news! The customer has completed their phone booking.</p>
+        <p style="margin: 10px 0 0 0;">
+          Their payment method has been securely saved and the booking is ready to be charged.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>📦 Booking Information</h2>
+        <div class="detail-row">
+          <span class="label">Booking ID:</span>
+          <span class="value">#${data.bookingId.slice(0, 8)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Status:</span>
+          <span class="value" style="color: #059669; font-weight: bold;">READY TO CHARGE</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Container Type:</span>
+          <span class="value">${data.containerType}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Total Amount:</span>
+          <span class="value" style="color: #059669; font-weight: bold;">$${data.totalAmount.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>👤 Customer Information</h2>
+        <div class="detail-row">
+          <span class="label">Name:</span>
+          <span class="value">${data.customerName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Email:</span>
+          <span class="value">${data.customerEmail}</span>
+        </div>
+      </div>
+
+      <p style="text-align: center; margin: 30px 0 10px 0;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/payments" class="button">Charge Customer Now</a>
+      </p>
+
+      <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0;">
+        <p style="margin: 0; color: #1e40af;"><strong>📋 Next Steps:</strong></p>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #1e40af;">
+          <li>Go to the Payment Tracker in your admin dashboard</li>
+          <li>Find this booking in the "Pending" section</li>
+          <li>Click "Charge Customer" when ready</li>
+          <li>The saved card will be charged automatically</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p><strong>SD Dumps Admin Panel</strong></p>
+      <p style="font-size: 12px; color: #9ca3af;">
+        This is an automated notification from your booking system.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `
+}
+
+// Send phone booking payment link email
+export async function sendPhoneBookingEmail(data: PhoneBookingEmailData) {
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping phone booking email')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+      to: data.customerEmail,
+      subject: `Complete Your Booking - Action Required`,
+      html: generatePhoneBookingCustomerEmail(data),
+    })
+    console.log('✅ Phone booking email sent to:', data.customerEmail)
+
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Error sending phone booking email:', error)
+    throw error
+  }
+}
+
+// Send notification to admin when phone booking is completed
+export async function sendPhoneBookingCompletedEmail(data: {
+  customerName: string
+  customerEmail: string
+  bookingId: string
+  containerType: string
+  totalAmount: number
+}) {
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping phone booking completion email')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"SD Dumps Notifications" <${process.env.SMTP_FROM}>`,
+      to: process.env.CONTACT_EMAIL,
+      subject: `✅ Phone Booking Completed - #${data.bookingId.slice(0, 8)}`,
+      html: generatePhoneBookingCompletedEmail(data),
+    })
+    console.log('✅ Phone booking completion email sent to admin')
+
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Error sending phone booking completion email:', error)
+    throw error
+  }
+}
+
