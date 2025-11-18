@@ -1,0 +1,16 @@
+name: Expire Old Payment Links
+
+on:
+  schedule:
+    # Runs every day at midnight UTC
+    - cron: '0 0 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  expire-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call API to expire old links
+        run: |
+          curl -X GET https://yourdomain.com/api/payment-link/expire-old

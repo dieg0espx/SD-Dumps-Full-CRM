@@ -38,7 +38,12 @@ export function BookingCalendar({ bookings, isAdmin = false, onBookingUpdate }: 
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
   const weeks = eachWeekOfInterval({ start: calendarStart, end: calendarEnd })
 
-  const getBookingColor = (bookingId: string) => {
+  const getBookingColor = (booking: any) => {
+    // Phone bookings awaiting card entry - use distinctive color
+    if (booking.status === "awaiting_card") {
+      return "bg-amber-500 border-2 border-amber-600"
+    }
+
     const colors = [
       "bg-blue-500",
       "bg-green-500",
@@ -52,7 +57,7 @@ export function BookingCalendar({ bookings, isAdmin = false, onBookingUpdate }: 
       "bg-cyan-500",
     ]
     // Use booking ID to consistently assign colors
-    const hash = bookingId.split("").reduce((a, b) => {
+    const hash = booking.id.split("").reduce((a, b) => {
       a = (a << 5) - a + b.charCodeAt(0)
       return a & a
     }, 0)
@@ -203,7 +208,7 @@ export function BookingCalendar({ bookings, isAdmin = false, onBookingUpdate }: 
                             .map((span) => (
                               <div
                                 key={`${span.id}-${weekIndex}`}
-                                className={`absolute pointer-events-auto cursor-pointer rounded px-2 py-1 text-white text-xs font-medium shadow-sm hover:shadow-md transition-shadow ${getBookingColor(span.id)}`}
+                                className={`absolute pointer-events-auto cursor-pointer rounded px-2 py-1 text-white text-xs font-medium shadow-sm hover:shadow-md transition-shadow ${getBookingColor(span)}`}
                                 style={{
                                   top: `${28 + span.row * 24}px`,
                                   left: "2px",
@@ -211,6 +216,7 @@ export function BookingCalendar({ bookings, isAdmin = false, onBookingUpdate }: 
                                   zIndex: 10,
                                 }}
                                 onClick={() => handleBookingClick(span)}
+                                title={span.status === 'awaiting_card' ? 'Phone Booking - Awaiting Card' : ''}
                               >
                                 <div className="truncate">
                                   {span.profiles?.full_name || span.profiles?.email?.split("@")[0] || "Guest"} -{" "}
