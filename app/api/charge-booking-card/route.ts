@@ -234,18 +234,40 @@ export async function POST(request: NextRequest) {
 
       // Send payment receipt email to customer
       try {
-        // Fetch customer profile separately
-        const { data: customerProfile } = await supabase
-          .from('profiles')
-          .select('full_name, email')
-          .eq('id', booking.user_id)
+        let customerName: string | null = null
+        let customerEmail: string | null = null
+
+        // Check if this is a phone booking (check phone_booking_guests table)
+        const { data: guestInfo } = await supabase
+          .from('phone_booking_guests')
+          .select('customer_name, customer_email')
+          .eq('booking_id', booking.id)
           .single()
 
-        if (customerProfile?.email && customerProfile?.full_name) {
+        if (guestInfo) {
+          // This is a phone booking - use guest info
+          console.log('🔵 [Charge Booking Card] Phone booking detected - using guest info')
+          customerName = guestInfo.customer_name
+          customerEmail = guestInfo.customer_email
+        } else {
+          // Regular booking - fetch customer profile
+          const { data: customerProfile } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', booking.user_id)
+            .single()
+
+          if (customerProfile) {
+            customerName = customerProfile.full_name
+            customerEmail = customerProfile.email
+          }
+        }
+
+        if (customerEmail && customerName) {
           console.log('📧 [Charge Booking Card] Sending payment receipt email...')
           await sendPaymentReceiptEmail({
-            customerName: customerProfile.full_name,
-            customerEmail: customerProfile.email,
+            customerName: customerName,
+            customerEmail: customerEmail,
             bookingId: booking.id,
             amount: amount,
             description: description || `Charge for booking #${booking.id.slice(0, 8)}`,

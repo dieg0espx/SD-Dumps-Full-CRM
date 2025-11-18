@@ -108,7 +108,13 @@ export async function POST(request: Request) {
 
     // Update booking with payment method and signature
     // Status stays "pending" for admin to manually charge from Payment Tracker
-    const { error: bookingError } = await supabase
+    console.log("🔵 [Payment Link Complete] Updating booking:", {
+      booking_id: booking.id,
+      payment_method_id: paymentMethodId,
+      signature_img_url: signatureUrl,
+    })
+
+    const { data: updatedBooking, error: bookingError } = await supabase
       .from("bookings")
       .update({
         payment_method_id: paymentMethodId,
@@ -118,11 +124,18 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", booking.id)
+      .select()
 
     if (bookingError) {
-      console.error("Error updating booking:", bookingError)
+      console.error("❌ [Payment Link Complete] Error updating booking:", bookingError)
       return NextResponse.json({ error: "Failed to update booking" }, { status: 500 })
     }
+
+    console.log("✅ [Payment Link Complete] Booking updated successfully:", {
+      booking_id: booking.id,
+      has_payment_method_id: !!updatedBooking?.[0]?.payment_method_id,
+      payment_method_id: updatedBooking?.[0]?.payment_method_id,
+    })
 
     // Update payment link status
     const { error: linkUpdateError } = await supabase

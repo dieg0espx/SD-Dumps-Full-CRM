@@ -27,6 +27,11 @@ export default function AdminPaymentsPage() {
       .order("created_at", { ascending: false })
 
     console.log("[v0] Admin payments - Pending bookings (card saved):", pendingBookings?.length || 0)
+    console.log("[v0] Admin payments - Pending bookings details:", pendingBookings?.map(b => ({
+      id: b.id.slice(0, 8),
+      has_payment_method: !!b.payment_method_id,
+      payment_method_id: b.payment_method_id?.slice(0, 10) + '...',
+    })))
 
     // Fetch all completed payments
     const { data: paymentsData, error: paymentsError } = await supabase
@@ -45,7 +50,12 @@ export default function AdminPaymentsPage() {
       const userIds = [...new Set(pendingBookings.map((b) => b.user_id))]
       const containerTypeIds = [...new Set(pendingBookings.map((b) => b.container_type_id))]
 
+      // Fetch profiles AND phone booking guests
       const { data: profiles } = await supabase.from("profiles").select("id, full_name, email, phone").in("id", userIds)
+      const { data: phoneGuests } = await supabase
+        .from("phone_booking_guests")
+        .select("booking_id, customer_name, customer_email, customer_phone")
+        .in("booking_id", bookingIds)
       const { data: containerTypes } = await supabase
         .from("container_types")
         .select("id, name, size")
@@ -54,6 +64,18 @@ export default function AdminPaymentsPage() {
       // Add pending bookings as items to display
       const pendingItems = pendingBookings.map((booking) => {
         const isAwaitingCard = !booking.payment_method_id
+
+        // Check if this is a phone booking (has guest info)
+        const guestInfo = phoneGuests?.find((g) => g.booking_id === booking.id)
+        const profileInfo = guestInfo
+          ? {
+              id: booking.user_id,
+              full_name: guestInfo.customer_name,
+              email: guestInfo.customer_email,
+              phone: guestInfo.customer_phone,
+            }
+          : profiles?.find((p) => p.id === booking.user_id) || null
+
         return {
           id: `booking_${booking.id}`,
           booking_id: booking.id,
@@ -67,7 +89,7 @@ export default function AdminPaymentsPage() {
           payment_method: 'stripe',
           bookings: {
             ...booking,
-            profiles: profiles?.find((p) => p.id === booking.user_id) || null,
+            profiles: profileInfo,
             container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
           },
           is_pending_booking: true,
@@ -87,7 +109,12 @@ export default function AdminPaymentsPage() {
         const userIds = [...new Set(bookings.map((b) => b.user_id))]
         const containerTypeIds = [...new Set(bookings.map((b) => b.container_type_id))]
 
+        // Fetch profiles AND phone booking guests
         const { data: profiles } = await supabase.from("profiles").select("id, full_name, email, phone").in("id", userIds)
+        const { data: phoneGuests } = await supabase
+          .from("phone_booking_guests")
+          .select("booking_id, customer_name, customer_email, customer_phone")
+          .in("booking_id", bookingIds)
         const { data: containerTypes } = await supabase
           .from("container_types")
           .select("id, name, size")
@@ -96,11 +123,22 @@ export default function AdminPaymentsPage() {
         const completedPayments = paymentsData.map((payment) => {
           const booking = bookings.find((b) => b.id === payment.booking_id)
           if (booking) {
+            // Check if this is a phone booking (has guest info)
+            const guestInfo = phoneGuests?.find((g) => g.booking_id === booking.id)
+            const profileInfo = guestInfo
+              ? {
+                  id: booking.user_id,
+                  full_name: guestInfo.customer_name,
+                  email: guestInfo.customer_email,
+                  phone: guestInfo.customer_phone,
+                }
+              : profiles?.find((p) => p.id === booking.user_id) || null
+
             return {
               ...payment,
               bookings: {
                 ...booking,
-                profiles: profiles?.find((p) => p.id === booking.user_id) || null,
+                profiles: profileInfo,
                 container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
               },
               is_pending_booking: false,

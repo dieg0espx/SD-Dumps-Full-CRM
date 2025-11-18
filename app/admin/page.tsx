@@ -48,19 +48,37 @@ export default async function AdminDashboardPage() {
 
   let recentBookings: any[] = []
   if (bookings && bookings.length > 0) {
+    const bookingIds = bookings.map((b) => b.id)
     const userIds = [...new Set(bookings.map((b) => b.user_id))]
     const containerTypeIds = [...new Set(bookings.map((b) => b.container_type_id))]
 
-    const [{ data: profiles }, { data: containerTypes }] = await Promise.all([
+    const [{ data: profiles }, { data: phoneGuests }, { data: containerTypes }] = await Promise.all([
       supabase.from("profiles").select("id, full_name, email, phone").in("id", userIds),
+      supabase
+        .from("phone_booking_guests")
+        .select("booking_id, customer_name, customer_email, customer_phone")
+        .in("booking_id", bookingIds),
       supabase.from("container_types").select("id, name, size").in("id", containerTypeIds),
     ])
 
-    recentBookings = bookings.map((booking) => ({
-      ...booking,
-      profiles: profiles?.find((p) => p.id === booking.user_id) || null,
-      container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
-    }))
+    recentBookings = bookings.map((booking) => {
+      // Check if this is a phone booking (has guest info)
+      const guestInfo = phoneGuests?.find((g) => g.booking_id === booking.id)
+      const profileInfo = guestInfo
+        ? {
+            id: booking.user_id,
+            full_name: guestInfo.customer_name,
+            email: guestInfo.customer_email,
+            phone: guestInfo.customer_phone,
+          }
+        : profiles?.find((p) => p.id === booking.user_id) || null
+
+      return {
+        ...booking,
+        profiles: profileInfo,
+        container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
+      }
+    })
   }
 
   return (
