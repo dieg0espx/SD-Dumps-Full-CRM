@@ -57,7 +57,7 @@ export function BookingCalendar({ bookings, isAdmin = false, onBookingUpdate }: 
       "bg-cyan-500",
     ]
     // Use booking ID to consistently assign colors
-    const hash = booking.id.split("").reduce((a, b) => {
+    const hash = booking.id.split("").reduce((a: number, b: string) => {
       a = (a << 5) - a + b.charCodeAt(0)
       return a & a
     }, 0)
