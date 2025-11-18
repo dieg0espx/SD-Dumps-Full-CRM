@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Check if customer already exists
+    // Check if customer already exists in profiles
     let userId: string
     const { data: existingProfile } = await supabase
       .from("profiles")
@@ -80,27 +80,10 @@ export async function POST(request: Request) {
         })
         .eq("id", userId)
     } else {
-      // Create a guest user profile (without auth account)
-      // We'll create a placeholder profile that can be linked later if they sign up
-      const guestId = crypto.randomUUID()
-
-      const { data: newProfile, error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: guestId,
-          email: customerEmail,
-          full_name: customerName,
-          phone: customerPhone,
-        })
-        .select()
-        .single()
-
-      if (profileError) {
-        console.error("Error creating guest profile:", profileError)
-        return NextResponse.json({ error: "Failed to create customer profile" }, { status: 500 })
-      }
-
-      userId = guestId
+      // Use the guest user account for customers without profiles
+      // This ensures all bookings have a valid user_id while storing
+      // actual customer info in payment_links table
+      userId = "89d3eafa-13e8-4a69-8c41-863d9e905553" // Guest User account
     }
 
     // Create the booking with 'pending' status (awaiting card to be saved)
@@ -130,6 +113,26 @@ export async function POST(request: Request) {
     if (bookingError) {
       console.error("Error creating booking:", bookingError)
       return NextResponse.json({ error: "Failed to create booking" }, { status: 500 })
+    }
+
+    // If using guest account, store customer info in phone_booking_guests table
+    if (userId === "89d3eafa-13e8-4a69-8c41-863d9e905553") {
+      const { error: guestError } = await supabase
+        .from("phone_booking_guests")
+        .insert({
+          booking_id: booking.id,
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: customerPhone,
+          customer_address: customerAddress,
+        })
+
+      if (guestError) {
+        console.error("Error storing guest info:", guestError)
+        // Rollback booking
+        await supabase.from("bookings").delete().eq("id", booking.id)
+        return NextResponse.json({ error: "Failed to store customer information" }, { status: 500 })
+      }
     }
 
     // Calculate expiration date (7 days from now)

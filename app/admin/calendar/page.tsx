@@ -40,7 +40,7 @@ export default function AdminCalendarPage() {
 
   const fetchBookings = async () => {
     setLoading(true)
-    
+
     // Fetch bookings separately
     const { data: bookings, error: bookingsError } = await supabase.from("bookings").select("*").order("start_date")
 
@@ -50,24 +50,41 @@ export default function AdminCalendarPage() {
     // Fetch related data separately if bookings exist
     let enrichedBookings: any[] = []
     if (bookings && bookings.length > 0) {
-      // Get unique user IDs and container type IDs
+      // Get unique user IDs, booking IDs, and container type IDs
+      const bookingIds = bookings.map((b) => b.id)
       const userIds = [...new Set(bookings.map((b) => b.user_id))]
       const containerTypeIds = [...new Set(bookings.map((b) => b.container_type_id))]
 
-      // Fetch profiles and container types
+      // Fetch profiles, phone booking guests, and container types
       const { data: profiles } = await supabase.from("profiles").select("id, full_name, email, phone").in("id", userIds)
-
+      const { data: phoneGuests } = await supabase
+        .from("phone_booking_guests")
+        .select("booking_id, customer_name, customer_email, customer_phone")
+        .in("booking_id", bookingIds)
       const { data: containerTypes } = await supabase
         .from("container_types")
         .select("id, name, size")
         .in("id", containerTypeIds)
 
       // Combine the data
-      enrichedBookings = bookings.map((booking) => ({
-        ...booking,
-        profiles: profiles?.find((p) => p.id === booking.user_id) || null,
-        container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
-      }))
+      enrichedBookings = bookings.map((booking) => {
+        // Check if this is a phone booking (has guest info)
+        const guestInfo = phoneGuests?.find((g) => g.booking_id === booking.id)
+        const profileInfo = guestInfo
+          ? {
+              id: booking.user_id,
+              full_name: guestInfo.customer_name,
+              email: guestInfo.customer_email,
+              phone: guestInfo.customer_phone,
+            }
+          : profiles?.find((p) => p.id === booking.user_id) || null
+
+        return {
+          ...booking,
+          profiles: profileInfo,
+          container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
+        }
+      })
     }
 
     setBookings(enrichedBookings)
