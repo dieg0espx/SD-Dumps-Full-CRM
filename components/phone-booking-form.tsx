@@ -90,9 +90,9 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
 
   // Fetch all bookings on component mount (like the client booking form)
   const fetchBookings = async () => {
-    const { data: bookings, error, count } = await supabase
+    const { data: bookings, error } = await supabase
       .from("bookings")
-      .select("id, start_date, end_date, container_type_id, status", { count: 'exact' })
+      .select("id, start_date, end_date, container_type_id, status")
       .not("status", "in", '("cancelled")')
       .order("start_date", { ascending: true })
 
@@ -101,11 +101,6 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
       return
     }
 
-    console.log(`📅 [Phone Booking Form] Fetched ${bookings?.length || 0} bookings (total in DB: ${count})`)
-    console.log("Date range of bookings:", {
-      first: bookings?.[0]?.start_date,
-      last: bookings?.[bookings.length - 1]?.start_date
-    })
     setExistingBookings(bookings || [])
   }
 
@@ -127,70 +122,9 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const container = containerTypes.find((ct) => ct.id === containerType)
     if (!container) return false
 
-    console.log(`🔍 [isDateUnavailable] Checking date, total bookings in state: ${existingBookings.length}, container type: ${containerType}`)
-
     // Normalize date to midnight for accurate comparison
     const checkDate = new Date(date)
     checkDate.setHours(0, 0, 0, 0)
-
-    // Filter bookings for this container type first
-    const containerBookings = existingBookings.filter(b => b.container_type_id === containerType)
-    console.log(`📦 Found ${containerBookings.length} bookings for this container type`)
-
-    // Show bookings that might match this date
-    if (containerBookings.length > 0) {
-      const checkingDateStr = checkDate.toISOString().split('T')[0]
-      // Get month from checking date (e.g., "2025-11")
-      const checkMonth = checkingDateStr.substring(0, 7)
-
-      // Filter bookings that overlap with the month we're checking
-      const relevantBookings = containerBookings.filter(b => {
-        return b.start_date.startsWith(checkMonth) || b.end_date.startsWith(checkMonth)
-      })
-
-      // Check for bookings on the specific date we're checking
-      const exactDateBookings = containerBookings.filter(b => {
-        return b.start_date === checkingDateStr || b.end_date === checkingDateStr
-      })
-      if (exactDateBookings.length > 0) {
-        console.log(`🎯🎯 Found ${exactDateBookings.length} bookings with EXACT date ${checkingDateStr}:`, exactDateBookings.map(b => ({
-          id: b.id.slice(0, 8),
-          start: b.start_date,
-          end: b.end_date,
-          status: b.status
-        })))
-      }
-
-      if (relevantBookings.length > 0) {
-        console.log(`🎯 Found ${relevantBookings.length} bookings for ${checkMonth}:`, relevantBookings.slice(-5).map(b => ({
-          id: b.id.slice(0, 8),
-          start: b.start_date,
-          end: b.end_date,
-          status: b.status
-        })))
-
-        // Check specifically which bookings should cover the date we're checking
-        const shouldMatch = relevantBookings.filter(b => {
-          const start = new Date(b.start_date)
-          start.setHours(0, 0, 0, 0)
-          const end = new Date(b.end_date)
-          end.setHours(0, 0, 0, 0)
-          return checkDate >= start && checkDate <= end
-        })
-        console.log(`📍 Bookings that SHOULD match ${checkingDateStr}:`, shouldMatch.map(b => ({
-          id: b.id.slice(0, 8),
-          start: b.start_date,
-          end: b.end_date,
-          covers: `${checkDate >= new Date(b.start_date).setHours(0,0,0,0)} && ${checkDate <= new Date(b.end_date).setHours(0,0,0,0)}`
-        })))
-      } else {
-        console.log(`❌ No bookings found for month ${checkMonth}. Showing first 3 bookings:`, containerBookings.slice(0, 3).map(b => ({
-          id: b.id.slice(0, 8),
-          start: b.start_date,
-          end: b.end_date
-        })))
-      }
-    }
 
     // Count how many containers are booked on this date
     // Use STRING comparison to avoid timezone issues
@@ -204,15 +138,6 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     })
 
     const bookedCount = matchingBookings.length
-
-    console.log(`📅 Date ${checkDate.toISOString().split('T')[0]}: ${bookedCount}/${container.available_quantity} booked`, {
-      matching: matchingBookings.map(b => ({
-        id: b.id.slice(0, 8),
-        start: b.start_date,
-        end: b.end_date,
-        status: b.status
-      }))
-    })
 
     // Date is unavailable if all containers are booked
     return bookedCount >= container.available_quantity
