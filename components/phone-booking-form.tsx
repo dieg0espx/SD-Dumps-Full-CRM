@@ -89,23 +89,36 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
   const selectedContainer = containerTypes.find((c) => c.id === containerType)
 
   // Fetch all bookings on component mount (like the client booking form)
-  useEffect(() => {
-    const fetchBookings = async () => {
-      const { data: bookings, error } = await supabase
-        .from("bookings")
-        .select("id, start_date, end_date, container_type_id, status")
-        .in("status", ["confirmed", "pending", "awaiting_card"])
+  const fetchBookings = async () => {
+    const { data: bookings, error, count } = await supabase
+      .from("bookings")
+      .select("id, start_date, end_date, container_type_id, status", { count: 'exact' })
+      .not("status", "in", '("cancelled")')
+      .order("start_date", { ascending: true })
 
-      if (error) {
-        console.error("Error fetching bookings:", error)
-        return
-      }
-
-      setExistingBookings(bookings || [])
+    if (error) {
+      console.error("Error fetching bookings:", error)
+      return
     }
 
+    console.log(`📅 [Phone Booking Form] Fetched ${bookings?.length || 0} bookings (total in DB: ${count})`)
+    console.log("Date range of bookings:", {
+      first: bookings?.[0]?.start_date,
+      last: bookings?.[bookings.length - 1]?.start_date
+    })
+    setExistingBookings(bookings || [])
+  }
+
+  useEffect(() => {
     fetchBookings()
   }, [])
+
+  // Refetch bookings whenever container type changes to ensure calendar has latest data
+  useEffect(() => {
+    if (containerType) {
+      fetchBookings()
+    }
+  }, [containerType])
 
   // Helper functions for availability checking
   const isDateUnavailable = (date: Date) => {
@@ -114,15 +127,92 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const container = containerTypes.find((ct) => ct.id === containerType)
     if (!container) return false
 
+    console.log(`🔍 [isDateUnavailable] Checking date, total bookings in state: ${existingBookings.length}, container type: ${containerType}`)
+
+    // Normalize date to midnight for accurate comparison
+    const checkDate = new Date(date)
+    checkDate.setHours(0, 0, 0, 0)
+
+    // Filter bookings for this container type first
+    const containerBookings = existingBookings.filter(b => b.container_type_id === containerType)
+    console.log(`📦 Found ${containerBookings.length} bookings for this container type`)
+
+    // Show bookings that might match this date
+    if (containerBookings.length > 0) {
+      const checkingDateStr = checkDate.toISOString().split('T')[0]
+      // Get month from checking date (e.g., "2025-11")
+      const checkMonth = checkingDateStr.substring(0, 7)
+
+      // Filter bookings that overlap with the month we're checking
+      const relevantBookings = containerBookings.filter(b => {
+        return b.start_date.startsWith(checkMonth) || b.end_date.startsWith(checkMonth)
+      })
+
+      // Check for bookings on the specific date we're checking
+      const exactDateBookings = containerBookings.filter(b => {
+        return b.start_date === checkingDateStr || b.end_date === checkingDateStr
+      })
+      if (exactDateBookings.length > 0) {
+        console.log(`🎯🎯 Found ${exactDateBookings.length} bookings with EXACT date ${checkingDateStr}:`, exactDateBookings.map(b => ({
+          id: b.id.slice(0, 8),
+          start: b.start_date,
+          end: b.end_date,
+          status: b.status
+        })))
+      }
+
+      if (relevantBookings.length > 0) {
+        console.log(`🎯 Found ${relevantBookings.length} bookings for ${checkMonth}:`, relevantBookings.slice(-5).map(b => ({
+          id: b.id.slice(0, 8),
+          start: b.start_date,
+          end: b.end_date,
+          status: b.status
+        })))
+
+        // Check specifically which bookings should cover the date we're checking
+        const shouldMatch = relevantBookings.filter(b => {
+          const start = new Date(b.start_date)
+          start.setHours(0, 0, 0, 0)
+          const end = new Date(b.end_date)
+          end.setHours(0, 0, 0, 0)
+          return checkDate >= start && checkDate <= end
+        })
+        console.log(`📍 Bookings that SHOULD match ${checkingDateStr}:`, shouldMatch.map(b => ({
+          id: b.id.slice(0, 8),
+          start: b.start_date,
+          end: b.end_date,
+          covers: `${checkDate >= new Date(b.start_date).setHours(0,0,0,0)} && ${checkDate <= new Date(b.end_date).setHours(0,0,0,0)}`
+        })))
+      } else {
+        console.log(`❌ No bookings found for month ${checkMonth}. Showing first 3 bookings:`, containerBookings.slice(0, 3).map(b => ({
+          id: b.id.slice(0, 8),
+          start: b.start_date,
+          end: b.end_date
+        })))
+      }
+    }
+
     // Count how many containers are booked on this date
-    const bookedCount = existingBookings.filter((booking) => {
+    // Use STRING comparison to avoid timezone issues
+    const checkDateStr = checkDate.toISOString().split('T')[0]
+
+    const matchingBookings = existingBookings.filter((booking) => {
       if (booking.container_type_id !== containerType) return false
 
-      const bookingStart = new Date(booking.start_date)
-      const bookingEnd = new Date(booking.end_date)
+      // Compare date strings directly (YYYY-MM-DD format)
+      return checkDateStr >= booking.start_date && checkDateStr <= booking.end_date
+    })
 
-      return date >= bookingStart && date <= bookingEnd
-    }).length
+    const bookedCount = matchingBookings.length
+
+    console.log(`📅 Date ${checkDate.toISOString().split('T')[0]}: ${bookedCount}/${container.available_quantity} booked`, {
+      matching: matchingBookings.map(b => ({
+        id: b.id.slice(0, 8),
+        start: b.start_date,
+        end: b.end_date,
+        status: b.status
+      }))
+    })
 
     // Date is unavailable if all containers are booked
     return bookedCount >= container.available_quantity
@@ -134,13 +224,21 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const container = containerTypes.find((ct) => ct.id === containerType)
     if (!container) return { available: 0, total: 0 }
 
+    // Normalize date to midnight for accurate comparison
+    const checkDate = new Date(date)
+    checkDate.setHours(0, 0, 0, 0)
+
     const bookedCount = existingBookings.filter((booking) => {
       if (booking.container_type_id !== containerType) return false
 
       const bookingStart = new Date(booking.start_date)
-      const bookingEnd = new Date(booking.end_date)
+      bookingStart.setHours(0, 0, 0, 0)
 
-      return date >= bookingStart && date <= bookingEnd
+      const bookingEnd = new Date(booking.end_date)
+      bookingEnd.setHours(0, 0, 0, 0)
+
+      // Check if the date falls within the booking period (inclusive)
+      return checkDate >= bookingStart && checkDate <= bookingEnd
     }).length
 
     return {
@@ -285,6 +383,9 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
 
       // Set the payment link
       setPaymentLink(data.paymentLink)
+
+      // Refetch bookings to update calendar colors
+      await fetchBookings()
     } catch (err) {
       console.error("Error creating phone booking:", err)
       setError(err instanceof Error ? err.message : "Failed to create phone booking")
@@ -293,7 +394,10 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     }
   }
 
-  const handleCreateAnother = () => {
+  const handleCreateAnother = async () => {
+    // Refetch bookings to ensure calendar has latest data
+    await fetchBookings()
+
     // Reset form
     setCustomerName("")
     setCustomerEmail("")
@@ -502,6 +606,7 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
+                    key={`calendar-${existingBookings.length}-${containerType}`}
                     mode="range"
                     selected={{ from: startDate, to: endDate }}
                     onSelect={(range) => {
