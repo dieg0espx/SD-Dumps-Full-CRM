@@ -91,7 +91,7 @@ export async function POST(request: Request) {
           email: customerEmail,
           full_name: customerName,
           phone: customerPhone,
-          role: "guest",
+          role: "user",
         })
         .select()
         .single()
