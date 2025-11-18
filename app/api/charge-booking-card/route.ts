@@ -56,20 +56,10 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [Charge Booking Card] Admin verified')
 
-    // Get booking with payment method ID and customer info
+    // Get booking with payment method ID
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .select(`
-        id,
-        payment_method_id,
-        user_id,
-        total_amount,
-        status,
-        profiles (
-          full_name,
-          email
-        )
-      `)
+      .select('id, payment_method_id, user_id, total_amount, status')
       .eq('id', bookingId)
       .single()
 
@@ -244,7 +234,13 @@ export async function POST(request: NextRequest) {
 
       // Send payment receipt email to customer
       try {
-        const customerProfile = booking.profiles as any
+        // Fetch customer profile separately
+        const { data: customerProfile } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', booking.user_id)
+          .single()
+
         if (customerProfile?.email && customerProfile?.full_name) {
           console.log('📧 [Charge Booking Card] Sending payment receipt email...')
           await sendPaymentReceiptEmail({
