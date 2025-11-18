@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { PaymentLinkForm } from "@/components/payment-link-form"
 import { format } from "date-fns"
+import Link from "next/link"
 
 export default async function PaymentLinkPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -47,12 +48,12 @@ export default async function PaymentLinkPage({ params }: { params: Promise<{ to
           <p className="text-gray-600 mb-6">
             This payment link is not valid. It may have been deleted or the URL is incorrect.
           </p>
-          <a
+          <Link
             href="/"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
           >
             Go to Homepage
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -96,12 +97,12 @@ export default async function PaymentLinkPage({ params }: { params: Promise<{ to
           <p className="text-sm text-gray-500 mb-4">
             Booking ID: #{(paymentLink.bookings as any).id.slice(0, 8)}
           </p>
-          <a
+          <Link
             href="/"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
           >
             Contact Us
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -119,12 +120,12 @@ export default async function PaymentLinkPage({ params }: { params: Promise<{ to
           <p className="text-gray-600 mb-6">
             This booking has been cancelled. Please contact us if you'd like to make a new booking.
           </p>
-          <a
+          <Link
             href="/"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
           >
             Contact Us
-          </a>
+          </Link>
         </div>
       </div>
     )
