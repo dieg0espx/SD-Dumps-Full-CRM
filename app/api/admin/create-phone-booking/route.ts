@@ -68,8 +68,17 @@ export async function POST(request: Request) {
       .single()
 
     if (existingProfile) {
-      // Use existing user
+      // Use existing user and update their phone if provided
       userId = existingProfile.id
+
+      // Update profile with latest info (name and phone)
+      await supabase
+        .from("profiles")
+        .update({
+          full_name: customerName,
+          phone: customerPhone,
+        })
+        .eq("id", userId)
     } else {
       // Create a guest user profile (without auth account)
       // We'll create a placeholder profile that can be linked later if they sign up
@@ -95,7 +104,10 @@ export async function POST(request: Request) {
       userId = guestId
     }
 
-    // Create the booking with 'awaiting_card' status
+    // Create the booking with 'pending' status (awaiting card to be saved)
+    // We use payment_method_id being null to indicate it's awaiting card
+    const notesWithFlag = notes ? `${notes}\n\n[PHONE BOOKING - Awaiting card]` : "[PHONE BOOKING - Awaiting card]"
+
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .insert({
@@ -108,10 +120,8 @@ export async function POST(request: Request) {
         customer_address: customerAddress,
         delivery_address: deliveryAddress || null,
         total_amount: totalAmount,
-        extra_tonnage: extraTonnage || null,
-        appliance_count: applianceCount || null,
-        notes: notes || null,
-        status: "awaiting_card",
+        notes: notesWithFlag,
+        status: "pending",
         payment_status: "pending",
         payment_method_id: null,
       })

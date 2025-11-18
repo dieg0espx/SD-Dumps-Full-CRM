@@ -19,11 +19,11 @@ export default function AdminPaymentsPage() {
     
     // Fetch all bookings with card saved (pending payment)
     // These are bookings that have payment_method_id but payment_status is still "pending"
-    // Also include awaiting_card status (phone bookings waiting for customer to complete)
+    // Also include bookings with null payment_method_id (phone bookings waiting for customer to save card)
     const { data: pendingBookings, error: bookingsError } = await supabase
       .from("bookings")
       .select("*")
-      .or("and(payment_status.eq.pending,payment_method_id.not.is.null),status.eq.awaiting_card")
+      .eq("payment_status", "pending")
       .order("created_at", { ascending: false })
 
     console.log("[v0] Admin payments - Pending bookings (card saved):", pendingBookings?.length || 0)
@@ -52,25 +52,28 @@ export default function AdminPaymentsPage() {
         .in("id", containerTypeIds)
 
       // Add pending bookings as items to display
-      const pendingItems = pendingBookings.map((booking) => ({
-        id: `booking_${booking.id}`,
-        booking_id: booking.id,
-        amount: booking.total_amount,
-        status: booking.status === 'awaiting_card' ? 'awaiting_card' : 'pending',
-        payment_status: booking.payment_status || 'pending',
-        created_at: booking.created_at,
-        transaction_id: booking.status === 'awaiting_card'
-          ? `⏳ AWAITING CARD - ${booking.id.slice(0, 8).toUpperCase()}`
-          : `PENDING-${booking.id.slice(0, 8).toUpperCase()}`,
-        payment_method: 'stripe',
-        bookings: {
-          ...booking,
-          profiles: profiles?.find((p) => p.id === booking.user_id) || null,
-          container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
-        },
-        is_pending_booking: true,
-        is_awaiting_card: booking.status === 'awaiting_card',
-      }))
+      const pendingItems = pendingBookings.map((booking) => {
+        const isAwaitingCard = !booking.payment_method_id
+        return {
+          id: `booking_${booking.id}`,
+          booking_id: booking.id,
+          amount: booking.total_amount,
+          status: isAwaitingCard ? 'awaiting_card' : 'pending',
+          payment_status: booking.payment_status || 'pending',
+          created_at: booking.created_at,
+          transaction_id: isAwaitingCard
+            ? `AWAITING CARD - ${booking.id.slice(0, 8).toUpperCase()}`
+            : `PENDING-${booking.id.slice(0, 8).toUpperCase()}`,
+          payment_method: 'stripe',
+          bookings: {
+            ...booking,
+            profiles: profiles?.find((p) => p.id === booking.user_id) || null,
+            container_types: containerTypes?.find((ct) => ct.id === booking.container_type_id) || null,
+          },
+          is_pending_booking: true,
+          is_awaiting_card: isAwaitingCard,
+        }
+      })
 
       allItems = [...allItems, ...pendingItems]
     }

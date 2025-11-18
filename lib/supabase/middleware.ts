@@ -45,6 +45,7 @@ export async function updateSession(request: NextRequest) {
     // Allow unauthenticated access to booking entry and guest booking
     !request.nextUrl.pathname.startsWith("/booking") &&
     !request.nextUrl.pathname.startsWith("/guest-booking") &&
+    !request.nextUrl.pathname.startsWith("/payment") &&
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth") &&

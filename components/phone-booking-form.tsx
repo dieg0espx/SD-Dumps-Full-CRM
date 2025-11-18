@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation"
 import { formatPhoneNumber } from "@/lib/phone-utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { DayProps } from "react-day-picker"
+import { cn } from "@/lib/utils"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -80,71 +81,71 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [availability, setAvailability] = useState<{ booked: number; available: number } | null>(null)
   const [checkingAvailability, setCheckingAvailability] = useState(false)
-  const [unavailableDates, setUnavailableDates] = useState<Date[]>([])
+  const [existingBookings, setExistingBookings] = useState<any[]>([])
 
   const supabase = createClient()
   const router = useRouter()
 
   const selectedContainer = containerTypes.find((c) => c.id === containerType)
 
-  // Fetch unavailable dates when container type changes
+  // Fetch all bookings on component mount (like the client booking form)
   useEffect(() => {
-    if (containerType) {
-      fetchUnavailableDates()
-    } else {
-      setUnavailableDates([])
-    }
-  }, [containerType])
-
-  const fetchUnavailableDates = async () => {
-    if (!containerType) return
-
-    try {
-      const container = containerTypes.find((c) => c.id === containerType)
-      if (!container) return
-
-      // Fetch all bookings for this container type for next 12 months
-      const today = new Date()
-      const futureDate = addDays(today, 365)
-
+    const fetchBookings = async () => {
       const { data: bookings, error } = await supabase
         .from("bookings")
-        .select("start_date, end_date")
-        .eq("container_type_id", containerType)
-        .not("status", "in", '("cancelled")')
-        .gte("end_date", today.toISOString().split("T")[0])
-        .lte("start_date", futureDate.toISOString().split("T")[0])
+        .select("id, start_date, end_date, container_type_id, status")
+        .in("status", ["confirmed", "pending", "awaiting_card"])
 
       if (error) {
-        console.error("Error fetching unavailable dates:", error)
+        console.error("Error fetching bookings:", error)
         return
       }
 
-      // Count bookings per date
-      const dateBookingCount = new Map<string, number>()
+      setExistingBookings(bookings || [])
+    }
 
-      bookings?.forEach((booking) => {
-        const start = new Date(booking.start_date)
-        const end = new Date(booking.end_date)
-        const days = eachDayOfInterval({ start, end })
+    fetchBookings()
+  }, [])
 
-        days.forEach((day) => {
-          const dateKey = day.toISOString().split("T")[0]
-          dateBookingCount.set(dateKey, (dateBookingCount.get(dateKey) || 0) + 1)
-        })
-      })
+  // Helper functions for availability checking
+  const isDateUnavailable = (date: Date) => {
+    if (!containerType) return false
 
-      // Find dates where bookings >= available quantity
-      const unavailable: Date[] = []
-      dateBookingCount.forEach((count, dateKey) => {
-        if (count >= container.available_quantity) {
-          unavailable.push(new Date(dateKey))
-        }
-      })
+    const container = containerTypes.find((ct) => ct.id === containerType)
+    if (!container) return false
 
-      setUnavailableDates(unavailable)
-    } catch (err) {
-      console.error("Error fetching unavailable dates:", err)
+    // Count how many containers are booked on this date
+    const bookedCount = existingBookings.filter((booking) => {
+      if (booking.container_type_id !== containerType) return false
+
+      const bookingStart = new Date(booking.start_date)
+      const bookingEnd = new Date(booking.end_date)
+
+      return date >= bookingStart && date <= bookingEnd
+    }).length
+
+    // Date is unavailable if all containers are booked
+    return bookedCount >= container.available_quantity
+  }
+
+  const getDateAvailability = (date: Date) => {
+    if (!containerType) return { available: 0, total: 0 }
+
+    const container = containerTypes.find((ct) => ct.id === containerType)
+    if (!container) return { available: 0, total: 0 }
+
+    const bookedCount = existingBookings.filter((booking) => {
+      if (booking.container_type_id !== containerType) return false
+
+      const bookingStart = new Date(booking.start_date)
+      const bookingEnd = new Date(booking.end_date)
+
+      return date >= bookingStart && date <= bookingEnd
+    }).length
+
+    return {
+      available: Math.max(0, container.available_quantity - bookedCount),
+      total: container.available_quantity,
     }
   }
 
@@ -197,7 +198,10 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
   const calculateTotal = () => {
     if (!selectedContainer || !startDate || !endDate) return 0
     const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-    return selectedContainer.price_per_day * Math.max(1, days)
+    const baseTotalAmount = selectedContainer.price_per_day * Math.max(1, days)
+    const extraTonnageAmount = (extraTonnage || 0) * 125
+    const applianceAmount = (applianceCount || 0) * 25
+    return baseTotalAmount + extraTonnageAmount + applianceAmount
   }
 
   const handleCopyLink = async () => {
@@ -314,22 +318,6 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     setError(null)
   }
 
-  // Custom day styling for calendar
-  const modifiers = {
-    unavailable: unavailableDates,
-  }
-
-  const modifiersClassNames = {
-    unavailable: "bg-red-500 text-white line-through hover:bg-red-600",
-  }
-
-  const modifiersStyles = {
-    unavailable: {
-      backgroundColor: "#ef4444",
-      color: "#ffffff",
-      textDecoration: "line-through",
-    },
-  }
 
   // If payment link is generated, show success screen
   if (paymentLink) {
@@ -498,60 +486,73 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
             <CardDescription>Select the start and end dates</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Start Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      initialFocus
-                      disabled={(date) => date < new Date()}
-                      modifiers={modifiers}
-                      modifiersClassNames={modifiersClassNames}
-                      modifiersStyles={modifiersStyles}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label>End Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      initialFocus
-                      disabled={(date) => date < new Date()}
-                      modifiers={modifiers}
-                      modifiersClassNames={modifiersClassNames}
-                      modifiersStyles={modifiersStyles}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+            <div className="space-y-2">
+              <Label>Date Range *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate && endDate
+                      ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd, yyyy")}`
+                      : "Click to select your rental dates"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="range"
+                    selected={{ from: startDate, to: endDate }}
+                    onSelect={(range) => {
+                      setStartDate(range?.from)
+                      setEndDate(range?.to)
+                    }}
+                    disabled={(date) => date < new Date() || isDateUnavailable(date)}
+                    initialFocus
+                    numberOfMonths={2}
+                    modifiers={{
+                      unavailable: (date) => isDateUnavailable(date),
+                      limited: (date) => {
+                        if (!selectedContainer) return false
+                        const availability = getDateAvailability(date)
+                        return availability.available > 0 && availability.available < availability.total
+                      },
+                    }}
+                    modifiersClassNames={{
+                      unavailable: "bg-red-100 text-red-800",
+                      limited: "bg-yellow-100 text-yellow-800",
+                    }}
+                    modifiersStyles={{
+                      unavailable: { backgroundColor: "#fee2e2", color: "#dc2626" },
+                      limited: { backgroundColor: "#fef3c7", color: "#d97706" },
+                    }}
+                    className="rounded-md border shadow-lg"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
+
+            {/* Availability Legend */}
+            {selectedContainer && (
+              <div className="rounded-lg bg-muted p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-3">Calendar Legend:</p>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-white border-2 border-gray-300 rounded"></div>
+                    <span className="text-xs text-muted-foreground">Available</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-yellow-200 rounded"></div>
+                    <span className="text-xs text-muted-foreground">Limited</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-200 rounded"></div>
+                    <span className="text-xs text-muted-foreground">Fully Booked</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Availability Display */}
             {checkingAvailability && (
@@ -766,6 +767,24 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                   {Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))} days
                 </span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Base Rental:</span>
+                <span className="font-medium">
+                  {formatCurrency(selectedContainer.price_per_day * Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))))}
+                </span>
+              </div>
+              {extraTonnage > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Extra Tonnage ({extraTonnage} tons):</span>
+                  <span className="font-medium">{formatCurrency(extraTonnage * 125)}</span>
+                </div>
+              )}
+              {applianceCount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Appliance Disposal ({applianceCount} items):</span>
+                  <span className="font-medium">{formatCurrency(applianceCount * 25)}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between text-lg font-bold">
                 <span>Total Amount:</span>

@@ -3,7 +3,8 @@ import { redirect } from "next/navigation"
 import { PaymentLinkForm } from "@/components/payment-link-form"
 import { format } from "date-fns"
 
-export default async function PaymentLinkPage({ params }: { params: { token: string } }) {
+export default async function PaymentLinkPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
   const supabase = await createClient()
 
   // Fetch payment link with booking details
@@ -21,8 +22,6 @@ export default async function PaymentLinkPage({ params }: { params: { token: str
         customer_address,
         delivery_address,
         total_amount,
-        extra_tonnage,
-        appliance_count,
         notes,
         status,
         container_types (
@@ -33,7 +32,7 @@ export default async function PaymentLinkPage({ params }: { params: { token: str
         )
       )
     `)
-    .eq("token", params.token)
+    .eq("token", token)
     .single()
 
   // Handle errors and invalid states

@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { sendPhoneBookingCompletedEmail } from "@/lib/email"
+import { sendPhoneBookingCompletedEmail, sendCustomerConfirmationEmail } from "@/lib/email"
 import Stripe from "stripe"
+import { format } from "date-fns"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-12-18.acacia",
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
         bookings (
           id,
           container_type_id,
+          start_date,
+          end_date,
           total_amount,
           status,
           container_types (
@@ -104,12 +107,13 @@ export async function POST(request: Request) {
     }
 
     // Update booking with payment method and signature
+    // Status stays "pending" for admin to manually charge from Payment Tracker
     const { error: bookingError } = await supabase
       .from("bookings")
       .update({
         payment_method_id: paymentMethodId,
         signature_img_url: signatureUrl,
-        status: "pending", // Now waiting for admin to charge
+        status: "pending",
         payment_status: "pending",
         updated_at: new Date().toISOString(),
       })
@@ -134,7 +138,23 @@ export async function POST(request: Request) {
       console.error("Error updating payment link:", linkUpdateError)
     }
 
-    // Send email to admin notifying completion
+    // Send confirmation email to customer
+    try {
+      await sendCustomerConfirmationEmail({
+        customerName: paymentLink.customer_name,
+        customerEmail: paymentLink.customer_email,
+        bookingId: booking.id,
+        containerType: booking.container_types.name,
+        startDate: format(new Date(booking.start_date), "MMMM do, yyyy"),
+        endDate: format(new Date(booking.end_date), "MMMM do, yyyy"),
+        totalAmount: booking.total_amount,
+      })
+    } catch (emailError) {
+      console.error("Error sending customer confirmation email:", emailError)
+      // Don't fail the request if email fails
+    }
+
+    // Send notification to admin
     try {
       await sendPhoneBookingCompletedEmail({
         customerName: paymentLink.customer_name,
@@ -144,7 +164,7 @@ export async function POST(request: Request) {
         totalAmount: booking.total_amount,
       })
     } catch (emailError) {
-      console.error("Error sending completion email:", emailError)
+      console.error("Error sending admin notification email:", emailError)
       // Don't fail the request if email fails
     }
 

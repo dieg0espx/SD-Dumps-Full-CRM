@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -49,6 +49,11 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
   const expiresAt = new Date(paymentLink.expires_at)
   const daysUntilExpiry = Math.ceil((expiresAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [currentStep])
+
   const handleSignatureComplete = (dataUrl: string) => {
     setSignatureDataUrl(dataUrl)
   }
@@ -74,7 +79,8 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
     try {
       // Upload signature to Cloudinary
       const base64Data = extractBase64FromDataUrl(signatureDataUrl)
-      const signatureUrl = await uploadSignatureToCloudinary(base64Data)
+      const booking = paymentLink.bookings as any
+      const signatureUrl = await uploadSignatureToCloudinary(base64Data, booking.id)
 
       // Complete the booking
       const response = await fetch("/api/payment-link/complete", {
@@ -169,13 +175,116 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
 
   // Signature step
   if (currentStep === "signature") {
+    const booking = paymentLink.bookings as any
+    const containerType = booking.container_types
+
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Rental Agreement */}
+        <Card>
+          <CardHeader className="border-b border-gray-200 bg-gray-50">
+            <CardTitle className="text-2xl">Container Rental Agreement</CardTitle>
+            <CardDescription className="text-base">
+              Please read the following terms and conditions carefully before signing
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="prose max-w-none space-y-4 text-sm text-gray-700">
+              {/* Rental Details Section */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 className="font-semibold text-lg text-blue-900 mb-3">Rental Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Container Type:</span>
+                    <span className="ml-2 text-gray-900">{containerType.size}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Rental Period:</span>
+                    <span className="ml-2 text-gray-900">
+                      {format(new Date(booking.start_date), "MMM dd")} - {format(new Date(booking.end_date), "MMM dd, yyyy")}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Service Type:</span>
+                    <span className="ml-2 text-gray-900 capitalize">{booking.service_type}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Total Amount:</span>
+                    <span className="ml-2 text-gray-900 font-semibold">{formatCurrency(booking.total_amount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms and Conditions */}
+              <div className="space-y-3 mt-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">Terms of Lease</h3>
+
+                <div className="space-y-3">
+                  <p className="text-gray-700 leading-relaxed">
+                    San Diego Dumping Solutions will provide dumpster disposal service using our roll-off containers.
+                    Service will be provided on the day requested when using our online ordering software.
+                    Additional days on your rental period will be $25 Per Day, starting on the 4th day until the roll-off is picked up.
+                  </p>
+
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Additional Charges:</h4>
+                    <p className="text-gray-700 leading-relaxed">
+                      All customers are responsible for the total weight of the contents of their dumpster(s).
+                      All customers are responsible for scheduling the removal of their dumpster(s).
+                      All customers are responsible for ensuring their dumpster(s) are not overloaded.
+                      Customers shall inspect the dumpster upon delivery for any existing damage.
+                      Upon removal of the dumpster, San Diego Dumping Solutions shall be entitled to charge the customer
+                      for the repair or replacement costs attributable to any damage to the dumpster while in the customer's possession.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Weight Allowance:</h4>
+                    <p className="text-gray-700 leading-relaxed">
+                      Exceeding stated weight allowance will result in an additional charge of $125 per ton
+                    </p>
+                    <ul className="list-disc list-inside text-gray-700 ml-4 mt-2">
+                      <li>17 yard - 4,000 lbs included ($125 per additional 2,000 pounds)</li>
+                      <li>21 yard - 4,000 lbs included ($125 per additional 2,000 pounds)</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Additional Service Charges:</h4>
+                    <ul className="list-disc list-inside text-gray-700 ml-4">
+                      <li>Mattresses and box springs will be $25 additional, each</li>
+                      <li>Appliances will be $25 additional, each</li>
+                      <li>Electronics will be $25 additional, each</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Prohibited Waste:</h4>
+                    <p className="text-gray-700 leading-relaxed">
+                      Non-Hazardous Solid Waste Only. Customer agrees not to put any waste that is liquid, radioactive,
+                      volatile, corrosive, highly flammable, explosive, biomedical, toxic, and/or any hazardous wastes or
+                      substances into roll-off containers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Agreement Statement */}
+              <div className="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300 mt-6">
+                <p className="font-semibold text-gray-900">
+                  By signing below, I acknowledge that I have read and agree to all terms listed in this contract.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Digital Signature */}
         <Card>
           <CardHeader>
-            <CardTitle>Step 3: Digital Signature</CardTitle>
+            <CardTitle>Digital Signature</CardTitle>
             <CardDescription>
-              Sign below to agree to the rental terms and conditions
+              Please sign below to confirm your agreement
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
