@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
+import { sendPaymentReceiptEmail } from '@/lib/email'
+import { format } from 'date-fns'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -54,10 +56,20 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [Charge Booking Card] Admin verified')
 
-    // Get booking with payment method ID
+    // Get booking with payment method ID and customer info
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .select('id, payment_method_id, user_id, total_amount, status')
+      .select(`
+        id,
+        payment_method_id,
+        user_id,
+        total_amount,
+        status,
+        profiles (
+          full_name,
+          email
+        )
+      `)
       .eq('id', bookingId)
       .single()
 
@@ -228,6 +240,29 @@ export async function POST(request: NextRequest) {
           })
           .eq('id', booking.id)
         console.log(`✅ [Charge Booking Card] Booking total updated: $${booking.total_amount} → $${newTotal}`)
+      }
+
+      // Send payment receipt email to customer
+      try {
+        const customerProfile = booking.profiles as any
+        if (customerProfile?.email && customerProfile?.full_name) {
+          console.log('📧 [Charge Booking Card] Sending payment receipt email...')
+          await sendPaymentReceiptEmail({
+            customerName: customerProfile.full_name,
+            customerEmail: customerProfile.email,
+            bookingId: booking.id,
+            amount: amount,
+            description: description || `Charge for booking #${booking.id.slice(0, 8)}`,
+            transactionId: paymentIntent.id,
+            chargedDate: format(new Date(), "MMMM do, yyyy 'at' h:mm a"),
+          })
+          console.log('✅ [Charge Booking Card] Payment receipt email sent')
+        } else {
+          console.warn('⚠️ [Charge Booking Card] Customer email or name not found, skipping receipt email')
+        }
+      } catch (emailError) {
+        console.error('❌ [Charge Booking Card] Error sending payment receipt email:', emailError)
+        // Don't fail the request if email fails
       }
 
       return NextResponse.json({

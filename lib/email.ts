@@ -806,3 +806,127 @@ export async function sendCustomerConfirmationEmail(data: {
   }
 }
 
+// Generate payment receipt email HTML
+function generatePaymentReceiptEmail(data: {
+  customerName: string
+  bookingId: string
+  amount: number
+  description: string
+  transactionId: string
+  chargedDate: string
+}) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card h2 { color: #2563eb; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .detail-row:last-child { border-bottom: none; }
+    .label { font-weight: bold; color: #6b7280; }
+    .value { color: #111827; }
+    .amount-box { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
+    .amount-box .label { color: rgba(255, 255, 255, 0.9); font-size: 14px; }
+    .amount-box .amount { font-size: 36px; font-weight: bold; margin: 10px 0; }
+    .info { background: #dbeafe; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0; color: #1e40af; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💳 Payment Receipt</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">Your payment has been processed</p>
+    </div>
+
+    <div class="content">
+      <p>Hi ${data.customerName},</p>
+
+      <div class="amount-box">
+        <p class="label">Amount Charged</p>
+        <p class="amount">$${data.amount.toFixed(2)}</p>
+        <p style="margin: 0; font-size: 14px; opacity: 0.9;">Payment Successful</p>
+      </div>
+
+      <div class="card">
+        <h2>📋 Payment Details</h2>
+        <div class="detail-row">
+          <span class="label">Booking ID:</span>
+          <span class="value">#${data.bookingId.slice(0, 8).toUpperCase()}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Description:</span>
+          <span class="value">${data.description}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Date:</span>
+          <span class="value">${data.chargedDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Transaction ID:</span>
+          <span class="value" style="font-size: 11px; font-family: monospace;">${data.transactionId}</span>
+        </div>
+      </div>
+
+      <div class="info">
+        <p style="margin: 0; font-weight: bold;">📧 Receipt Confirmation</p>
+        <p style="margin: 10px 0 0 0;">
+          This email serves as your receipt. Please save it for your records. If you have any questions about this charge, please contact us.
+        </p>
+      </div>
+
+      <p style="text-align: center; margin: 30px 0 10px 0; color: #6b7280;">
+        Thank you for your business!
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>SD Dumps</strong></p>
+      <p style="font-size: 12px; color: #9ca3af;">
+        Container Rental Services
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `
+}
+
+// Send payment receipt email to customer
+export async function sendPaymentReceiptEmail(data: {
+  customerName: string
+  customerEmail: string
+  bookingId: string
+  amount: number
+  description: string
+  transactionId: string
+  chargedDate: string
+}) {
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping payment receipt email')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+      to: data.customerEmail,
+      subject: `💳 Payment Receipt - $${data.amount.toFixed(2)} - Booking #${data.bookingId.slice(0, 8)}`,
+      html: generatePaymentReceiptEmail(data),
+    })
+    console.log('✅ Payment receipt email sent to:', data.customerEmail)
+
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Error sending payment receipt email:', error)
+    throw error
+  }
+}
+
