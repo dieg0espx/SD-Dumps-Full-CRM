@@ -89,23 +89,31 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
   const selectedContainer = containerTypes.find((c) => c.id === containerType)
 
   // Fetch all bookings on component mount (like the client booking form)
-  useEffect(() => {
-    const fetchBookings = async () => {
-      const { data: bookings, error } = await supabase
-        .from("bookings")
-        .select("id, start_date, end_date, container_type_id, status")
-        .in("status", ["confirmed", "pending", "awaiting_card"])
+  const fetchBookings = async () => {
+    const { data: bookings, error } = await supabase
+      .from("bookings")
+      .select("id, start_date, end_date, container_type_id, status")
+      .not("status", "in", '("cancelled")')
+      .order("start_date", { ascending: true })
 
-      if (error) {
-        console.error("Error fetching bookings:", error)
-        return
-      }
-
-      setExistingBookings(bookings || [])
+    if (error) {
+      console.error("Error fetching bookings:", error)
+      return
     }
 
+    setExistingBookings(bookings || [])
+  }
+
+  useEffect(() => {
     fetchBookings()
   }, [])
+
+  // Refetch bookings whenever container type changes to ensure calendar has latest data
+  useEffect(() => {
+    if (containerType) {
+      fetchBookings()
+    }
+  }, [containerType])
 
   // Helper functions for availability checking
   const isDateUnavailable = (date: Date) => {
@@ -114,15 +122,22 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const container = containerTypes.find((ct) => ct.id === containerType)
     if (!container) return false
 
+    // Normalize date to midnight for accurate comparison
+    const checkDate = new Date(date)
+    checkDate.setHours(0, 0, 0, 0)
+
     // Count how many containers are booked on this date
-    const bookedCount = existingBookings.filter((booking) => {
+    // Use STRING comparison to avoid timezone issues
+    const checkDateStr = checkDate.toISOString().split('T')[0]
+
+    const matchingBookings = existingBookings.filter((booking) => {
       if (booking.container_type_id !== containerType) return false
 
-      const bookingStart = new Date(booking.start_date)
-      const bookingEnd = new Date(booking.end_date)
+      // Compare date strings directly (YYYY-MM-DD format)
+      return checkDateStr >= booking.start_date && checkDateStr <= booking.end_date
+    })
 
-      return date >= bookingStart && date <= bookingEnd
-    }).length
+    const bookedCount = matchingBookings.length
 
     // Date is unavailable if all containers are booked
     return bookedCount >= container.available_quantity
@@ -134,13 +149,21 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const container = containerTypes.find((ct) => ct.id === containerType)
     if (!container) return { available: 0, total: 0 }
 
+    // Normalize date to midnight for accurate comparison
+    const checkDate = new Date(date)
+    checkDate.setHours(0, 0, 0, 0)
+
     const bookedCount = existingBookings.filter((booking) => {
       if (booking.container_type_id !== containerType) return false
 
       const bookingStart = new Date(booking.start_date)
-      const bookingEnd = new Date(booking.end_date)
+      bookingStart.setHours(0, 0, 0, 0)
 
-      return date >= bookingStart && date <= bookingEnd
+      const bookingEnd = new Date(booking.end_date)
+      bookingEnd.setHours(0, 0, 0, 0)
+
+      // Check if the date falls within the booking period (inclusive)
+      return checkDate >= bookingStart && checkDate <= bookingEnd
     }).length
 
     return {
@@ -285,6 +308,9 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
 
       // Set the payment link
       setPaymentLink(data.paymentLink)
+
+      // Refetch bookings to update calendar colors
+      await fetchBookings()
     } catch (err) {
       console.error("Error creating phone booking:", err)
       setError(err instanceof Error ? err.message : "Failed to create phone booking")
@@ -293,7 +319,10 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     }
   }
 
-  const handleCreateAnother = () => {
+  const handleCreateAnother = async () => {
+    // Refetch bookings to ensure calendar has latest data
+    await fetchBookings()
+
     // Reset form
     setCustomerName("")
     setCustomerEmail("")
@@ -502,6 +531,7 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
+                    key={`calendar-${existingBookings.length}-${containerType}`}
                     mode="range"
                     selected={{ from: startDate, to: endDate }}
                     onSelect={(range) => {
