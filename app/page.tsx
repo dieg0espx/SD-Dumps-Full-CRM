@@ -10,6 +10,7 @@ import Testimonials from '@/components/Testimonials'
 import FAQSection from '@/components/FAQSection'
 import ContactSection from '@/components/ContactSection'
 import Footer from '@/components/Footer'
+import { FAQSchema, ServiceSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
   title: 'Professional Container Rental Services | SD Dumps',
@@ -64,15 +65,19 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
-      <HeroSection />
-      <WhyChooseUs />
-      <WasteSolutions />
-      <TrustedByThousands />
-      <PricingSection />
-      <Testimonials />
-      <FAQSection />
-      <ContactSection />
-    </div>
+    <>
+      <FAQSchema />
+      <ServiceSchema />
+      <div className="min-h-screen bg-white">
+        <HeroSection />
+        <WhyChooseUs />
+        <WasteSolutions />
+        <TrustedByThousands />
+        <PricingSection />
+        <Testimonials />
+        <FAQSection />
+        <ContactSection />
+      </div>
+    </>
   )
 }

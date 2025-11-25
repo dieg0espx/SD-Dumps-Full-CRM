@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Shield, Users, Award, Truck, Check } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { AboutPageSchema, BreadcrumbSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
   title: 'About SD Dumps | Professional Waste Management Company',
@@ -58,9 +59,17 @@ export const metadata: Metadata = {
 }
 
 export default function About() {
+  const breadcrumbs = [
+    { name: 'Home', url: 'https://sddumps.com' },
+    { name: 'About', url: 'https://sddumps.com/about' }
+  ]
+
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <>
+      <AboutPageSchema />
+      <BreadcrumbSchema items={breadcrumbs} />
+      <div className="min-h-screen bg-white">
+        <Header />
       
       <div className="bg-white">
         {/* About Us Section */}
@@ -239,6 +248,7 @@ export default function About() {
           </div>
         </section>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

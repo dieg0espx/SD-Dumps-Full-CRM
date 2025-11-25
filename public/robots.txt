@@ -1,0 +1,73 @@
+# SD Dumps - Robots.txt
+# Professional Container Rental Services in San Diego
+# https://sddumps.com
+
+# Default rules for all crawlers
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /services
+Allow: /contact
+Allow: /booking
+Allow: /guest-booking
+
+# Disallow admin and private areas
+Disallow: /admin
+Disallow: /admin/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /chat
+Disallow: /profile
+Disallow: /payments
+Disallow: /payment-methods
+Disallow: /bookings
+Disallow: /payment/
+
+# Disallow API routes
+Disallow: /api/
+Disallow: /_next/
+
+# Disallow internal Next.js paths
+Disallow: /_next/static/
+Disallow: /_next/image/
+
+# Google-specific rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# Bing-specific rules
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+# GPTBot (OpenAI crawler)
+User-agent: GPTBot
+Allow: /
+Allow: /about
+Allow: /services
+Allow: /contact
+Disallow: /admin
+Disallow: /auth
+Disallow: /api/
+
+# Claude-Web (Anthropic crawler)
+User-agent: Claude-Web
+Allow: /
+Allow: /about
+Allow: /services
+Allow: /contact
+Disallow: /admin
+Disallow: /auth
+Disallow: /api/
+
+# CCBot (Common Crawl)
+User-agent: CCBot
+Allow: /
+Crawl-delay: 5
+
+# Sitemap location
+Sitemap: https://sddumps.com/sitemap.xml
+
+# Host directive
+Host: https://sddumps.com

@@ -8,6 +8,7 @@ import Footer from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { ServiceSchema, BreadcrumbSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
   title: 'Waste Management Services | Container Rental Solutions',
@@ -61,9 +62,17 @@ export const metadata: Metadata = {
 }
 
 export default function Services() {
+  const breadcrumbs = [
+    { name: 'Home', url: 'https://sddumps.com' },
+    { name: 'Services', url: 'https://sddumps.com/services' }
+  ]
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <>
+      <ServiceSchema />
+      <BreadcrumbSchema items={breadcrumbs} />
+      <div className="min-h-screen bg-background">
+        <Header />
       
       <div className="bg-background">
         {/* Hero Section */}
@@ -312,7 +321,7 @@ export default function Services() {
           </div>
         </section>
       </div>
-
-    </div>
+      </div>
+    </>
   )
 }

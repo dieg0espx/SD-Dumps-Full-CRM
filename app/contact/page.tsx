@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 import { Phone, Mail, MapPin, Clock, MessageSquare } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import Head from 'next/head'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -75,10 +74,6 @@ export default function Contact() {
   }
   return (
     <>
-      <Head>
-        <title>Contact SD Dumps | Get Free Quote & Support</title>
-        <meta name="description" content="Contact SD Dumps for professional waste management services. Get free quotes, schedule pickups, or get support. Serving San Diego County with 24/7 availability." />
-      </Head>
       <div className="min-h-screen bg-white">
         <Header />
       

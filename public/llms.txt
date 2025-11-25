@@ -1,0 +1,115 @@
+# SD Dumps - LLM Context File
+# Professional Container Rental Services in San Diego
+
+## About SD Dumps
+
+SD Dumps is a professional waste management and dumpster rental company serving San Diego County, California. We provide container rental services for construction, renovation, and waste management projects.
+
+### Company Information
+- **Business Name:** SD Dumps (San Diego Dumping Solutions)
+- **Location:** San Diego County, California
+- **Phone:** (760) 270-0312
+- **Email:** sandiegodumpingsolutions@gmail.com
+- **Website:** https://sddumps.com
+- **Service Area:** San Diego County and surrounding communities
+
+### Business Hours
+- Monday - Friday: 7:00 AM - 6:00 PM
+- Saturday: 8:00 AM - 4:00 PM
+- Sunday: Closed
+- Emergency Service: Available 24/7
+
+## Services Offered
+
+### Container Rental Services
+1. **Residential Dumpster Rental**
+   - Home renovations
+   - Household cleanouts
+   - Landscaping projects
+   - Garage and basement cleanups
+
+2. **Commercial Waste Solutions**
+   - Business waste management
+   - Retail location cleanup
+   - Office building waste disposal
+   - Regular pickup schedules
+
+3. **Construction & Demolition**
+   - Construction debris removal
+   - Demolition waste disposal
+   - Job site containers
+   - Heavy debris handling
+
+4. **Yard Waste & Landscaping**
+   - Tree trimming disposal
+   - Landscaping debris
+   - Organic waste
+   - Seasonal cleanup
+
+### Container Sizes
+- 10-yard containers
+- 20-yard containers
+- 30-yard containers
+- 40-yard containers
+
+### Additional Services
+- Same-day delivery (subject to availability)
+- Flexible rental periods
+- Permit assistance for street placement
+- Recycling programs
+- Professional pickup service
+
+## Key Features
+- Over 10 years of experience
+- 99% customer satisfaction rate
+- 5000+ projects completed
+- Licensed and insured professionals
+- Fast delivery and pickup
+- Competitive pricing
+- Professional service
+
+## Website Structure
+
+### Public Pages
+- **/** - Homepage with overview, pricing, testimonials, and FAQs
+- **/services** - Detailed service descriptions and categories
+- **/about** - Company history, values, and team information
+- **/contact** - Contact form, phone, email, and business hours
+- **/booking** - Online booking portal for registered users
+- **/guest-booking** - Quick booking without account creation
+
+### Customer Portal
+- Book new containers
+- View booking history
+- Manage payment methods
+- Chat with support
+- Update profile information
+
+## Contact Information
+
+For inquiries about dumpster rental services in San Diego:
+
+- **Phone:** (760) 270-0312 (Available 24/7 for urgent requests)
+- **Email:** sandiegodumpingsolutions@gmail.com
+- **Website:** https://sddumps.com/contact
+
+## Booking Process
+
+1. **Get a Quote** - Contact us or use online booking for instant quotes
+2. **Schedule Delivery** - Choose your delivery date and container size
+3. **Fill & Use** - Use the container during your rental period
+4. **Professional Pickup** - We handle pickup and proper disposal
+
+## Service Commitments
+
+- **Reliability:** On-time delivery and pickup
+- **Customer First:** Personalized service for each client
+- **Quality Service:** Professional equipment and experienced team
+- **Efficiency:** Streamlined processes for fast service
+- **Environmental Responsibility:** Proper disposal and recycling options
+
+---
+
+*This file is intended to help AI assistants provide accurate information about SD Dumps services. For the most current information, please visit https://sddumps.com or contact us directly.*
+
+Last Updated: 2024

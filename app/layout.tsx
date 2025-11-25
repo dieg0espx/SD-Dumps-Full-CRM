@@ -5,6 +5,7 @@ import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { ConditionalLayout } from '@/components/ConditionalLayout'
+import { OrganizationSchema, WebSiteSchema } from '@/components/JsonLd'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -90,12 +91,15 @@ export const metadata: Metadata = {
   referrer: 'origin-when-cross-origin',
   icons: {
     icon: [
-      { url: '/favicon/favicon.ico' },
+      { url: '/favicon/favicon.ico', sizes: '32x32' },
       { url: '/favicon/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
       { url: '/favicon/favicon.svg', type: 'image/svg+xml' },
     ],
     apple: [
       { url: '/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: [
+      { url: '/favicon/favicon.ico' },
     ],
     other: [
       { rel: 'mask-icon', url: '/favicon/favicon.svg', color: '#000000' },
@@ -135,6 +139,9 @@ html {
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#ffffff" />
+        <script src="https://analytics.ahrefs.com/analytics.js" data-key="YQSE9IfTg0mSXOmHceksBA" async></script>
+        <OrganizationSchema />
+        <WebSiteSchema />
       </head>
       <body suppressHydrationWarning>
         <ConditionalLayout>
