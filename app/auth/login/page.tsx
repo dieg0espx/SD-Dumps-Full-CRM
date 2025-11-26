@@ -100,7 +100,7 @@ export default function LoginPage() {
             <div className="text-center">
               {/* <div className="flex items-center justify-center mb-4">
                 <Image
-                  src="/logo.png"
+                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo"
                   alt="SD Dumps Logo"
                   width={48}
                   height={48}

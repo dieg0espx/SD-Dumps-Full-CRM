@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: 'SD Dumps',
     images: [
       {
-        url: '/miniature.png',
+        url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         width: 1200,
         height: 630,
         alt: 'Contact SD Dumps',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Contact SD Dumps | Get Free Quote & Support',
     description: 'Contact SD Dumps for professional waste management services. Get free quotes and schedule pickups in San Diego.',
-    images: ['/miniature.png'],
+    images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
   },
   alternates: {
     canonical: '/contact',

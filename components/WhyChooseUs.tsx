@@ -39,7 +39,7 @@ export default function WhyChooseUs() {
           </div>
           <div className="order-2 flex justify-center">
             <Image
-              src="/dumpster.png"
+              src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
               alt="Professional dumpster service"
               width={500}
               height={400}

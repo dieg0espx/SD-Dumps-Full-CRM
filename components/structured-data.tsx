@@ -34,7 +34,7 @@ export function OrganizationSchema() {
       data={{
         name: 'SD Dumps',
         url: 'https://sddumps.com',
-        logo: 'https://sddumps.com/miniature.png',
+        logo: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         description: 'Professional container rental services for construction, renovation, and waste management in San Diego.',
         address: {
           '@type': 'PostalAddress',

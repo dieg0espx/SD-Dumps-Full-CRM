@@ -11,7 +11,7 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center mb-4">
               <Image
-                src="/logo.png"
+                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo"
                 alt="SD Dumps Logo"
                 width={40}
                 height={40}

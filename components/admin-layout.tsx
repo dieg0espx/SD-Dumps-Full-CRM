@@ -55,7 +55,7 @@ export function AdminLayout({ user, children }: AdminLayoutProps) {
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Image
-              src="/logo.png"
+              src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo"
               alt="SD Dumps Logo"
               width={40}
               height={40}

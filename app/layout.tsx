@@ -56,7 +56,7 @@ export const metadata: Metadata = {
       description: 'Professional container rental services for construction, renovation, and waste management. Fast delivery, competitive pricing, and reliable service across San Diego.',
       images: [
         {
-          url: '/miniature.png',
+          url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
           width: 1200,
           height: 630,
           alt: 'SD Dumps - Professional Container Rental Services',
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
       card: 'summary_large_image',
       title: 'SD Dumps - Professional Container Rental Services',
       description: 'Professional container rental services for construction, renovation, and waste management. Fast delivery, competitive pricing, and reliable service across San Diego.',
-      images: ['/miniature.png'],
+      images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
       creator: '@sddumps',
     },
   robots: {

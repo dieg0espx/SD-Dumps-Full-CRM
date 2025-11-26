@@ -27,7 +27,7 @@ export const metadata: Metadata = {
       siteName: 'SD Dumps',
       images: [
         {
-          url: '/miniature.png',
+          url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
           width: 1200,
           height: 630,
           alt: 'SD Dumps Professional Waste Management',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
       card: 'summary_large_image',
       title: 'About SD Dumps | Professional Waste Management Company',
       description: 'Learn about SD Dumps, a trusted waste management company with over 10 years of experience in San Diego.',
-      images: ['/miniature.png'],
+      images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
     },
   alternates: {
     canonical: '/about',
@@ -107,7 +107,7 @@ export default function About() {
               
               <div className="order-2 flex justify-center">
                 <Image
-                  src="/dumpster.png"
+                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
                   alt="Professional dumpster"
                   width={500}
                   height={400}
@@ -161,7 +161,7 @@ export default function About() {
               
               <div className="order-2 flex justify-center">
                 <Image
-                  src="/dumpster.png"
+                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
                   alt="Professional dumpster"
                   width={500}
                   height={400}

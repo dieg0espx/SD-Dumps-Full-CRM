@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: 'SD Dumps',
     images: [
       {
-        url: '/miniature.png',
+        url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         width: 1200,
         height: 630,
         alt: 'SD Dumps Account Sign In',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Sign In | SD Dumps Account Access',
     description: 'Sign in to your SD Dumps account to manage your container rentals and bookings.',
-    images: ['/miniature.png'],
+    images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
   },
   alternates: {
     canonical: '/auth/login',

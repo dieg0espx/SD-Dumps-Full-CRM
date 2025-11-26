@@ -32,7 +32,7 @@ export const metadata: Metadata = {
       siteName: 'SD Dumps',
       images: [
         {
-          url: '/miniature.png',
+          url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
           width: 1200,
           height: 630,
           alt: 'SD Dumps Container Rental Services',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
       card: 'summary_large_image',
       title: 'Professional Container Rental Services | SD Dumps',
       description: 'Get reliable container rental services for construction, renovation, and waste management in San Diego.',
-      images: ['/miniature.png'],
+      images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
     },
   alternates: {
     canonical: '/',

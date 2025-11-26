@@ -41,7 +41,7 @@ export default function AboutPage() {
             
             <div className="flex justify-center">
               <Image
-                src="/dumpster.png"
+                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
                 alt="Professional dumpster"
                 width={500}
                 height={400}
@@ -58,7 +58,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
               <Image
-                src="/dumpster.png"
+                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
                 alt="Professional dumpster"
                 width={500}
                 height={400}

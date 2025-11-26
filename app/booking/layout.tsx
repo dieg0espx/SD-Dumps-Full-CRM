@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { BookingPageSchema, BreadcrumbSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
   title: 'Book Container Rental | Get Free Quote & Schedule',
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     siteName: 'SD Dumps',
     images: [
       {
-        url: '/miniature.png',
+        url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         width: 1200,
         height: 630,
         alt: 'Book Container Rental with SD Dumps',
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Book Container Rental | Get Free Quote & Schedule',
     description: 'Book your container rental online. Get instant quotes, choose your delivery date, and schedule professional waste management services.',
-    images: ['/miniature.png'],
+    images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
   },
   alternates: {
     canonical: '/booking',
@@ -51,10 +52,21 @@ export const metadata: Metadata = {
   },
 }
 
+const breadcrumbs = [
+  { name: 'Home', url: 'https://sddumps.com' },
+  { name: 'Booking', url: 'https://sddumps.com/booking' }
+]
+
 export default function BookingLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      <BookingPageSchema />
+      <BreadcrumbSchema items={breadcrumbs} />
+      {children}
+    </>
+  )
 }

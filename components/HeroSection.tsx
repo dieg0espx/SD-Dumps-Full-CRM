@@ -30,7 +30,7 @@ export default function HeroSection() {
            </div>
           <div className="flex justify-center px-4">
             <Image
-              src="/dumpster.png"
+              src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
               alt="Professional dumpster"
               width={900}
               height={400}

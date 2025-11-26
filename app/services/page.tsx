@@ -30,7 +30,7 @@ export const metadata: Metadata = {
       siteName: 'SD Dumps',
       images: [
         {
-          url: '/miniature.png',
+          url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
           width: 1200,
           height: 630,
           alt: 'SD Dumps Waste Management Services',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
       card: 'summary_large_image',
       title: 'Waste Management Services | Container Rental Solutions',
       description: 'Professional waste management services including residential dumpster rental, commercial waste solutions, and construction debris removal.',
-      images: ['/miniature.png'],
+      images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
     },
   alternates: {
     canonical: '/services',
@@ -161,7 +161,7 @@ export default function Services() {
             <div className="flex items-center justify-center">
               <div className="relative">
                 <Image
-                  src="/dumpster.png"
+                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
                   alt="Professional dumpster services"
                   width={500}
                   height={400}

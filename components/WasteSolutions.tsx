@@ -9,7 +9,7 @@ export default function WasteSolutions() {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="order-2 lg:order-1 flex justify-center">
             <Image
-              src="/dumpster.png"
+              src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
               alt="Waste management solutions"
               width={500}
               height={400}

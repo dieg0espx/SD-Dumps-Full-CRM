@@ -50,7 +50,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <Image
-              src="/logo.png"
+              src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo"
               alt="SD Dumps Logo"
               width={40}
               height={40}

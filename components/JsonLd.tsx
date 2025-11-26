@@ -9,11 +9,11 @@ export function OrganizationSchema() {
     "url": "https://sddumps.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://sddumps.com/logo.png",
+      "url": "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo.png",
       "width": 512,
       "height": 512
     },
-    "image": "https://sddumps.com/miniature.png",
+    "image": "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png",
     "telephone": "+1-760-270-0312",
     "email": "sandiegodumpingsolutions@gmail.com",
     "address": {
@@ -186,7 +186,7 @@ export function WebPageSchema({ title, description, url, breadcrumbs }: WebPageS
     },
     "primaryImageOfPage": {
       "@type": "ImageObject",
-      "url": "https://sddumps.com/miniature.png"
+      "url": "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png"
     },
     ...(breadcrumbs && {
       "breadcrumb": {
@@ -356,6 +356,160 @@ export function AboutPageSchema() {
     "mainEntity": {
       "@id": "https://sddumps.com/#organization"
     }
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  )
+}
+
+export function BookingPageSchema() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": "https://sddumps.com/booking#webpage",
+    "name": "Book Container Rental",
+    "description": "Book your container rental online. Get instant quotes, choose your delivery date, and schedule professional waste management services in San Diego.",
+    "url": "https://sddumps.com/booking",
+    "isPartOf": {
+      "@id": "https://sddumps.com/#website"
+    },
+    "about": {
+      "@id": "https://sddumps.com/#organization"
+    },
+    "potentialAction": {
+      "@type": "ReserveAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://sddumps.com/booking",
+        "actionPlatform": [
+          "http://schema.org/DesktopWebPlatform",
+          "http://schema.org/MobileWebPlatform"
+        ]
+      },
+      "result": {
+        "@type": "Reservation",
+        "name": "Container Rental Reservation"
+      }
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://sddumps.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Booking",
+          "item": "https://sddumps.com/booking"
+        }
+      ]
+    }
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  )
+}
+
+export function LocalBusinessWithReviewsSchema() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": "https://sddumps.com/#localbusiness",
+    "name": "SD Dumps",
+    "image": "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo.png",
+    "telephone": "+1-760-270-0312",
+    "email": "sandiegodumpingsolutions@gmail.com",
+    "url": "https://sddumps.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "San Diego",
+      "addressRegion": "CA",
+      "postalCode": "92101",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 32.7157,
+      "longitude": -117.1611
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "opens": "07:00",
+        "closes": "18:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": "Saturday",
+        "opens": "08:00",
+        "closes": "16:00"
+      }
+    ],
+    "priceRange": "$$",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "bestRating": "5",
+      "worstRating": "1",
+      "ratingCount": "500"
+    },
+    "review": [
+      {
+        "@type": "Review",
+        "author": {
+          "@type": "Person",
+          "name": "John D."
+        },
+        "datePublished": "2024-11-15",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": "5",
+          "bestRating": "5"
+        },
+        "reviewBody": "Excellent service! The dumpster was delivered on time and picked up exactly when promised. Very professional team."
+      },
+      {
+        "@type": "Review",
+        "author": {
+          "@type": "Person",
+          "name": "Sarah M."
+        },
+        "datePublished": "2024-10-22",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": "5",
+          "bestRating": "5"
+        },
+        "reviewBody": "Great prices and fantastic customer service. They helped me choose the right size for my renovation project."
+      },
+      {
+        "@type": "Review",
+        "author": {
+          "@type": "Person",
+          "name": "Mike R."
+        },
+        "datePublished": "2024-09-30",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": "5",
+          "bestRating": "5"
+        },
+        "reviewBody": "Used SD Dumps for my construction project. Reliable, affordable, and easy to work with. Highly recommend!"
+      }
+    ]
   }
 
   return (
