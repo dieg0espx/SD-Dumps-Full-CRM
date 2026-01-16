@@ -284,6 +284,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
       ? Math.max(1, differenceInDays(endDate, startDate) + 1)
       : 1
 
+  const serviceType = "delivery"
   const selectedContainerType = containerTypes.find((ct) => ct.id === selectedContainer)
   // Base price includes 3 days (72 hours)
   const baseAmount = selectedContainerType?.price_per_day || 0
