@@ -1,8 +1,11 @@
 # SD Dumps - Robots.txt
 # Professional Container Rental Services in San Diego
 # https://sddumps.com
+# Last Updated: 2025
 
+# ===========================================
 # Default rules for all crawlers
+# ===========================================
 User-agent: *
 Allow: /
 Allow: /about
@@ -17,29 +20,66 @@ Disallow: /admin/
 Disallow: /auth
 Disallow: /auth/
 Disallow: /chat
+Disallow: /chat/
 Disallow: /profile
+Disallow: /profile/
 Disallow: /payments
+Disallow: /payments/
 Disallow: /payment-methods
+Disallow: /payment-methods/
 Disallow: /bookings
+Disallow: /bookings/
 Disallow: /payment/
 
-# Disallow API routes
+# Disallow API and internal Next.js paths
 Disallow: /api/
 Disallow: /_next/
-
-# Disallow internal Next.js paths
 Disallow: /_next/static/
 Disallow: /_next/image/
 
+# ===========================================
 # Google-specific rules
+# ===========================================
 User-agent: Googlebot
 Allow: /
+Allow: /about
+Allow: /services
+Allow: /contact
+Allow: /booking
+Allow: /guest-booking
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /auth/
+Disallow: /profile/
+Disallow: /bookings/
+Disallow: /payments/
+Disallow: /chat/
 Crawl-delay: 1
 
+# ===========================================
 # Bing-specific rules
+# ===========================================
 User-agent: Bingbot
 Allow: /
+Allow: /about
+Allow: /services
+Allow: /contact
+Allow: /booking
+Allow: /guest-booking
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /auth/
+Disallow: /profile/
+Disallow: /bookings/
+Disallow: /payments/
+Disallow: /chat/
 Crawl-delay: 2
+
+# ===========================================
+# AI Crawlers
+# ===========================================
 
 # GPTBot (OpenAI crawler)
 User-agent: GPTBot
@@ -47,9 +87,16 @@ Allow: /
 Allow: /about
 Allow: /services
 Allow: /contact
-Disallow: /admin
-Disallow: /auth
+Allow: /llms.txt
+Disallow: /admin/
+Disallow: /auth/
 Disallow: /api/
+Disallow: /booking
+Disallow: /guest-booking
+Disallow: /profile/
+Disallow: /bookings/
+Disallow: /payments/
+Disallow: /chat/
 
 # Claude-Web (Anthropic crawler)
 User-agent: Claude-Web
@@ -57,17 +104,64 @@ Allow: /
 Allow: /about
 Allow: /services
 Allow: /contact
-Disallow: /admin
-Disallow: /auth
+Allow: /llms.txt
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /booking
+Disallow: /guest-booking
+Disallow: /profile/
+Disallow: /bookings/
+Disallow: /payments/
+Disallow: /chat/
+
+# Google-Extended (Bard/Gemini training)
+User-agent: Google-Extended
+Allow: /
+Allow: /about
+Allow: /services
+Allow: /contact
+Allow: /llms.txt
+Disallow: /admin/
+Disallow: /auth/
 Disallow: /api/
 
 # CCBot (Common Crawl)
 User-agent: CCBot
 Allow: /
+Allow: /about
+Allow: /services
+Allow: /contact
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /booking
+Disallow: /guest-booking
 Crawl-delay: 5
 
-# Sitemap location
-Sitemap: https://sddumps.com/sitemap.xml
+# ===========================================
+# Block aggressive/unwanted crawlers
+# ===========================================
+User-agent: AhrefsBot
+Disallow: /
 
-# Host directive
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+# ===========================================
+# Sitemap and Host
+# ===========================================
+Sitemap: https://sddumps.com/sitemap.xml
 Host: https://sddumps.com

@@ -1,13 +1,24 @@
 {
   "name": "SD Dumps - Professional Container Rental Services",
   "short_name": "SD Dumps",
-  "description": "Professional container rental services for construction, renovation, and waste management in San Diego.",
+  "description": "Professional container rental services for construction, renovation, and waste management in San Diego County.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
   "orientation": "portrait-primary",
   "icons": [
+    {
+      "src": "/favicon/favicon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
     {
       "src": "/favicon/web-app-manifest-192x192.png",
       "sizes": "192x192",
@@ -21,7 +32,24 @@
       "purpose": "maskable any"
     }
   ],
-  "categories": ["business", "construction", "utilities"],
+  "categories": ["business", "construction", "utilities", "local"],
   "lang": "en-US",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Book Now",
+      "short_name": "Book",
+      "description": "Book a container rental",
+      "url": "/booking",
+      "icons": [{"src": "/favicon/favicon-96x96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Contact Us",
+      "short_name": "Contact",
+      "description": "Get in touch",
+      "url": "/contact",
+      "icons": [{"src": "/favicon/favicon-96x96.png", "sizes": "96x96"}]
+    }
+  ]
 }

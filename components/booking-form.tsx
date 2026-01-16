@@ -84,7 +84,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
   const [selectedContainer, setSelectedContainer] = useState<string>("")
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
-  const [serviceType, setServiceType] = useState<string>("pickup")
   const [pickupTime, setPickupTime] = useState<string>("09:00")
   const [streetAddress, setStreetAddress] = useState<string>("")
   const [city, setCity] = useState<string>("")
@@ -95,7 +94,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
   const [deliveryState, setDeliveryState] = useState<string>("")
   const [deliveryZipCode, setDeliveryZipCode] = useState<string>("")
   const [useProfileAddress, setUseProfileAddress] = useState<boolean>(false)
-  const [extraTonnage, setExtraTonnage] = useState<number>(0)
+  const [extraDays, setExtraDays] = useState<number>(0)
   const [applianceCount, setApplianceCount] = useState<number>(0)
   const [notes, setNotes] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
@@ -138,13 +137,13 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
 
   // Handle profile address checkbox
   useEffect(() => {
-    if (useProfileAddress && profile && serviceType === "delivery") {
+    if (useProfileAddress && profile) {
       setDeliveryStreetAddress(profile.street_address || "")
       setDeliveryCity(profile.city || "")
       setDeliveryState(profile.state || "")
       setDeliveryZipCode(profile.zip_code || "")
     }
-  }, [useProfileAddress, profile, serviceType])
+  }, [useProfileAddress, profile])
 
   // Populate billing address with profile address when profile loads
   useEffect(() => {
@@ -286,11 +285,12 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
       : 1
 
   const selectedContainerType = containerTypes.find((ct) => ct.id === selectedContainer)
+  // Base price includes 3 days (72 hours)
   const baseAmount = selectedContainerType?.price_per_day || 0
-  const baseTotalAmount = baseAmount * totalDays
-  const extraTonnageAmount = (extraTonnage || 0) * 125
+  const includedDays = 3
+  const extraDaysAmount = (extraDays || 0) * 25
   const applianceAmount = (applianceCount || 0) * 25
-  const totalAmount = baseTotalAmount + extraTonnageAmount + applianceAmount
+  const totalAmount = baseAmount + extraDaysAmount + applianceAmount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -363,23 +363,19 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
       return
     }
 
-    if (serviceType === "delivery") {
-      if (!useProfileAddress && (!deliveryStreetAddress.trim() || !deliveryCity.trim() || !deliveryState.trim() || !deliveryZipCode.trim())) {
-        setError("Please fill in all delivery address fields")
-        setIsLoading(false)
-        return
-      }
+    if (!useProfileAddress && (!deliveryStreetAddress.trim() || !deliveryCity.trim() || !deliveryState.trim() || !deliveryZipCode.trim())) {
+      setError("Please fill in all delivery address fields")
+      setIsLoading(false)
+      return
     }
 
     // Payment validation is handled by Stripe component
 
     try {
       const deliveryAddress =
-        serviceType === "delivery"
-          ? useProfileAddress && profile
-            ? `${profile.street_address}, ${profile.city}, ${profile.state} ${profile.zip_code}`
-            : `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`
-          : null
+        useProfileAddress && profile
+          ? `${profile.street_address}, ${profile.city}, ${profile.state} ${profile.zip_code}`
+          : `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`
 
       // Update user profile with phone if available
       if (!guestMode) {
@@ -398,7 +394,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         pickup_time: pickupTime,
         delivery_address: deliveryAddress,
         customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
-        service_type: serviceType,
+        service_type: "delivery",
         total_amount: totalAmount,
         notes: (() => {
           const base = notes.trim() || ""
@@ -518,20 +514,16 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         return
       }
 
-      if (serviceType === "delivery") {
-        if (!useProfileAddress && (!deliveryStreetAddress.trim() || !deliveryCity.trim() || !deliveryState.trim() || !deliveryZipCode.trim())) {
-          setError("Please fill in all delivery address fields")
-          setIsLoading(false)
-          return
-        }
+      if (!useProfileAddress && (!deliveryStreetAddress.trim() || !deliveryCity.trim() || !deliveryState.trim() || !deliveryZipCode.trim())) {
+        setError("Please fill in all delivery address fields")
+        setIsLoading(false)
+        return
       }
 
       const deliveryAddress =
-        serviceType === "delivery"
-          ? useProfileAddress && profile
-            ? `${profile.street_address}, ${profile.city}, ${profile.state} ${profile.zip_code}`
-            : `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`
-          : null
+        useProfileAddress && profile
+          ? `${profile.street_address}, ${profile.city}, ${profile.state} ${profile.zip_code}`
+          : `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`
 
       // Update user profile with phone if available
       const {
@@ -550,7 +542,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         pickup_time: pickupTime,
         delivery_address: deliveryAddress,
         customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
-        service_type: serviceType,
+        service_type: "delivery",
         total_amount: totalAmount,
         notes: notes.trim() || null,
         status: "confirmed",
@@ -604,7 +596,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
             containerType: selectedContainerType?.size || 'Container',
             startDate: format(startDate, "MMMM dd, yyyy"),
             endDate: format(endDate, "MMMM dd, yyyy"),
-            serviceType: serviceType,
+            serviceType: "delivery",
             totalAmount: totalAmount,
             deliveryAddress: deliveryAddress,
             pickupTime: pickupTime,
@@ -678,11 +670,8 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         return startDate && endDate && isDateRangeAvailable(startDate, endDate)
       case 3:
         return (
-          serviceType &&
           pickupTime &&
-          (serviceType === "pickup" || (
-            useProfileAddress || (deliveryStreetAddress && deliveryCity && deliveryState && deliveryZipCode)
-          ))
+          (useProfileAddress || (deliveryStreetAddress && deliveryCity && deliveryState && deliveryZipCode))
         )
       case 4:
         return true
@@ -772,7 +761,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
           <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
             {currentStep === 1 && "Select Container"}
             {currentStep === 2 && "Choose Dates"}
-            {currentStep === 3 && "Service & Address"}
+            {currentStep === 3 && "Delivery Address"}
             {currentStep === 4 && "Additional Services"}
             {currentStep === 5 && "Review & Book"}
             {currentStep === 6 && "Rental Agreement"}
@@ -782,7 +771,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
           <p className="text-gray-600 mt-1 text-xs sm:text-sm md:text-base lg:text-lg max-w-3xl mx-auto">
             {currentStep === 1 && "Choose the perfect container size for your project"}
             {currentStep === 2 && "Select your rental dates"}
-            {currentStep === 3 && "Configure service options and addresses"}
+            {currentStep === 3 && "Enter your delivery address and preferred time"}
             {currentStep === 4 && "Add optional services"}
             {currentStep === 5 && "Review and confirm your booking"}
             {currentStep === 6 && "Review the rental agreement and sign below"}
@@ -842,9 +831,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                                 <div className="flex flex-col sm:flex-row sm:items-center mt-2 gap-1 sm:gap-2 md:gap-3">
                                   <div className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block">
                                     Available: {container.available_quantity} units
-                                  </div>
-                                  <div className="text-xs sm:text-sm text-green-600 bg-green-100 px-2 py-1 rounded inline-block">
-                                    Includes 2 tons
                                   </div>
                                 </div>
                               </div>
@@ -1003,79 +989,25 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
           <div className="space-y-4 sm:space-y-6">
             <Card className="border-0 shadow-lg">
               <CardHeader className="text-center pb-4 sm:pb-6 px-2 sm:px-6">
-                <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Service Options</CardTitle>
-                <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">Choose how you'd like to handle your container</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Delivery Details</CardTitle>
+                <CardDescription className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto">Enter your delivery address and preferred time</CardDescription>
               </CardHeader>
               <CardContent className="px-2 sm:px-6">
-                <RadioGroup value={serviceType} onValueChange={setServiceType}>
-                  <div className="grid gap-3 sm:gap-4 lg:gap-6">
-                    <div className="relative">
-                      <RadioGroupItem value="pickup" id="pickup" className="sr-only" />
-                      <Label
-                        htmlFor="pickup"
-                        className={cn(
-                          "block cursor-pointer rounded-xl border-2 p-4 sm:p-6 transition-all duration-200",
-                          serviceType === "pickup"
-                            ? "border-blue-600 bg-blue-50 shadow-md"
-                            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm",
-                        )}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 lg:space-x-8">
-                          <div
-                            className={cn(
-                              "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0",
-                              serviceType === "pickup" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600",
-                            )}
-                          >
-                            <Truck className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
-                          </div>
-                          <div className="flex-1 text-center sm:text-left ml-5">
-                            <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Pickup Service</div>
-                            <div className="text-gray-600 mt-1 text-sm sm:text-base">You pick up and return the container yourself</div>
-                            <div className="text-xs sm:text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded mt-2 inline-block">
-                              Most economical option
-                            </div>
-                          </div>
-                        </div>
-                      </Label>
+                <div className="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200 mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Truck className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
                     </div>
-
-                    <div className="relative">
-                      <RadioGroupItem value="delivery" id="delivery" className="sr-only" />
-                      <Label
-                        htmlFor="delivery"
-                        className={cn(
-                          "block cursor-pointer rounded-xl border-2 p-4 sm:p-6 transition-all duration-200",
-                          serviceType === "delivery"
-                            ? "border-blue-600 bg-blue-50 shadow-md"
-                            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm",
-                        )}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 lg:space-x-8">
-                          <div
-                            className={cn(
-                              "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0",
-                              serviceType === "delivery" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600",
-                            )}
-                          >
-                            <MapPin className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
-                          </div>
-                          <div className="flex-1 text-center sm:text-left ml-5">
-                            <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Delivery Service</div>
-                            <div className="text-gray-600 mt-1 text-sm sm:text-base">We deliver and pick up the container for you</div>
-                            <div className="text-xs sm:text-sm text-green-600 bg-green-100 px-2 py-1 rounded mt-2 inline-block">
-                              Most convenient option
-                            </div>
-                          </div>
-                        </div>
-                      </Label>
+                    <div>
+                      <div className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Delivery Service</div>
+                      <div className="text-gray-600 mt-1 text-sm sm:text-base">We deliver and pick up the container for you</div>
                     </div>
                   </div>
-                </RadioGroup>
+                </div>
 
-                <div className="mt-4 sm:mt-6 bg-gray-50 rounded-xl p-4 sm:p-6 border">
+                <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border">
                   <Label htmlFor="pickupTime" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-3 block">
-                    Preferred Time
+                    Preferred Delivery Time
                   </Label>
                   <Input
                     id="pickupTime"
@@ -1089,10 +1021,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
               </CardContent>
             </Card>
 
-
-
-            {serviceType === "delivery" && (
-              <Card className="border border-gray-200 border-l-4 border-l-blue-600 shadow-lg">
+            <Card className="border border-gray-200 border-l-4 border-l-blue-600 shadow-lg">
                 <CardHeader className="px-2 sm:px-6">
                   <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center">
                     <Truck className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
@@ -1184,7 +1113,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                   )}
                 </CardContent>
               </Card>
-            )}
           </div>
         )}
 
@@ -1199,38 +1127,31 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                 <div className="bg-orange-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-orange-200">
                   <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                        />
-                      </svg>
+                      <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
                     </div>
                     <div className="flex-1 text-center sm:text-left ml-5">
-                      <Label htmlFor="extraTonnage" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
-                        Extra Tonnage
+                      <Label htmlFor="extraDays" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
+                        Extra Days
                       </Label>
-                      <p className="text-gray-600 mb-4 text-sm sm:text-base">Beyond included 2 tons - {formatCurrency(125)} per ton</p>
+                      <p className="text-gray-600 mb-4 text-sm sm:text-base">Beyond included 3 days (72 hours) - {formatCurrency(25)} per day</p>
                       <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-4">
                         <Input
-                          id="extraTonnage"
+                          id="extraDays"
                           type="number"
                           min="0"
-                          max="10"
-                          value={extraTonnage}
-                          onChange={(e) => setExtraTonnage(Number(e.target.value))}
+                          max="30"
+                          value={extraDays}
+                          onChange={(e) => setExtraDays(Number(e.target.value))}
                           className="w-20 sm:w-24 h-10 sm:h-12 text-center text-sm sm:text-base lg:text-lg border-2 focus:border-orange-600"
                         />
-                        <span className="text-gray-600 text-sm sm:text-base">tons</span>
-                        {extraTonnage > 0 && (
+                        <span className="text-gray-600 text-sm sm:text-base">days</span>
+                        {extraDays > 0 && (
                           <div className="text-base sm:text-lg lg:text-xl font-semibold text-orange-600">
-                            +{formatCurrency(extraTonnage * 125)}
+                            +{formatCurrency(extraDays * 25)}
                           </div>
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-2">Each container includes 2 tons of debris</p>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-2">Price includes 3 days (72 hours) rental period</p>
                     </div>
                   </div>
                 </div>
@@ -1321,7 +1242,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                       </div>
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
                         <span className="text-gray-600 text-xs sm:text-sm lg:text-base">Service:</span>
-                        <span className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base capitalize">{serviceType}</span>
+                        <span className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base capitalize">delivery</span>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
                         <span className="text-gray-600 text-xs sm:text-sm lg:text-base">Preferred Time:</span>
@@ -1369,14 +1290,14 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 gap-1 sm:gap-2">
                       <span className="text-sm sm:text-base lg:text-lg text-gray-700">
-                        Base Price ({totalDays} day{totalDays > 1 ? "s" : ""}):
+                        Base Price (includes {includedDays} days):
                       </span>
-                      <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(baseTotalAmount)}</span>
+                      <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(baseAmount)}</span>
                     </div>
-                    {extraTonnage > 0 && (
+                    {extraDays > 0 && (
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 gap-1 sm:gap-2">
-                        <span className="text-sm sm:text-base lg:text-lg text-gray-700">Extra Tonnage ({extraTonnage} tons):</span>
-                        <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(extraTonnageAmount)}</span>
+                        <span className="text-sm sm:text-base lg:text-lg text-gray-700">Extra Days ({extraDays} day{extraDays > 1 ? "s" : ""}):</span>
+                        <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(extraDaysAmount)}</span>
                       </div>
                     )}
                     {applianceCount > 0 && (
@@ -1428,7 +1349,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">Service Type:</span>
-                        <span className="ml-2 text-gray-900 capitalize">{serviceType}</span>
+                        <span className="ml-2 text-gray-900 capitalize">delivery</span>
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">Total Amount:</span>
@@ -1591,7 +1512,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                         </div>
                         <div className="flex justify-between">
                           <span>Service:</span>
-                          <span className="capitalize">{serviceType}</span>
+                          <span className="capitalize">delivery</span>
                         </div>
                         <Separator />
                         <div className="flex justify-between font-semibold text-lg">
@@ -1688,9 +1609,9 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                               container_type_id: selectedContainer,
                               start_date: startDate?.toISOString(),
                               end_date: endDate?.toISOString(),
-                              service_type: serviceType,
+                              service_type: "delivery",
                               customer_address: useProfileAddress ? `${profile?.street_address || ''}, ${profile?.city || ''}, ${profile?.state || ''} ${profile?.zip_code || ''}` : `${streetAddress}, ${city}, ${state} ${zipCode}`,
-                              delivery_address: serviceType === 'delivery' ? `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}` : null,
+                              delivery_address: `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`,
                               total_amount: totalAmount,
                               pickup_time: pickupTime,
                               notes: notes,
@@ -1716,9 +1637,9 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                                     containerType: bookingData.container_types?.size || containerTypes.find(c => c.id === selectedContainer)?.size || 'Container',
                                     startDate: format(startDate!, "MMMM dd, yyyy"),
                                     endDate: format(endDate!, "MMMM dd, yyyy"),
-                                    serviceType: serviceType,
+                                    serviceType: "delivery",
                                     totalAmount: totalAmount,
-                                    deliveryAddress: serviceType === 'delivery' ? `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}` : null,
+                                    deliveryAddress: `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`,
                                     pickupTime: pickupTime,
                                     notes: notes.trim() || undefined,
                                   }),
@@ -1953,11 +1874,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                         <p>• Our team will review and charge the final amount once confirmed</p>
                         <p>• You'll receive a confirmation email with all the details</p>
                         <p>• Our team will contact you to confirm your booking details</p>
-                        {successData.booking.service_type === "delivery" ? (
-                          <p>• We'll deliver the container to your specified address on the scheduled date</p>
-                        ) : (
-                          <p>• You can pick up your container at our location on the scheduled date</p>
-                        )}
+                        <p>• We'll deliver the container to your specified address on the scheduled date</p>
                         <p>• You can track your booking status in your account</p>
                       </div>
                     </CardContent>
@@ -2020,7 +1937,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                     setSelectedContainer("")
                     setStartDate(undefined)
                     setEndDate(undefined)
-                    setServiceType("pickup")
                     setPickupTime("09:00")
                     setStreetAddress("")
                     setCity("")
@@ -2031,7 +1947,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                     setDeliveryState("")
                     setDeliveryZipCode("")
                     setUseProfileAddress(false)
-                    setExtraTonnage(0)
+                    setExtraDays(0)
                     setApplianceCount(0)
                     setNotes("")
                     setPaymentMethod("stripe")

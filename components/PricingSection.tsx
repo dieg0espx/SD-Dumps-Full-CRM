@@ -14,7 +14,7 @@ export default function PricingSection() {
             Transparent Pricing
           </h2>
           <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
-            Choose the right dumpster for your project. Base cost charged upon delivery. Extra tonnage charged after actual dump.
+            Choose the right dumpster for your project. Price includes 3 days (72 hours). Extra tonnage charged after actual dump.
           </p>
         </div>
 
@@ -24,8 +24,8 @@ export default function PricingSection() {
             <div className="text-center mb-6">
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">$595</div>
               <div className="text-base sm:text-lg text-gray-600">17 Yard Dumpster</div>
-              <div className="text-sm text-gray-500 mt-2">Includes 2 tons of waste disposal.</div>
-              <div className="text-xs text-gray-400 mt-1">Base cost charged upon delivery. Extra tonnage charged after actual dump.</div>
+              <div className="text-sm text-gray-500 mt-2">Includes 3 days (72 hours) & 2 tons of waste disposal.</div>
+              <div className="text-xs text-gray-400 mt-1">Extra days: $25/day. Extra tonnage charged after actual dump.</div>
             </div>
             <div className="space-y-3 mb-6 sm:mb-8">
               <div className="flex items-center space-x-2">
@@ -34,11 +34,15 @@ export default function PricingSection() {
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main flex-shrink-0" />
+                <span className="text-sm text-gray-600">3 days (72 hours) included</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Check className="w-4 h-4 text-main flex-shrink-0" />
                 <span className="text-sm text-gray-600">2 tons included in base price</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main flex-shrink-0" />
-                <span className="text-sm text-gray-600">Extra tonnage: $125 per ton</span>
+                <span className="text-sm text-gray-600">Extra days: $25 per day</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main flex-shrink-0" />
@@ -46,11 +50,7 @@ export default function PricingSection() {
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main flex-shrink-0" />
-                <span className="text-sm text-gray-600">Flexible scheduling</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="w-4 h-4 text-main flex-shrink-0" />
-                <span className="text-sm text-gray-600">Drop-off and pick-up included</span>
+                <span className="text-sm text-gray-600">Delivery and pick-up included</span>
               </div>
             </div>
             <button
@@ -69,8 +69,8 @@ export default function PricingSection() {
             <div className="text-center mb-6">
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">$695</div>
               <div className="text-base sm:text-lg text-gray-600">21 Yard Dumpster</div>
-              <div className="text-sm text-gray-500 mt-2">Includes 2 tons of waste disposal.</div>
-              <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded mt-2">Base cost charged upon delivery. Extra tonnage charged after actual dump.</div>
+              <div className="text-sm text-gray-500 mt-2">Includes 3 days (72 hours) & 2 tons of waste disposal.</div>
+              <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded mt-2">Extra days: $25/day. Extra tonnage charged after actual dump.</div>
             </div>
             <div className="space-y-3 mb-8">
               <div className="flex items-center space-x-2">
@@ -79,11 +79,15 @@ export default function PricingSection() {
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main" />
+                <span className="text-sm text-gray-600">3 days (72 hours) included</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Check className="w-4 h-4 text-main" />
                 <span className="text-sm text-gray-600">2 tons included in base price</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main" />
-                <span className="text-sm text-gray-600">Extra tonnage: $125 per ton</span>
+                <span className="text-sm text-gray-600">Extra days: $25 per day</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main" />
@@ -91,11 +95,7 @@ export default function PricingSection() {
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main" />
-                <span className="text-sm text-gray-600">Flexible scheduling</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="w-4 h-4 text-main" />
-                <span className="text-sm text-gray-600">Drop-off and pick-up included</span>
+                <span className="text-sm text-gray-600">Delivery and pick-up included</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4 text-main" />
