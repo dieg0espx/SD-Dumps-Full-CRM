@@ -70,7 +70,6 @@ export default function Footer() {
             <div className="space-y-2 text-gray-400">
               <div>Phone: (760) 270-0312</div>
               <div>Email: sandiegodumpingsolutions@gmail.com</div>
-              <div>Address: 123 Main Street, City, State 12345</div>
               <div>Hours: Mon-Fri: 9AM-6PM</div>
             </div>
           </div>

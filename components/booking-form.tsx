@@ -1737,9 +1737,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
 
                         {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</div>}
 
-                        <div className="text-xs text-gray-500 text-center">
-                          <p>No real payment will be processed.</p>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>

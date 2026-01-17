@@ -384,9 +384,6 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                   </Button>
                 </div>
 
-                <div className="text-xs text-gray-500 text-center">
-                  <p>No real payment will be processed.</p>
-                </div>
               </form>
             </CardContent>
           </Card>

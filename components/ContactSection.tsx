@@ -1,5 +1,5 @@
 import React from 'react'
-import { MapPin, Phone, Mail } from 'lucide-react'
+import { Phone, Mail } from 'lucide-react'
 
 export default function ContactSection() {
   return (
@@ -12,11 +12,7 @@ export default function ContactSection() {
           Ready to get started? Contact us for a free quote or to schedule your dumpster rental today.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12">
-          <div className="flex flex-col items-center">
-            <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-main mb-3 sm:mb-4" />
-            <div className="text-gray-600 text-sm sm:text-base">123 Main Street, City, State 12345</div>
-          </div>
+        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-12">
           <div className="flex flex-col items-center">
             <Phone className="w-6 h-6 sm:w-8 sm:h-8 text-main mb-3 sm:mb-4" />
             <div className="text-gray-600 text-sm sm:text-base">(760) 270-0312</div>
