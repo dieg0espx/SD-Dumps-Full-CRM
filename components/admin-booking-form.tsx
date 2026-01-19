@@ -29,6 +29,11 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
+// Format date to YYYY-MM-DD in local timezone (avoids UTC conversion issues)
+const formatDateLocal = (date: Date) => {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
 interface AdminBookingFormProps {
   containerTypes: any[]
   users: any[]
@@ -113,8 +118,8 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
         .insert({
           user_id: selectedUser,
           container_type_id: containerType,
-          start_date: startDate.toISOString().split("T")[0],
-          end_date: endDate.toISOString().split("T")[0],
+          start_date: formatDateLocal(startDate),
+          end_date: formatDateLocal(endDate),
           service_type: serviceType,
           customer_address: customerAddress,
           delivery_address: serviceType === "delivery" ? deliveryAddress : null,

@@ -3,6 +3,12 @@ import { NextResponse } from "next/server"
 import { sendPhoneBookingEmail } from "@/lib/email"
 import { format, addDays } from "date-fns"
 
+// Parse date string (YYYY-MM-DD) to local date to avoid timezone issues
+const parseLocalDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
@@ -42,7 +48,10 @@ export async function POST(request: Request) {
       totalAmount,
       extraTonnage,
       applianceCount,
+      travelFee,
       notes,
+      priceAdjustment,
+      adjustmentReason,
     } = await request.json()
 
     // Validate required fields
@@ -88,7 +97,22 @@ export async function POST(request: Request) {
 
     // Create the booking with 'pending' status (awaiting card to be saved)
     // We use payment_method_id being null to indicate it's awaiting card
-    const notesWithFlag = notes ? `${notes}\n\n[PHONE BOOKING - Awaiting card]` : "[PHONE BOOKING - Awaiting card]"
+    let notesWithFlag = notes || ""
+
+    // Add travel fee info to notes if applicable
+    if (travelFee && travelFee > 0) {
+      const travelFeeText = `[Travel Fee: $${travelFee}]`
+      notesWithFlag = notesWithFlag ? `${notesWithFlag}\n\n${travelFeeText}` : travelFeeText
+    }
+
+    // Add price adjustment info to notes if applicable
+    if (priceAdjustment && priceAdjustment !== 0) {
+      const adjustmentType = priceAdjustment < 0 ? "Discount" : "Additional Charge"
+      const adjustmentText = `[${adjustmentType}: $${Math.abs(priceAdjustment)}${adjustmentReason ? ` - ${adjustmentReason}` : ""}]`
+      notesWithFlag = notesWithFlag ? `${notesWithFlag}\n\n${adjustmentText}` : adjustmentText
+    }
+
+    notesWithFlag = notesWithFlag ? `${notesWithFlag}\n\n[PHONE BOOKING - Awaiting card]` : "[PHONE BOOKING - Awaiting card]"
 
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
@@ -102,6 +126,9 @@ export async function POST(request: Request) {
         customer_address: customerAddress,
         delivery_address: deliveryAddress || null,
         total_amount: totalAmount,
+        travel_fee: travelFee || null,
+        price_adjustment: priceAdjustment || null,
+        adjustment_reason: priceAdjustment ? (adjustmentReason || null) : null,
         notes: notesWithFlag,
         status: "pending",
         payment_status: "pending",
@@ -177,8 +204,8 @@ export async function POST(request: Request) {
         customerEmail,
         paymentLink: paymentUrl,
         containerType: containerType?.name || "Container",
-        startDate: format(new Date(startDate), "PPP"),
-        endDate: format(new Date(endDate), "PPP"),
+        startDate: format(parseLocalDate(startDate), "PPP"),
+        endDate: format(parseLocalDate(endDate), "PPP"),
         totalAmount,
         expiresAt: format(expiresAt, "PPP"),
       })

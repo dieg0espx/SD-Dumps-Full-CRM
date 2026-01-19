@@ -29,6 +29,12 @@ const formatCurrency = (amount: number) => {
     maximumFractionDigits: 0,
   }).format(amount)
 }
+
+// Parse date string (YYYY-MM-DD) to local date to avoid timezone issues
+const parseLocalDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
 import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 
@@ -226,8 +232,8 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
     const bookedCount = existingBookings.filter((booking) => {
       if (booking.container_type_id !== selectedContainer) return false
 
-      const bookingStart = new Date(booking.start_date)
-      const bookingEnd = new Date(booking.end_date)
+      const bookingStart = parseLocalDate(booking.start_date)
+      const bookingEnd = parseLocalDate(booking.end_date)
 
       return date >= bookingStart && date <= bookingEnd
     }).length
@@ -245,8 +251,8 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
     const bookedCount = existingBookings.filter((booking) => {
       if (booking.container_type_id !== selectedContainer) return false
 
-      const bookingStart = new Date(booking.start_date)
-      const bookingEnd = new Date(booking.end_date)
+      const bookingStart = parseLocalDate(booking.start_date)
+      const bookingEnd = parseLocalDate(booking.end_date)
 
       return date >= bookingStart && date <= bookingEnd
     }).length
@@ -269,8 +275,8 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
       const bookedCount = existingBookings.filter((booking) => {
         if (booking.container_type_id !== selectedContainer) return false
 
-        const bookingStart = new Date(booking.start_date)
-        const bookingEnd = new Date(booking.end_date)
+        const bookingStart = parseLocalDate(booking.start_date)
+        const bookingEnd = parseLocalDate(booking.end_date)
 
         return date >= bookingStart && date <= bookingEnd
       }).length

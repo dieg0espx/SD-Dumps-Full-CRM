@@ -4,6 +4,12 @@ import { sendPhoneBookingCompletedEmail, sendCustomerConfirmationEmail } from "@
 import Stripe from "stripe"
 import { format } from "date-fns"
 
+// Parse date string (YYYY-MM-DD) to local date to avoid timezone issues
+const parseLocalDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil",
 })
@@ -158,8 +164,8 @@ export async function POST(request: Request) {
         customerEmail: paymentLink.customer_email,
         bookingId: booking.id,
         containerType: booking.container_types.name,
-        startDate: format(new Date(booking.start_date), "MMMM do, yyyy"),
-        endDate: format(new Date(booking.end_date), "MMMM do, yyyy"),
+        startDate: format(parseLocalDate(booking.start_date), "MMMM do, yyyy"),
+        endDate: format(parseLocalDate(booking.end_date), "MMMM do, yyyy"),
         totalAmount: booking.total_amount,
       })
     } catch (emailError) {

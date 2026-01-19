@@ -1,14 +1,27 @@
 "use client"
 
-import { X, Calendar, Package, User, CreditCard, Clock, DollarSign } from "lucide-react"
+import { X, Calendar, Package, User, CreditCard, Clock, DollarSign, Ban } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
 import { formatPhoneNumber } from "@/lib/phone-utils"
+import { parseLocalDate } from "@/lib/utils"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Textarea } from "@/components/ui/textarea"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -31,6 +44,9 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = fals
   const [chargeAmount, setChargeAmount] = useState("")
   const [chargeDescription, setChargeDescription] = useState("")
   const [isCharging, setIsCharging] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [cancelReason, setCancelReason] = useState("")
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
   const { toast } = useToast()
 
   if (!isOpen || !booking) return null
@@ -115,6 +131,57 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = fals
     }
   }
 
+  const handleCancelBooking = async () => {
+    setIsCancelling(true)
+
+    try {
+      const response = await fetch('/api/admin/cancel-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          reason: cancelReason.trim() || undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel booking')
+      }
+
+      toast({
+        title: "Booking Cancelled",
+        description: data.emailSent
+          ? "The booking has been cancelled and the customer has been notified via email."
+          : "The booking has been cancelled.",
+      })
+
+      // Reset form and close dialog
+      setCancelReason("")
+      setShowCancelDialog(false)
+
+      // Refresh booking data
+      if (onUpdate) {
+        onUpdate()
+      }
+
+      // Close the sidebar
+      onClose()
+    } catch (error) {
+      console.error('Cancel booking error:', error)
+      toast({
+        title: "Cancellation Failed",
+        description: error instanceof Error ? error.message : "Failed to cancel booking",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
   return (
     <>
       {/* Overlay */}
@@ -195,10 +262,10 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = fals
                   </p>
                   <p className="text-sm">
                     <span className="font-medium">Start Date:</span>{" "}
-                    {format(new Date(booking.start_date), "MMM dd, yyyy")}
+                    {format(parseLocalDate(booking.start_date), "MMM dd, yyyy")}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">End Date:</span> {format(new Date(booking.end_date), "MMM dd, yyyy")}
+                    <span className="font-medium">End Date:</span> {format(parseLocalDate(booking.end_date), "MMM dd, yyyy")}
                   </p>
                   {booking.delivery_address && (
                     <p className="text-sm">
@@ -338,6 +405,52 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = fals
                   </p>
                 )}
               </div>
+
+              {/* Admin: Cancel Booking */}
+              {isAdmin && booking.status !== "cancelled" && (
+                <div className="space-y-3 pt-4 border-t">
+                  <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        disabled={isCancelling}
+                      >
+                        <Ban className="h-4 w-4 mr-2" />
+                        Cancel Booking
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel Booking?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will cancel the booking and notify the customer via email. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="space-y-2 py-4">
+                        <Label htmlFor="cancel-reason">Reason (optional)</Label>
+                        <Textarea
+                          id="cancel-reason"
+                          placeholder="Enter a reason for cancellation..."
+                          value={cancelReason}
+                          onChange={(e) => setCancelReason(e.target.value)}
+                          disabled={isCancelling}
+                        />
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isCancelling}>Keep Booking</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleCancelBooking}
+                          disabled={isCancelling}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {isCancelling ? "Cancelling..." : "Yes, Cancel Booking"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </div>
           </div>
         </div>

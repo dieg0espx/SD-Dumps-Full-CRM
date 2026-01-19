@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import {
   CalendarIcon,
@@ -42,37 +41,56 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
+// Format date to YYYY-MM-DD in local timezone (avoids UTC conversion issues)
+const formatDateLocal = (date: Date) => {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+// Parse date string (YYYY-MM-DD) to local date to avoid timezone issues
+const parseLocalDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 interface PhoneBookingFormProps {
   containerTypes: any[]
 }
 
 export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
+  // Test data for development
+  const isDev = process.env.NODE_ENV === 'development'
+
   // Customer Info
-  const [customerName, setCustomerName] = useState("")
-  const [customerEmail, setCustomerEmail] = useState("")
-  const [customerPhone, setCustomerPhone] = useState("")
+  const [customerName, setCustomerName] = useState(isDev ? "John Doe" : "")
+  const [customerEmail, setCustomerEmail] = useState(isDev ? "diego@comcreate.org" : "")
+  const [customerPhone, setCustomerPhone] = useState(isDev ? "(555) 123-4567" : "")
 
   // Booking Details
   const [containerType, setContainerType] = useState("")
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
-  const [serviceType, setServiceType] = useState("pickup")
+  const [serviceType, setServiceType] = useState("delivery")
   const [pickupTime, setPickupTime] = useState("09:00")
 
   // Addresses
-  const [billingStreet, setBillingStreet] = useState("")
-  const [billingCity, setBillingCity] = useState("")
-  const [billingState, setBillingState] = useState("")
-  const [billingZip, setBillingZip] = useState("")
-  const [deliveryStreet, setDeliveryStreet] = useState("")
-  const [deliveryCity, setDeliveryCity] = useState("")
-  const [deliveryState, setDeliveryState] = useState("")
-  const [deliveryZip, setDeliveryZip] = useState("")
+  const [billingStreet, setBillingStreet] = useState(isDev ? "123 Main Street" : "")
+  const [billingCity, setBillingCity] = useState(isDev ? "San Diego" : "")
+  const [billingState, setBillingState] = useState(isDev ? "CA" : "")
+  const [billingZip, setBillingZip] = useState(isDev ? "92101" : "")
+  const [deliveryStreet, setDeliveryStreet] = useState(isDev ? "123 Main Street" : "")
+  const [deliveryCity, setDeliveryCity] = useState(isDev ? "San Diego" : "")
+  const [deliveryState, setDeliveryState] = useState(isDev ? "CA" : "")
+  const [deliveryZip, setDeliveryZip] = useState(isDev ? "92101" : "")
 
   // Additional
   const [extraTonnage, setExtraTonnage] = useState<number>(0)
   const [applianceCount, setApplianceCount] = useState<number>(0)
   const [notes, setNotes] = useState("")
+
+  // Price Adjustment
+  const [priceAdjustment, setPriceAdjustment] = useState<number>(0)
+  const [adjustmentReason, setAdjustmentReason] = useState("")
+  const [travelFee, setTravelFee] = useState<number>(0)
 
   // UI States
   const [loading, setLoading] = useState(false)
@@ -122,13 +140,9 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const container = containerTypes.find((ct) => ct.id === containerType)
     if (!container) return false
 
-    // Normalize date to midnight for accurate comparison
-    const checkDate = new Date(date)
-    checkDate.setHours(0, 0, 0, 0)
-
     // Count how many containers are booked on this date
     // Use STRING comparison to avoid timezone issues
-    const checkDateStr = checkDate.toISOString().split('T')[0]
+    const checkDateStr = formatDateLocal(date)
 
     const matchingBookings = existingBookings.filter((booking) => {
       if (booking.container_type_id !== containerType) return false
@@ -156,14 +170,15 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const bookedCount = existingBookings.filter((booking) => {
       if (booking.container_type_id !== containerType) return false
 
-      const bookingStart = new Date(booking.start_date)
-      bookingStart.setHours(0, 0, 0, 0)
+      const bookingStart = parseLocalDate(booking.start_date)
+      const bookingEnd = parseLocalDate(booking.end_date)
 
-      const bookingEnd = new Date(booking.end_date)
-      bookingEnd.setHours(0, 0, 0, 0)
+      // Normalize checkDate for comparison
+      const checkDateNorm = new Date(date)
+      checkDateNorm.setHours(0, 0, 0, 0)
 
       // Check if the date falls within the booking period (inclusive)
-      return checkDate >= bookingStart && checkDate <= bookingEnd
+      return checkDateNorm >= bookingStart && checkDateNorm <= bookingEnd
     }).length
 
     return {
@@ -196,8 +211,8 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
         .select("id, start_date, end_date")
         .eq("container_type_id", containerType)
         .not("status", "in", '("cancelled")')
-        .gte("end_date", startDate.toISOString().split("T")[0])
-        .lte("start_date", endDate.toISOString().split("T")[0])
+        .gte("end_date", formatDateLocal(startDate))
+        .lte("start_date", formatDateLocal(endDate))
 
       if (error) {
         console.error("Error checking availability:", error)
@@ -224,7 +239,9 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const baseTotalAmount = selectedContainer.price_per_day * Math.max(1, days)
     const extraTonnageAmount = (extraTonnage || 0) * 125
     const applianceAmount = (applianceCount || 0) * 25
-    return baseTotalAmount + extraTonnageAmount + applianceAmount
+    const travelFeeAmount = travelFee || 0
+    const adjustment = priceAdjustment || 0
+    return baseTotalAmount + extraTonnageAmount + applianceAmount + travelFeeAmount + adjustment
   }
 
   const handleCopyLink = async () => {
@@ -252,12 +269,12 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
       setError("Please fill in billing address")
       return
     }
-    if (serviceType === "delivery" && (!deliveryStreet || !deliveryCity || !deliveryState || !deliveryZip)) {
+    if (!deliveryStreet || !deliveryCity || !deliveryState || !deliveryZip) {
       setError("Please fill in delivery address")
       return
     }
     if (!pickupTime) {
-      setError("Please select a pickup/delivery time")
+      setError("Please select a delivery time")
       return
     }
 
@@ -287,8 +304,8 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
           customerEmail,
           customerPhone,
           containerTypeId: containerType,
-          startDate: startDate.toISOString().split("T")[0],
-          endDate: endDate.toISOString().split("T")[0],
+          startDate: formatDateLocal(startDate),
+          endDate: formatDateLocal(endDate),
           serviceType,
           pickupTime,
           customerAddress: billingAddress,
@@ -296,7 +313,10 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
           totalAmount,
           extraTonnage: extraTonnage > 0 ? extraTonnage : null,
           applianceCount: applianceCount > 0 ? applianceCount : null,
+          travelFee: travelFee > 0 ? travelFee : null,
           notes: notes || null,
+          priceAdjustment: priceAdjustment !== 0 ? priceAdjustment : null,
+          adjustmentReason: priceAdjustment !== 0 ? adjustmentReason : null,
         }),
       })
 
@@ -342,7 +362,10 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     setDeliveryZip("")
     setExtraTonnage(0)
     setApplianceCount(0)
+    setTravelFee(0)
     setNotes("")
+    setPriceAdjustment(0)
+    setAdjustmentReason("")
     setPaymentLink(null)
     setError(null)
   }
@@ -535,8 +558,26 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                     mode="range"
                     selected={{ from: startDate, to: endDate }}
                     onSelect={(range) => {
-                      setStartDate(range?.from)
-                      setEndDate(range?.to)
+                      // Ensure dates are set to noon local time to avoid timezone edge cases
+                      if (range?.from) {
+                        const from = new Date(range.from)
+                        console.log('Calendar from (raw):', range.from)
+                        console.log('Calendar from toString:', range.from.toString())
+                        console.log('Calendar from getDate:', range.from.getDate())
+                        from.setHours(12, 0, 0, 0)
+                        console.log('After setHours:', from.toString(), 'getDate:', from.getDate())
+                        console.log('formatDateLocal result:', formatDateLocal(from))
+                        setStartDate(from)
+                      } else {
+                        setStartDate(undefined)
+                      }
+                      if (range?.to) {
+                        const to = new Date(range.to)
+                        to.setHours(12, 0, 0, 0)
+                        setEndDate(to)
+                      } else {
+                        setEndDate(undefined)
+                      }
                     }}
                     disabled={(date) => date < new Date() || isDateUnavailable(date)}
                     initialFocus
@@ -621,30 +662,6 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Service Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Service Type</CardTitle>
-            <CardDescription>Select pickup or delivery service</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup value={serviceType} onValueChange={setServiceType}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="pickup" id="pickup" />
-                <Label htmlFor="pickup" className="cursor-pointer">
-                  Customer Pickup
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="delivery" id="delivery" />
-                <Label htmlFor="delivery" className="cursor-pointer">
-                  Delivery Service
-                </Label>
-              </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
-
         {/* Time & Addresses */}
         <Card>
           <CardHeader>
@@ -655,9 +672,7 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="pickupTime">
-                {serviceType === "pickup" ? "Pickup Time" : "Delivery Time"} *
-              </Label>
+              <Label htmlFor="pickupTime">Delivery Time *</Label>
               <Input
                 id="pickupTime"
                 type="time"
@@ -701,42 +716,54 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
               />
             </div>
 
-            {serviceType === "delivery" && (
-              <>
-                <Separator />
-                <div className="space-y-4">
-                  <h4 className="font-medium">Delivery Address *</h4>
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Street Address"
-                      value={deliveryStreet}
-                      onChange={(e) => setDeliveryStreet(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      placeholder="City"
-                      value={deliveryCity}
-                      onChange={(e) => setDeliveryCity(e.target.value)}
-                      required
-                    />
-                    <Input
-                      placeholder="State"
-                      value={deliveryState}
-                      onChange={(e) => setDeliveryState(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Input
-                    placeholder="ZIP Code"
-                    value={deliveryZip}
-                    onChange={(e) => setDeliveryZip(e.target.value)}
-                    required
-                  />
-                </div>
-              </>
-            )}
+            <Separator />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Delivery Address *</h4>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDeliveryStreet(billingStreet)
+                    setDeliveryCity(billingCity)
+                    setDeliveryState(billingState)
+                    setDeliveryZip(billingZip)
+                  }}
+                  disabled={!billingStreet && !billingCity && !billingState && !billingZip}
+                >
+                  Same as Billing
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <Input
+                  placeholder="Street Address"
+                  value={deliveryStreet}
+                  onChange={(e) => setDeliveryStreet(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="City"
+                  value={deliveryCity}
+                  onChange={(e) => setDeliveryCity(e.target.value)}
+                  required
+                />
+                <Input
+                  placeholder="State"
+                  value={deliveryState}
+                  onChange={(e) => setDeliveryState(e.target.value)}
+                  required
+                />
+              </div>
+              <Input
+                placeholder="ZIP Code"
+                value={deliveryZip}
+                onChange={(e) => setDeliveryZip(e.target.value)}
+                required
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -768,6 +795,20 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="travelFee">Travel Fee ($)</Label>
+              <Input
+                id="travelFee"
+                type="number"
+                min="0"
+                placeholder="0"
+                value={travelFee || ""}
+                onChange={(e) => setTravelFee(Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Additional fee for delivery distance
+              </p>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="notes">Special Notes</Label>
               <Textarea
                 id="notes"
@@ -776,6 +817,44 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Price Adjustment */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Price Adjustment</CardTitle>
+            <CardDescription>Apply discounts or add charges (e.g., "-75 loyal customer" or "+50 rush fee")</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="priceAdjustment">Amount ($)</Label>
+                <Input
+                  id="priceAdjustment"
+                  type="number"
+                  placeholder="-75"
+                  value={priceAdjustment || ""}
+                  onChange={(e) => setPriceAdjustment(Number(e.target.value))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use negative for discounts, positive for extra charges
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="adjustmentReason">Reason</Label>
+                <Input
+                  id="adjustmentReason"
+                  type="text"
+                  placeholder="loyal customer"
+                  value={adjustmentReason}
+                  onChange={(e) => setAdjustmentReason(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Brief description for the adjustment
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -813,6 +892,23 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Appliance Disposal ({applianceCount} items):</span>
                   <span className="font-medium">{formatCurrency(applianceCount * 25)}</span>
+                </div>
+              )}
+              {travelFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Travel Fee:</span>
+                  <span className="font-medium">{formatCurrency(travelFee)}</span>
+                </div>
+              )}
+              {priceAdjustment !== 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {priceAdjustment < 0 ? "Discount" : "Additional Charge"}
+                    {adjustmentReason && ` (${adjustmentReason})`}:
+                  </span>
+                  <span className={`font-medium ${priceAdjustment < 0 ? "text-green-600" : "text-red-600"}`}>
+                    {priceAdjustment < 0 ? "-" : "+"}{formatCurrency(Math.abs(priceAdjustment))}
+                  </span>
                 </div>
               )}
               <Separator />

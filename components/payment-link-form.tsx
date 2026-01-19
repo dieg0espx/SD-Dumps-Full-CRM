@@ -18,6 +18,7 @@ import {
   Clock,
 } from "lucide-react"
 import { format } from "date-fns"
+import { parseLocalDate } from "@/lib/utils"
 import { StripePaymentLinkForm } from "@/components/stripe-payment-link-form"
 import { SignaturePad } from "@/components/signature-pad"
 import { uploadSignatureToCloudinary } from "@/lib/cloudinary"
@@ -151,11 +152,11 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
                 </div>
                 <div>
                   <p className="text-gray-600">Start Date</p>
-                  <p className="font-medium">{format(new Date(booking.start_date), "PPP")}</p>
+                  <p className="font-medium">{format(parseLocalDate(booking.start_date), "PPP")}</p>
                 </div>
                 <div>
                   <p className="text-gray-600">End Date</p>
-                  <p className="font-medium">{format(new Date(booking.end_date), "PPP")}</p>
+                  <p className="font-medium">{format(parseLocalDate(booking.end_date), "PPP")}</p>
                 </div>
                 <div>
                   <p className="text-gray-600">Total Amount</p>
@@ -201,7 +202,7 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
                   <div>
                     <span className="font-medium text-gray-700">Rental Period:</span>
                     <span className="ml-2 text-gray-900">
-                      {format(new Date(booking.start_date), "MMM dd")} - {format(new Date(booking.end_date), "MMM dd, yyyy")}
+                      {format(parseLocalDate(booking.start_date), "MMM dd")} - {format(parseLocalDate(booking.end_date), "MMM dd, yyyy")}
                     </span>
                   </div>
                   <div>
@@ -458,11 +459,11 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-gray-600">Start Date</Label>
-              <p className="font-medium">{format(new Date(booking.start_date), "PPP")}</p>
+              <p className="font-medium">{format(parseLocalDate(booking.start_date), "PPP")}</p>
             </div>
             <div>
               <Label className="text-gray-600">End Date</Label>
-              <p className="font-medium">{format(new Date(booking.end_date), "PPP")}</p>
+              <p className="font-medium">{format(parseLocalDate(booking.end_date), "PPP")}</p>
             </div>
           </div>
           <div>

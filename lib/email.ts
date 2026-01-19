@@ -997,3 +997,129 @@ export async function sendPaymentReceiptEmail(data: {
   }
 }
 
+// Generate booking cancellation email HTML
+function generateCancellationEmail(data: {
+  customerName: string
+  bookingId: string
+  containerType: string
+  startDate: string
+  endDate: string
+  reason?: string
+}) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card h2 { color: #dc2626; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .detail-row:last-child { border-bottom: none; }
+    .label { font-weight: bold; color: #6b7280; }
+    .value { color: #111827; }
+    .alert { background: #fee2e2; border-left: 4px solid #dc2626; padding: 15px; border-radius: 4px; margin: 20px 0; color: #991b1b; }
+    .info { background: #dbeafe; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0; color: #1e40af; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Booking Cancelled</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">Your booking has been cancelled</p>
+    </div>
+
+    <div class="content">
+      <p>Hi ${data.customerName},</p>
+
+      <div class="alert">
+        <p style="margin: 0; font-weight: bold;">Your booking has been cancelled.</p>
+        ${data.reason ? `<p style="margin: 10px 0 0 0;">Reason: ${data.reason}</p>` : ''}
+      </div>
+
+      <div class="card">
+        <h2>Cancelled Booking Details</h2>
+        <div class="detail-row">
+          <span class="label">Booking ID:</span>
+          <span class="value">#${data.bookingId.slice(0, 8).toUpperCase()}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Container:</span>
+          <span class="value">${data.containerType}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Start Date:</span>
+          <span class="value">${data.startDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">End Date:</span>
+          <span class="value">${data.endDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Status:</span>
+          <span class="value" style="color: #dc2626; font-weight: bold;">CANCELLED</span>
+        </div>
+      </div>
+
+      <div class="info">
+        <p style="margin: 0; font-weight: bold;">Need to rebook?</p>
+        <p style="margin: 10px 0 0 0;">
+          If you'd like to schedule a new booking, please visit our website or give us a call. We're happy to help you find a time that works for you.
+        </p>
+      </div>
+
+      <p style="text-align: center; margin: 30px 0 10px 0; color: #6b7280;">
+        Questions? Contact us anytime - we're here to help!
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>SD Dumps</strong></p>
+      <p>Professional Waste Management Services</p>
+      <p style="font-size: 12px; color: #9ca3af;">
+        Thank you for considering SD Dumps for your container rental needs.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `
+}
+
+// Send booking cancellation email to customer
+export async function sendCancellationEmail(data: {
+  customerName: string
+  customerEmail: string
+  bookingId: string
+  containerType: string
+  startDate: string
+  endDate: string
+  reason?: string
+}) {
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping cancellation email')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+      to: data.customerEmail,
+      subject: `Booking Cancelled - #${data.bookingId.slice(0, 8)}`,
+      html: generateCancellationEmail(data),
+    })
+    console.log('✅ Cancellation email sent to:', data.customerEmail)
+
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Error sending cancellation email:', error)
+    throw error
+  }
+}
+

@@ -20,6 +20,12 @@ import {
   eachWeekOfInterval,
 } from "date-fns"
 
+// Parse date string (YYYY-MM-DD) to local date to avoid timezone issues
+const parseLocalDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 interface BookingCalendarProps {
   bookings: any[]
   isAdmin?: boolean
@@ -70,8 +76,11 @@ export function BookingCalendar({ bookings, isAdmin = false, onBookingUpdate }: 
     const spans: any[] = []
 
     bookings.forEach((booking) => {
-      const startDate = new Date(booking.start_date)
-      const endDate = new Date(booking.end_date)
+      console.log('Booking raw dates:', booking.start_date, booking.end_date)
+      const startDate = parseLocalDate(booking.start_date)
+      const endDate = parseLocalDate(booking.end_date)
+      console.log('Parsed dates:', startDate.toString(), endDate.toString())
+      console.log('getDate():', startDate.getDate(), endDate.getDate())
 
       // Check if booking overlaps with this week
       if (
