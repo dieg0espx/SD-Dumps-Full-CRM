@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Payment History | SD Dumps',
-  description: 'View your SD Dumps payment history.',
+  title: 'Payment History | SD Dumping Solutions',
+  description: 'View your SD Dumping Solutions payment history.',
   robots: {
     index: false,
     follow: false,

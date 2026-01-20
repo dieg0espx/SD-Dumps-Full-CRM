@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import { ContactPageSchema, BreadcrumbSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
-  title: 'Contact SD Dumps | Get Free Quote & Support',
-  description: 'Contact SD Dumps for professional waste management services. Get free quotes, schedule pickups, or get support. Serving San Diego County with 24/7 availability.',
+  title: 'Contact SD Dumping Solutions | Get Free Quote & Support',
+  description: 'Contact SD Dumping Solutions for professional waste management services. Get free quotes, schedule pickups, or get support. Serving San Diego County with 24/7 availability.',
   keywords: [
-    'contact SD Dumps',
+    'contact SD Dumping Solutions',
     'dumpster rental quote',
     'waste management contact',
     'San Diego dumpster service',
@@ -14,16 +14,16 @@ export const metadata: Metadata = {
     'waste disposal inquiry'
   ],
   openGraph: {
-    title: 'Contact SD Dumps | Get Free Quote & Support',
-    description: 'Contact SD Dumps for professional waste management services. Get free quotes, schedule pickups, or get support. Serving San Diego County.',
+    title: 'Contact SD Dumping Solutions | Get Free Quote & Support',
+    description: 'Contact SD Dumping Solutions for professional waste management services. Get free quotes, schedule pickups, or get support. Serving San Diego County.',
     url: 'https://sddumps.com/contact',
-    siteName: 'SD Dumps',
+    siteName: 'SD Dumping Solutions',
     images: [
       {
         url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         width: 1200,
         height: 630,
-        alt: 'Contact SD Dumps',
+        alt: 'Contact SD Dumping Solutions',
       },
     ],
     locale: 'en_US',
@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Contact SD Dumps | Get Free Quote & Support',
-    description: 'Contact SD Dumps for professional waste management services. Get free quotes and schedule pickups in San Diego.',
+    title: 'Contact SD Dumping Solutions | Get Free Quote & Support',
+    description: 'Contact SD Dumping Solutions for professional waste management services. Get free quotes and schedule pickups in San Diego.',
     images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
   },
   alternates: {

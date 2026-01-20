@@ -236,12 +236,18 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
   const calculateTotal = () => {
     if (!selectedContainer || !startDate || !endDate) return 0
     const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-    const baseTotalAmount = selectedContainer.price_per_day * Math.max(1, days)
+    const totalDays = Math.max(1, days)
+    // Base price includes 3 days
+    const includedDays = 3
+    const baseAmount = selectedContainer.price_per_day
+    // Calculate extra days beyond the included 3 days
+    const extraDaysCount = Math.max(0, totalDays - includedDays)
+    const extraDaysAmount = extraDaysCount * 25
     const extraTonnageAmount = (extraTonnage || 0) * 125
     const applianceAmount = (applianceCount || 0) * 25
     const travelFeeAmount = travelFee || 0
     const adjustment = priceAdjustment || 0
-    return baseTotalAmount + extraTonnageAmount + applianceAmount + travelFeeAmount + adjustment
+    return baseAmount + extraDaysAmount + extraTonnageAmount + applianceAmount + travelFeeAmount + adjustment
   }
 
   const handleCopyLink = async () => {
@@ -579,7 +585,11 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                         setEndDate(undefined)
                       }
                     }}
-                    disabled={(date) => date < new Date() || isDateUnavailable(date)}
+                    disabled={(date) => {
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0)
+                      return date < today || isDateUnavailable(date)
+                    }}
                     initialFocus
                     numberOfMonths={2}
                     modifiers={{
@@ -877,11 +887,19 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Base Rental:</span>
+                <span className="text-muted-foreground">Base Rental (includes 3 days):</span>
                 <span className="font-medium">
-                  {formatCurrency(selectedContainer.price_per_day * Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))))}
+                  {formatCurrency(selectedContainer.price_per_day)}
                 </span>
               </div>
+              {Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) > 3 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Extra Days ({Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) - 3} days × $25):</span>
+                  <span className="font-medium">
+                    {formatCurrency((Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) - 3) * 25)}
+                  </span>
+                </div>
+              )}
               {extraTonnage > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Extra Tonnage ({extraTonnage} tons):</span>

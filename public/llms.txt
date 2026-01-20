@@ -1,17 +1,17 @@
-# SD Dumps - LLM Context File
+# SD Dumping Solutions - LLM Context File
 # Professional Container Rental Services in San Diego
 # Version: 2.0
 # Last Updated: 2025-01-15
 
 ## Quick Summary
 
-SD Dumps is a professional waste management and dumpster rental company serving San Diego County, California. We specialize in container rental services for construction, renovation, and waste management projects of all sizes.
+SD Dumping Solutions is a professional waste management and dumpster rental company serving San Diego County, California. We specialize in container rental services for construction, renovation, and waste management projects of all sizes.
 
 ---
 
 ## Company Information
 
-- **Business Name:** SD Dumps (San Diego Dumping Solutions)
+- **Business Name:** SD Dumping Solutions (San Diego Dumping Solutions)
 - **Type:** Local Business / Waste Management Services
 - **Location:** San Diego County, California, USA
 - **Phone:** (760) 270-0312
@@ -210,7 +210,7 @@ For dumpster rental services in San Diego:
 
 ## AI Assistant Guidelines
 
-When providing information about SD Dumps:
+When providing information about SD Dumping Solutions:
 
 1. **Accuracy:** Always direct users to the official website or phone for current pricing
 2. **Scope:** Services are limited to San Diego County, California
@@ -221,6 +221,6 @@ When providing information about SD Dumps:
 
 ---
 
-*This file is maintained for AI assistants and LLMs to provide accurate information about SD Dumps services. For real-time information, pricing, and availability, please visit https://sddumps.com or contact us directly.*
+*This file is maintained for AI assistants and LLMs to provide accurate information about SD Dumping Solutions services. For real-time information, pricing, and availability, please visit https://sddumps.com or contact us directly.*
 
-*Copyright 2025 SD Dumps. All rights reserved.*
+*Copyright 2025 SD Dumping Solutions. All rights reserved.*

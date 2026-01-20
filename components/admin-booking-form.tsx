@@ -67,7 +67,21 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
   const calculateTotal = () => {
     if (!selectedContainer || !startDate || !endDate) return 0
     const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-    return selectedContainer.price_per_day * Math.max(1, days)
+    const totalDays = Math.max(1, days)
+    // Base price includes 3 days
+    const includedDays = 3
+    const baseAmount = selectedContainer.price_per_day
+    // Calculate extra days beyond the included 3 days
+    const extraDaysCount = Math.max(0, totalDays - includedDays)
+    const extraDaysAmount = extraDaysCount * 25
+    return baseAmount + extraDaysAmount
+  }
+
+  const getExtraDays = () => {
+    if (!startDate || !endDate) return 0
+    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const totalDays = Math.max(1, days)
+    return Math.max(0, totalDays - 3)
   }
 
 
@@ -503,7 +517,11 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                       mode="single"
                       selected={startDate}
                       onSelect={setStartDate}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date) => {
+                        const today = new Date()
+                        today.setHours(0, 0, 0, 0)
+                        return date < today
+                      }}
                     />
                   </PopoverContent>
                 </Popover>
@@ -523,7 +541,13 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
                       mode="single"
                       selected={endDate}
                       onSelect={setEndDate}
-                      disabled={(date) => date < (startDate || new Date())}
+                      disabled={(date) => {
+                        const minDate = startDate || new Date()
+                        if (!startDate) {
+                          minDate.setHours(0, 0, 0, 0)
+                        }
+                        return date < minDate
+                      }}
                     />
                   </PopoverContent>
                 </Popover>
@@ -578,13 +602,19 @@ export function AdminBookingForm({ containerTypes, users }: AdminBookingFormProp
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span>{selectedContainer.name}</span>
+                <span>{selectedContainer.name} (includes 3 days)</span>
                 <span>{formatCurrency(selectedContainer.price_per_day)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Duration</span>
                 <span>{Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days</span>
               </div>
+              {getExtraDays() > 0 && (
+                <div className="flex justify-between">
+                  <span>Extra Days ({getExtraDays()} × $25)</span>
+                  <span>{formatCurrency(getExtraDays() * 25)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total</span>
                 <span>{formatCurrency(calculateTotal())}</span>

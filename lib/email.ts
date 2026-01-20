@@ -96,6 +96,7 @@ function generateGuestInquiryEmail(data: GuestInquiryEmailData): string {
   <body>
     <div class="container">
       <div class="header">
+        <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
         <h2>New Guest Booking Request</h2>
         <p style="margin: 6px 0 0 0">No account – follow-up required</p>
       </div>
@@ -125,7 +126,7 @@ export async function sendGuestInquiryEmail(data: GuestInquiryEmailData) {
   }
 
   await transporter.sendMail({
-    from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+    from: `"SD Dumping Solutions" <${process.env.SMTP_FROM}>`,
     to: process.env.CONTACT_EMAIL,
     subject: `New Guest Booking Request`,
     html: generateGuestInquiryEmail(data),
@@ -156,6 +157,7 @@ function generateContactFormEmail(data: ContactFormData): string {
 <body>
   <div class="container">
     <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
       <h2>New Contact Form Submission</h2>
       <p style="margin: 6px 0 0 0">From your website contact page</p>
     </div>
@@ -183,7 +185,7 @@ export async function sendContactFormEmail(data: ContactFormData) {
   }
 
   await transporter.sendMail({
-    from: `"SD Dumps Contact Form" <${process.env.SMTP_FROM}>`,
+    from: `"SD Dumping Solutions Contact Form" <${process.env.SMTP_FROM}>`,
     to: process.env.CONTACT_EMAIL,
     subject: `New Contact Form Submission from ${data.firstName} ${data.lastName}`,
     html: generateContactFormEmail(data),
@@ -219,10 +221,11 @@ export function generateClientEmail(data: BookingEmailData): string {
 <body>
   <div class="container">
     <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
       <h1>🎉 Booking Confirmed!</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">Thank you for your order</p>
     </div>
-    
+
     <div class="content">
       <p style="font-size: 16px; margin-top: 0;">Hi <strong>${data.customerName}</strong>,</p>
       <p>Your container rental has been successfully booked! Here are your booking details:</p>
@@ -286,7 +289,7 @@ export function generateClientEmail(data: BookingEmailData): string {
       </div>
       
       <p style="text-align: center; margin: 30px 0 10px 0;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/bookings" class="button">View My Bookings</a>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.sddumpingsolutions.com'}/bookings" class="button">View My Bookings</a>
       </p>
       
       <p style="color: #6b7280; font-size: 14px;">
@@ -295,7 +298,7 @@ export function generateClientEmail(data: BookingEmailData): string {
     </div>
     
     <div class="footer">
-      <p><strong>SD Dumps</strong></p>
+      <p><strong>SD Dumping Solutions</strong></p>
       <p>Professional Waste Management Services</p>
       <p style="margin: 10px 0;">
         📧 ${process.env.SMTP_FROM} | 📞 Contact Us
@@ -336,10 +339,11 @@ export function generateAdminEmail(data: BookingEmailData): string {
 <body>
   <div class="container">
     <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
       <h1>🔔 New Booking Alert</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">Action Required</p>
     </div>
-    
+
     <div class="content">
       <div class="alert">
         <p style="margin: 0; font-weight: bold;">⚠️ A new booking has been created and requires your attention.</p>
@@ -413,7 +417,7 @@ export function generateAdminEmail(data: BookingEmailData): string {
       ` : ''}
       
       <p style="text-align: center; margin: 30px 0 10px 0;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/bookings" class="button">Manage Booking</a>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.sddumpingsolutions.com'}/admin/bookings" class="button">Manage Booking</a>
       </p>
       
       <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0;">
@@ -428,7 +432,7 @@ export function generateAdminEmail(data: BookingEmailData): string {
     </div>
     
     <div class="footer">
-      <p><strong>SD Dumps Admin Panel</strong></p>
+      <p><strong>SD Dumping Solutions Admin Panel</strong></p>
       <p style="font-size: 12px; color: #9ca3af;">
         This is an automated notification from your booking system.
       </p>
@@ -448,10 +452,11 @@ export async function sendBookingEmails(data: BookingEmailData) {
   }
 
   try {
-    // Send email to client
+    // Send email to client (with CC to admin emails)
     await transporter.sendMail({
-      from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+      from: `"SD Dumping Solutions" <${process.env.SMTP_FROM}>`,
       to: data.customerEmail,
+      cc: ['sandiegodumpingsolutions@gmail.com', 'diego@comcreate.org'],
       subject: `Booking Confirmed - Order #${data.bookingId.slice(0, 8)}`,
       html: generateClientEmail(data),
     })
@@ -459,7 +464,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
     // Send email to admin
     await transporter.sendMail({
-      from: `"SD Dumps Notifications" <${process.env.SMTP_FROM}>`,
+      from: `"SD Dumping Solutions Notifications" <${process.env.SMTP_FROM}>`,
       to: process.env.CONTACT_EMAIL,
       subject: `🔔 New Booking Alert - #${data.bookingId.slice(0, 8)}`,
       html: generateAdminEmail(data),
@@ -512,13 +517,14 @@ function generatePhoneBookingCustomerEmail(data: PhoneBookingEmailData): string 
 <body>
   <div class="container">
     <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
       <h1>📋 Complete Your Booking</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">One More Step Required</p>
     </div>
 
     <div class="content">
       <p style="font-size: 16px; margin-top: 0;">Hi <strong>${data.customerName}</strong>,</p>
-      <p>Thank you for booking with SD Dumps! We've reserved a container for you. To complete your booking, please click the button below to securely save your payment information.</p>
+      <p>Thank you for booking with SD Dumping Solutions! We've reserved a container for you. To complete your booking, please click the button below to review your booking details, sign the rental agreement, and securely save your payment information.</p>
 
       <div class="card">
         <h2>📦 Your Booking Details</h2>
@@ -548,7 +554,7 @@ function generatePhoneBookingCustomerEmail(data: PhoneBookingEmailData): string 
       </div>
 
       <p style="text-align: center; margin: 30px 0;">
-        <a href="${data.paymentLink}" class="button">Complete My Booking</a>
+        <a href="${data.paymentLink}" class="button">Review & Sign Contract</a>
       </p>
 
       <div class="warning">
@@ -559,11 +565,11 @@ function generatePhoneBookingCustomerEmail(data: PhoneBookingEmailData): string 
       </div>
 
       <div class="card">
-        <h2>🔒 What You'll Need</h2>
+        <h2>🔒 What You'll Need To Complete</h2>
         <ul style="margin: 10px 0; padding-left: 20px; color: #4b5563;">
-          <li>A valid credit or debit card</li>
-          <li>5 minutes to review your booking details</li>
-          <li>Your digital signature</li>
+          <li>Review your booking details</li>
+          <li>Save a valid credit or debit card</li>
+          <li>Read and sign the rental agreement</li>
         </ul>
       </div>
 
@@ -573,7 +579,7 @@ function generatePhoneBookingCustomerEmail(data: PhoneBookingEmailData): string 
     </div>
 
     <div class="footer">
-      <p><strong>SD Dumps</strong></p>
+      <p><strong>SD Dumping Solutions</strong></p>
       <p>Professional Waste Management Services</p>
       <p style="margin: 10px 0;">
         📧 ${process.env.SMTP_FROM} | 📞 Contact Us
@@ -620,6 +626,7 @@ function generatePhoneBookingCompletedEmail(data: {
 <body>
   <div class="container">
     <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
       <h1>✅ Phone Booking Completed!</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">Customer has saved their card</p>
     </div>
@@ -665,7 +672,7 @@ function generatePhoneBookingCompletedEmail(data: {
       </div>
 
       <p style="text-align: center; margin: 30px 0 10px 0;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/payments" class="button">Charge Customer Now</a>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.sddumpingsolutions.com'}/admin/payments" class="button">Charge Customer Now</a>
       </p>
 
       <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0;">
@@ -680,7 +687,7 @@ function generatePhoneBookingCompletedEmail(data: {
     </div>
 
     <div class="footer">
-      <p><strong>SD Dumps Admin Panel</strong></p>
+      <p><strong>SD Dumping Solutions Admin Panel</strong></p>
       <p style="font-size: 12px; color: #9ca3af;">
         This is an automated notification from your booking system.
       </p>
@@ -700,8 +707,9 @@ export async function sendPhoneBookingEmail(data: PhoneBookingEmailData) {
 
   try {
     await transporter.sendMail({
-      from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+      from: `"SD Dumping Solutions" <${process.env.SMTP_FROM}>`,
       to: data.customerEmail,
+      cc: ['sandiegodumpingsolutions@gmail.com', 'diego@comcreate.org'],
       subject: `Complete Your Booking - Action Required`,
       html: generatePhoneBookingCustomerEmail(data),
     })
@@ -729,7 +737,7 @@ export async function sendPhoneBookingCompletedEmail(data: {
 
   try {
     await transporter.sendMail({
-      from: `"SD Dumps Notifications" <${process.env.SMTP_FROM}>`,
+      from: `"SD Dumping Solutions Notifications" <${process.env.SMTP_FROM}>`,
       to: process.env.CONTACT_EMAIL,
       subject: `✅ Phone Booking Completed - #${data.bookingId.slice(0, 8)}`,
       html: generatePhoneBookingCompletedEmail(data),
@@ -777,6 +785,7 @@ function generateCustomerConfirmationEmail(data: {
 <body>
   <div class="container">
     <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
       <h1>✅ Booking Confirmed!</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">Your payment information has been saved successfully</p>
     </div>
@@ -831,9 +840,9 @@ function generateCustomerConfirmationEmail(data: {
     </div>
 
     <div class="footer">
-      <p><strong>SD Dumps</strong></p>
+      <p><strong>SD Dumping Solutions</strong></p>
       <p style="font-size: 12px; color: #9ca3af;">
-        Thank you for choosing SD Dumps for your container rental needs!
+        Thank you for choosing SD Dumping Solutions for your container rental needs!
       </p>
     </div>
   </div>
@@ -859,8 +868,9 @@ export async function sendCustomerConfirmationEmail(data: {
 
   try {
     await transporter.sendMail({
-      from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+      from: `"SD Dumping Solutions" <${process.env.SMTP_FROM}>`,
       to: data.customerEmail,
+      cc: ['sandiegodumpingsolutions@gmail.com', 'diego@comcreate.org'],
       subject: `✅ Booking Confirmed - #${data.bookingId.slice(0, 8)}`,
       html: generateCustomerConfirmationEmail(data),
     })
@@ -909,6 +919,7 @@ function generatePaymentReceiptEmail(data: {
 <body>
   <div class="container">
     <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
       <h1>💳 Payment Receipt</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">Your payment has been processed</p>
     </div>
@@ -955,7 +966,7 @@ function generatePaymentReceiptEmail(data: {
     </div>
 
     <div class="footer">
-      <p><strong>SD Dumps</strong></p>
+      <p><strong>SD Dumping Solutions</strong></p>
       <p style="font-size: 12px; color: #9ca3af;">
         Container Rental Services
       </p>
@@ -983,8 +994,9 @@ export async function sendPaymentReceiptEmail(data: {
 
   try {
     await transporter.sendMail({
-      from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+      from: `"SD Dumping Solutions" <${process.env.SMTP_FROM}>`,
       to: data.customerEmail,
+      cc: ['sandiegodumpingsolutions@gmail.com', 'diego@comcreate.org'],
       subject: `💳 Payment Receipt - $${data.amount.toFixed(2)} - Booking #${data.bookingId.slice(0, 8)}`,
       html: generatePaymentReceiptEmail(data),
     })
@@ -1031,6 +1043,7 @@ function generateCancellationEmail(data: {
 <body>
   <div class="container">
     <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
       <h1>Booking Cancelled</h1>
       <p style="margin: 10px 0 0 0; font-size: 16px;">Your booking has been cancelled</p>
     </div>
@@ -1080,10 +1093,10 @@ function generateCancellationEmail(data: {
     </div>
 
     <div class="footer">
-      <p><strong>SD Dumps</strong></p>
+      <p><strong>SD Dumping Solutions</strong></p>
       <p>Professional Waste Management Services</p>
       <p style="font-size: 12px; color: #9ca3af;">
-        Thank you for considering SD Dumps for your container rental needs.
+        Thank you for considering SD Dumping Solutions for your container rental needs.
       </p>
     </div>
   </div>
@@ -1109,8 +1122,9 @@ export async function sendCancellationEmail(data: {
 
   try {
     await transporter.sendMail({
-      from: `"SD Dumps" <${process.env.SMTP_FROM}>`,
+      from: `"SD Dumping Solutions" <${process.env.SMTP_FROM}>`,
       to: data.customerEmail,
+      cc: ['sandiegodumpingsolutions@gmail.com', 'diego@comcreate.org'],
       subject: `Booking Cancelled - #${data.bookingId.slice(0, 8)}`,
       html: generateCancellationEmail(data),
     })

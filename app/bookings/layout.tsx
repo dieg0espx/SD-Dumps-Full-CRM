@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'My Bookings | SD Dumps',
-  description: 'View and manage your SD Dumps container rental bookings.',
+  title: 'My Bookings | SD Dumping Solutions',
+  description: 'View and manage your SD Dumping Solutions container rental bookings.',
   robots: {
     index: false,
     follow: false,

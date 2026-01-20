@@ -51,12 +51,12 @@ export default function Header() {
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <Image
               src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo"
-              alt="SD Dumps Logo"
+              alt="SD Dumping Solutions Logo"
               width={40}
               height={40}
               className="mr-3"
             />
-            <span className="text-xl font-bold text-gray-900">SD Dumps</span>
+            <span className="text-xl font-bold text-gray-900">SD Dumping Solutions</span>
           </Link>
 
           {/* Desktop Navigation */}

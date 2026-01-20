@@ -71,6 +71,8 @@ export function PaymentTracker({ payments, onRefresh }: PaymentTrackerProps) {
     setSelectedPayment(null)
     setSelectedBooking(null)
     setExtraFees([])
+    setShowTonsInput(false)
+    setExtraTons("")
   }
 
   const handleOpenChargeDialog = () => {
@@ -81,12 +83,14 @@ export function PaymentTracker({ payments, onRefresh }: PaymentTrackerProps) {
   const handleCloseChargeDialog = () => {
     setShowChargeDialog(false)
     setExtraFees([])
+    setShowTonsInput(false)
+    setExtraTons("")
     // Return to details dialog
     if (selectedBooking) {
       setShowDetailsDialog(true)
     } else {
       setSelectedPayment(null)
-    setSelectedBooking(null)
+      setSelectedBooking(null)
     }
   }
 
@@ -97,6 +101,25 @@ export function PaymentTracker({ payments, onRefresh }: PaymentTrackerProps) {
       description: ""
     }
     setExtraFees([...extraFees, newFee])
+  }
+
+  const [showTonsInput, setShowTonsInput] = useState(false)
+  const [extraTons, setExtraTons] = useState<string>("")
+
+  const addTonsFee = () => {
+    const tons = parseFloat(extraTons)
+    if (isNaN(tons) || tons <= 0) {
+      return
+    }
+    const amount = tons * 125
+    const newFee: FeeItem = {
+      id: Date.now().toString(),
+      amount: amount,
+      description: `Extra tonnage (${tons} tons @ $125/ton)`
+    }
+    setExtraFees([...extraFees, newFee])
+    setExtraTons("")
+    setShowTonsInput(false)
   }
 
   const removeFee = (id: string) => {
@@ -533,25 +556,85 @@ export function PaymentTracker({ payments, onRefresh }: PaymentTrackerProps) {
               </h3>
               
               <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Label className="text-sm font-medium">Extra Fees</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addFee}
-                    className="h-8 px-3 text-xs"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Fee
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addFee}
+                      className="h-8 px-3 text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Fee
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowTonsInput(!showTonsInput)}
+                      className="h-8 px-3 text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Tons
+                    </Button>
+                  </div>
                 </div>
 
-                {extraFees.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500 text-sm">
-                    No extra fees added yet. Click "Add Fee" to add charges.
+                {/* Add Tons Input */}
+                {showTonsInput && (
+                  <div className="bg-white rounded-lg border p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Add Extra Tonnage</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowTonsInput(false)
+                          setExtraTons("")
+                        }}
+                        className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="flex gap-3 items-end">
+                      <div className="flex-1 space-y-1">
+                        <Label htmlFor="extra-tons" className="text-xs">Number of Extra Tons</Label>
+                        <Input
+                          id="extra-tons"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="e.g., 1.5"
+                          value={extraTons}
+                          onChange={(e) => setExtraTons(e.target.value)}
+                          className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        />
+                      </div>
+                      <div className="text-sm text-gray-600 pb-2">
+                        × $125/ton = <span className="font-semibold text-blue-600">${((parseFloat(extraTons) || 0) * 125).toFixed(2)}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={addTonsFee}
+                        disabled={!extraTons || parseFloat(extraTons) <= 0}
+                        className="h-9 px-4"
+                      >
+                        Add
+                      </Button>
+                    </div>
                   </div>
-                ) : (
+                )}
+
+                {extraFees.length === 0 && !showTonsInput ? (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No extra fees added yet. Click "Add Fee" or "Add Tons" to add charges.
+                  </div>
+                ) : extraFees.length === 0 ? null : (
                   <div className="space-y-3">
                     {extraFees.map((fee, index) => (
                       <div key={fee.id} className="bg-white rounded-lg border p-3 space-y-3">

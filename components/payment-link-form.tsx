@@ -38,7 +38,7 @@ interface PaymentLinkFormProps {
 }
 
 export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
-  const [currentStep, setCurrentStep] = useState<"review" | "payment" | "signature" | "success">("review")
+  const [currentStep, setCurrentStep] = useState<"review" | "signature" | "payment" | "success">("review")
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null)
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -63,14 +63,21 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
     setSignatureDataUrl(null)
   }
 
-  const handlePaymentSuccess = (pmId: string) => {
-    setPaymentMethodId(pmId)
-    setCurrentStep("signature")
+  const handleSignatureNext = () => {
+    if (signatureDataUrl) {
+      setCurrentStep("payment")
+    }
   }
 
-  const handleSubmit = async () => {
-    if (!signatureDataUrl || !paymentMethodId) {
-      setError("Please complete all steps")
+  const handlePaymentSuccess = (pmId: string) => {
+    setPaymentMethodId(pmId)
+    // Now complete the booking with both signature and payment
+    completeBooking(pmId)
+  }
+
+  const completeBooking = async (pmId: string) => {
+    if (!signatureDataUrl) {
+      setError("Signature is required")
       return
     }
 
@@ -91,7 +98,7 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
         },
         body: JSON.stringify({
           token: paymentLink.token,
-          paymentMethodId,
+          paymentMethodId: pmId,
           signatureUrl,
         }),
       })
@@ -111,6 +118,7 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
     }
   }
 
+  
   // Success screen
   if (currentStep === "success") {
     return (
@@ -174,7 +182,7 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
     )
   }
 
-  // Signature step
+  // Signature step (Step 2 - before payment)
   if (currentStep === "signature") {
     const booking = paymentLink.bookings as any
     const containerType = booking.container_types
@@ -184,7 +192,7 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
         {/* Rental Agreement */}
         <Card>
           <CardHeader className="border-b border-gray-200 bg-gray-50">
-            <CardTitle className="text-2xl">Container Rental Agreement</CardTitle>
+            <CardTitle className="text-2xl">Step 2: Sign Rental Agreement</CardTitle>
             <CardDescription className="text-base">
               Please read the following terms and conditions carefully before signing
             </CardDescription>
@@ -305,18 +313,18 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                onClick={() => setCurrentStep("payment")}
+                onClick={() => setCurrentStep("review")}
                 disabled={loading}
                 className="flex-1"
               >
-                Back
+                Back to Review
               </Button>
               <Button
-                onClick={handleSubmit}
+                onClick={handleSignatureNext}
                 disabled={!signatureDataUrl || loading}
                 className="flex-1"
               >
-                {loading ? "Processing..." : "Complete Booking"}
+                Continue to Payment
               </Button>
             </div>
           </CardContent>
@@ -325,13 +333,13 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
     )
   }
 
-  // Payment step
+  // Payment step (Step 3 - after signature)
   if (currentStep === "payment") {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Step 2: Save Payment Method</CardTitle>
+            <CardTitle>Step 3: Save Payment Method</CardTitle>
             <CardDescription>
               Enter your card details to securely save for later charging
             </CardDescription>
@@ -356,12 +364,22 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
               </Alert>
             )}
 
+            {loading && (
+              <Alert className="mt-4 bg-blue-50 border-blue-200">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  Completing your booking...
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Button
               variant="outline"
-              onClick={() => setCurrentStep("review")}
+              onClick={() => setCurrentStep("signature")}
               className="w-full mt-4"
+              disabled={loading}
             >
-              Back to Review
+              Back to Signature
             </Button>
           </CardContent>
         </Card>
@@ -553,8 +571,8 @@ export function PaymentLinkForm({ paymentLink }: PaymentLinkFormProps) {
       </Card>
 
       {/* Continue Button */}
-      <Button onClick={() => setCurrentStep("payment")} size="lg" className="w-full">
-        Continue to Payment
+      <Button onClick={() => setCurrentStep("signature")} size="lg" className="w-full">
+        Continue to Sign Agreement
       </Button>
 
       {/* Footer Info */}

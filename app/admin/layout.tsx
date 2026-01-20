@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard | SD Dumps',
-  description: 'SD Dumps admin dashboard for managing bookings, users, and business operations.',
+  title: 'Admin Dashboard | SD Dumping Solutions',
+  description: 'SD Dumping Solutions admin dashboard for managing bookings, users, and business operations.',
   robots: {
     index: false,
     follow: false,

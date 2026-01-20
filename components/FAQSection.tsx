@@ -10,11 +10,11 @@ export default function FAQSection() {
   const faqData = [
     {
       question: "What sizes of dumpsters do you offer?",
-      answer: "We offer a variety of dumpster sizes including 10-yard, 15-yard, 20-yard, and 30-yard containers to accommodate different project needs. Our team can help you choose the right size based on your specific requirements."
+      answer: "We offer a variety of dumpster sizes including 10-yard, 17-yard, and 21-yard containers to accommodate different project needs. Our team can help you choose the right size based on your specific requirements."
     },
     {
       question: "How long can I keep the dumpster?",
-      answer: "Our standard rental period is 7 days, but we offer flexible rental terms. You can extend your rental period for an additional fee. Contact us to discuss your specific timeline needs."
+      answer: "Our standard rental period is 3 days, but we offer flexible rental terms. You can extend your rental period for an additional fee. Contact us to discuss your specific timeline needs."
     },
     {
       question: "What materials are prohibited from dumpsters?",

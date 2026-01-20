@@ -13,7 +13,7 @@ import Footer from '@/components/Footer'
 import { FAQSchema, ServiceSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
-  title: 'Professional Container Rental Services | SD Dumps',
+  title: 'Professional Container Rental Services | SD Dumping Solutions',
   description: 'Get reliable container rental services for construction, renovation, and waste management in San Diego. Fast delivery, competitive pricing, and professional service.',
   keywords: [
     'container rental San Diego',
@@ -26,16 +26,16 @@ export const metadata: Metadata = {
     'debris removal San Diego'
   ],
       openGraph: {
-      title: 'Professional Container Rental Services | SD Dumps',
+      title: 'Professional Container Rental Services | SD Dumping Solutions',
       description: 'Get reliable container rental services for construction, renovation, and waste management in San Diego. Fast delivery, competitive pricing, and professional service.',
       url: 'https://sddumps.com',
-      siteName: 'SD Dumps',
+      siteName: 'SD Dumping Solutions',
       images: [
         {
           url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
           width: 1200,
           height: 630,
-          alt: 'SD Dumps Container Rental Services',
+          alt: 'SD Dumping Solutions Container Rental Services',
         },
       ],
       locale: 'en_US',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     },
       twitter: {
       card: 'summary_large_image',
-      title: 'Professional Container Rental Services | SD Dumps',
+      title: 'Professional Container Rental Services | SD Dumping Solutions',
       description: 'Get reliable container rental services for construction, renovation, and waste management in San Diego.',
       images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
     },

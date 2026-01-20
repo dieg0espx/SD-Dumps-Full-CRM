@@ -3,7 +3,7 @@ export function OrganizationSchema() {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": "https://sddumps.com/#organization",
-    "name": "SD Dumps",
+    "name": "SD Dumping Solutions",
     "alternateName": "San Diego Dumping Solutions",
     "description": "Professional container rental services for construction, renovation, and waste management in San Diego County.",
     "url": "https://sddumps.com",
@@ -115,7 +115,7 @@ export function WebSiteSchema() {
     "@type": "WebSite",
     "@id": "https://sddumps.com/#website",
     "url": "https://sddumps.com",
-    "name": "SD Dumps",
+    "name": "SD Dumping Solutions",
     "description": "Professional container rental services for construction, renovation, and waste management in San Diego.",
     "publisher": {
       "@id": "https://sddumps.com/#organization"
@@ -330,8 +330,8 @@ export function ContactPageSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    "name": "Contact SD Dumps",
-    "description": "Contact SD Dumps for professional waste management services. Get free quotes, schedule pickups, or get support.",
+    "name": "Contact SD Dumping Solutions",
+    "description": "Contact SD Dumping Solutions for professional waste management services. Get free quotes, schedule pickups, or get support.",
     "url": "https://sddumps.com/contact",
     "mainEntity": {
       "@id": "https://sddumps.com/#organization"
@@ -350,8 +350,8 @@ export function AboutPageSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "AboutPage",
-    "name": "About SD Dumps",
-    "description": "Learn about SD Dumps, a trusted waste management company with over 10 years of experience providing professional dumpster rental services in San Diego.",
+    "name": "About SD Dumping Solutions",
+    "description": "Learn about SD Dumping Solutions, a trusted waste management company with over 10 years of experience providing professional dumpster rental services in San Diego.",
     "url": "https://sddumps.com/about",
     "mainEntity": {
       "@id": "https://sddumps.com/#organization"
@@ -427,7 +427,7 @@ export function LocalBusinessWithReviewsSchema() {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": "https://sddumps.com/#localbusiness",
-    "name": "SD Dumps",
+    "name": "SD Dumping Solutions",
     "image": "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo.png",
     "telephone": "+1-760-270-0312",
     "email": "sandiegodumpingsolutions@gmail.com",
@@ -507,7 +507,7 @@ export function LocalBusinessWithReviewsSchema() {
           "ratingValue": "5",
           "bestRating": "5"
         },
-        "reviewBody": "Used SD Dumps for my construction project. Reliable, affordable, and easy to work with. Highly recommend!"
+        "reviewBody": "Used SD Dumping Solutions for my construction project. Reliable, affordable, and easy to work with. Highly recommend!"
       }
     ]
   }

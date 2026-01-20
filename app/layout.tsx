@@ -19,8 +19,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'SD Dumps - Professional Container Rental Services',
-    template: '%s | SD Dumps'
+    default: 'SD Dumping Solutions - Professional Container Rental Services',
+    template: '%s | SD Dumping Solutions'
   },
   description: 'Professional container rental services for construction, renovation, and waste management. Fast delivery, competitive pricing, and reliable service across San Diego.',
   keywords: [
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
     'debris removal',
     'construction cleanup'
   ],
-  authors: [{ name: 'SD Dumps' }],
-  creator: 'SD Dumps',
-  publisher: 'SD Dumps',
+  authors: [{ name: 'SD Dumping Solutions' }],
+  creator: 'SD Dumping Solutions',
+  publisher: 'SD Dumping Solutions',
   formatDetection: {
     email: false,
     address: false,
@@ -51,21 +51,21 @@ export const metadata: Metadata = {
       type: 'website',
       locale: 'en_US',
       url: 'https://sddumps.com',
-      siteName: 'SD Dumps',
-      title: 'SD Dumps - Professional Container Rental Services',
+      siteName: 'SD Dumping Solutions',
+      title: 'SD Dumping Solutions - Professional Container Rental Services',
       description: 'Professional container rental services for construction, renovation, and waste management. Fast delivery, competitive pricing, and reliable service across San Diego.',
       images: [
         {
           url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
           width: 1200,
           height: 630,
-          alt: 'SD Dumps - Professional Container Rental Services',
+          alt: 'SD Dumping Solutions - Professional Container Rental Services',
         },
       ],
     },
       twitter: {
       card: 'summary_large_image',
-      title: 'SD Dumps - Professional Container Rental Services',
+      title: 'SD Dumping Solutions - Professional Container Rental Services',
       description: 'Professional container rental services for construction, renovation, and waste management. Fast delivery, competitive pricing, and reliable service across San Diego.',
       images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
       creator: '@sddumps',
@@ -129,10 +129,10 @@ html {
         `}</style>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <meta name="application-name" content="SD Dumps" />
+        <meta name="application-name" content="SD Dumping Solutions" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="SD Dumps" />
+        <meta name="apple-mobile-web-app-title" content="SD Dumping Solutions" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />

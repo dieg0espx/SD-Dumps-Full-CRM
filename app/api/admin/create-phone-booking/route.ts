@@ -194,7 +194,7 @@ export async function POST(request: Request) {
       .single()
 
     // Generate payment link URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.sddumpingsolutions.com"
     const paymentUrl = `${baseUrl}/payment/${paymentLink.token}`
 
     // Send email to customer

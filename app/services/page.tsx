@@ -27,13 +27,13 @@ export const metadata: Metadata = {
       title: 'Waste Management Services | Container Rental Solutions',
       description: 'Professional waste management services including residential dumpster rental, commercial waste solutions, construction debris removal, and yard waste disposal in San Diego.',
       url: 'https://sddumps.com/services',
-      siteName: 'SD Dumps',
+      siteName: 'SD Dumping Solutions',
       images: [
         {
           url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
           width: 1200,
           height: 630,
-          alt: 'SD Dumps Waste Management Services',
+          alt: 'SD Dumping Solutions Waste Management Services',
         },
       ],
       locale: 'en_US',

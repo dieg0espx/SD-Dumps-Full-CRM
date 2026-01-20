@@ -239,12 +239,12 @@ export default function SignUpPage() {
               {/* <div className="flex items-center justify-center mb-4">
                 <Image
                   src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo"
-                  alt="SD Dumps Logo"
+                  alt="SD Dumping Solutions Logo"
                   width={48}
                   height={48}
                   className="mr-3"
                 />
-                <span className="text-2xl font-bold text-gray-900">SD Dumps</span>
+                <span className="text-2xl font-bold text-gray-900">SD Dumping Solutions</span>
               </div> */}
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
               <p className="text-lg text-gray-600">Sign up to start booking containers for your projects</p>

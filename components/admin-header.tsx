@@ -36,7 +36,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">SD Dumps Admin</h1>
+            <h1 className="text-xl font-bold text-gray-900">SD Dumping Solutions Admin</h1>
             <p className="text-sm text-gray-600">Container Rental Management</p>
           </div>
 

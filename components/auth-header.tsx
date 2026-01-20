@@ -34,7 +34,7 @@ export function AuthHeader({ user }: AuthHeaderProps) {
     <div className="border-b bg-white">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">SD Dumps</h1>
+          <h1 className="text-xl font-bold text-gray-900">SD Dumping Solutions</h1>
           <p className="text-sm text-gray-600">Container Rental Service</p>
         </div>
         <div className="flex items-center gap-3">

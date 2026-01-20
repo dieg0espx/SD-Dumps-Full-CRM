@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Chat Support | SD Dumps',
-  description: 'Chat with SD Dumps support team.',
+  title: 'Chat Support | SD Dumping Solutions',
+  description: 'Chat with SD Dumping Solutions support team.',
   robots: {
     index: false,
     follow: false,

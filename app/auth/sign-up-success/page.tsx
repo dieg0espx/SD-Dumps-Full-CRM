@@ -9,7 +9,7 @@ export default function SignUpSuccessPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">SD Dumps</h1>
+            <h1 className="text-2xl font-bold text-gray-900">SD Dumping Solutions</h1>
             <p className="text-gray-600">Container Rental Service</p>
           </div>
           <Card>

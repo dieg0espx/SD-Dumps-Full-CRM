@@ -12,12 +12,12 @@ export default function Footer() {
             <div className="flex items-center mb-4">
               <Image
                 src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo"
-                alt="SD Dumps Logo"
+                alt="SD Dumping Solutions Logo"
                 width={40}
                 height={40}
                 className="mr-3"
               />
-              <span className="text-xl font-bold">SD Dumps</span>
+              <span className="text-xl font-bold">SD Dumping Solutions</span>
             </div>
             <p className="text-gray-400 mb-4">
               Professional Waste Solutions
@@ -110,7 +110,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
           <div className="text-gray-400 text-sm">
-            © 2024 SD Dumps. All rights reserved.
+            © 2024 SD Dumping Solutions. All rights reserved.
           </div>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">Privacy Policy</a>

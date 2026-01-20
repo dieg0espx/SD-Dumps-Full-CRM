@@ -18,13 +18,13 @@ export const metadata: Metadata = {
     title: 'Book Container Rental | Get Free Quote & Schedule',
     description: 'Book your container rental online. Get instant quotes, choose your delivery date, and schedule professional waste management services in San Diego.',
     url: 'https://sddumps.com/booking',
-    siteName: 'SD Dumps',
+    siteName: 'SD Dumping Solutions',
     images: [
       {
         url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         width: 1200,
         height: 630,
-        alt: 'Book Container Rental with SD Dumps',
+        alt: 'Book Container Rental with SD Dumping Solutions',
       },
     ],
     locale: 'en_US',

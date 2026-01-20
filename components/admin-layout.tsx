@@ -56,13 +56,13 @@ export function AdminLayout({ user, children }: AdminLayoutProps) {
           <div className="flex items-center gap-3">
             <Image
               src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo"
-              alt="SD Dumps Logo"
+              alt="SD Dumping Solutions Logo"
               width={40}
               height={40}
               className="rounded-lg"
             />
             <div>
-              <h1 className="text-xl font-bold text-gray-900">SD Dumps</h1>
+              <h1 className="text-xl font-bold text-gray-900">SD Dumping Solutions</h1>
               <p className="text-sm text-gray-600 mt-1">Container Rental</p>
             </div>
           </div>

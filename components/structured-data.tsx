@@ -32,7 +32,7 @@ export function OrganizationSchema() {
     <StructuredData
       type="organization"
       data={{
-        name: 'SD Dumps',
+        name: 'SD Dumping Solutions',
         url: 'https://sddumps.com',
         logo: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         description: 'Professional container rental services for construction, renovation, and waste management in San Diego.',
@@ -62,7 +62,7 @@ export function LocalBusinessSchema() {
     <StructuredData
       type="localBusiness"
       data={{
-        name: 'SD Dumps',
+        name: 'SD Dumping Solutions',
         description: 'Professional container rental and waste management services in San Diego County.',
         url: 'https://sddumps.com',
         telephone: '+1-760-270-0312',
@@ -123,7 +123,7 @@ export function ServiceSchema() {
         description: 'Professional container rental services for construction, renovation, and waste management.',
         provider: {
           '@type': 'Organization',
-          name: 'SD Dumps',
+          name: 'SD Dumping Solutions',
         },
         areaServed: {
           '@type': 'City',
@@ -149,12 +149,12 @@ export function WebsiteSchema() {
     <StructuredData
       type="website"
       data={{
-        name: 'SD Dumps',
+        name: 'SD Dumping Solutions',
         url: 'https://sddumps.com',
         description: 'Professional container rental services for construction, renovation, and waste management in San Diego.',
         publisher: {
           '@type': 'Organization',
-          name: 'SD Dumps',
+          name: 'SD Dumping Solutions',
         },
         potentialAction: {
           '@type': 'SearchAction',

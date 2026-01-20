@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { BreadcrumbSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
-  title: 'Guest Booking | Book Without Account | SD Dumps',
+  title: 'Guest Booking | Book Without Account | SD Dumping Solutions',
   description: 'Book a container rental without creating an account. Quick and easy guest booking for dumpster rentals in San Diego. No registration required.',
   keywords: [
     'guest booking',
@@ -14,16 +14,16 @@ export const metadata: Metadata = {
     'easy waste management booking'
   ],
   openGraph: {
-    title: 'Guest Booking | Book Without Account | SD Dumps',
+    title: 'Guest Booking | Book Without Account | SD Dumping Solutions',
     description: 'Book a container rental without creating an account. Quick and easy guest booking for dumpster rentals in San Diego.',
     url: 'https://sddumps.com/guest-booking',
-    siteName: 'SD Dumps',
+    siteName: 'SD Dumping Solutions',
     images: [
       {
         url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         width: 1200,
         height: 630,
-        alt: 'SD Dumps Guest Booking',
+        alt: 'SD Dumping Solutions Guest Booking',
       },
     ],
     locale: 'en_US',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Guest Booking | Book Without Account | SD Dumps',
+    title: 'Guest Booking | Book Without Account | SD Dumping Solutions',
     description: 'Book a container rental without creating an account. Quick and easy guest booking in San Diego.',
     images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
   },

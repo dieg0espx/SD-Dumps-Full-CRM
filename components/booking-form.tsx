@@ -100,7 +100,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
   const [deliveryState, setDeliveryState] = useState<string>("")
   const [deliveryZipCode, setDeliveryZipCode] = useState<string>("")
   const [useProfileAddress, setUseProfileAddress] = useState<boolean>(false)
-  const [extraDays, setExtraDays] = useState<number>(0)
+  // extraDays is now automatically calculated based on totalDays - included 3 days
   const [applianceCount, setApplianceCount] = useState<number>(0)
   const [notes, setNotes] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
@@ -292,10 +292,12 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
 
   const serviceType = "delivery"
   const selectedContainerType = containerTypes.find((ct) => ct.id === selectedContainer)
-  // Base price includes 3 days (72 hours)
+  // Base price includes 3 days
   const baseAmount = selectedContainerType?.price_per_day || 0
   const includedDays = 3
-  const extraDaysAmount = (extraDays || 0) * 25
+  // Automatically calculate extra days beyond the included 3 days
+  const extraDays = Math.max(0, totalDays - includedDays)
+  const extraDaysAmount = extraDays * 25
   const applianceAmount = (applianceCount || 0) * 25
   const totalAmount = baseAmount + extraDaysAmount + applianceAmount
 
@@ -918,7 +920,11 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                           setStartDate(range?.from)
                           setEndDate(range?.to)
                         }}
-                        disabled={(date) => date < new Date() || isDateUnavailable(date)}
+                        disabled={(date) => {
+                          const today = new Date()
+                          today.setHours(0, 0, 0, 0)
+                          return date < today || isDateUnavailable(date)
+                        }}
                         initialFocus
                         numberOfMonths={isMobile ? 1 : 2}
                         modifiers={{
@@ -1131,37 +1137,29 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
             </CardHeader>
             <CardContent className="space-y-6 sm:space-y-8 px-2 sm:px-6">
               <div className="grid gap-4 sm:gap-6 lg:gap-8">
-                <div className="bg-orange-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-orange-200">
-                  <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
-                      <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
-                    </div>
-                    <div className="flex-1 text-center sm:text-left ml-5">
-                      <Label htmlFor="extraDays" className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
-                        Extra Days
-                      </Label>
-                      <p className="text-gray-600 mb-4 text-sm sm:text-base">Beyond included 3 days (72 hours) - {formatCurrency(25)} per day</p>
-                      <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-4">
-                        <Input
-                          id="extraDays"
-                          type="number"
-                          min="0"
-                          max="30"
-                          value={extraDays}
-                          onChange={(e) => setExtraDays(Number(e.target.value))}
-                          className="w-20 sm:w-24 h-10 sm:h-12 text-center text-sm sm:text-base lg:text-lg border-2 focus:border-orange-600"
-                        />
-                        <span className="text-gray-600 text-sm sm:text-base">days</span>
-                        {extraDays > 0 && (
+                {extraDays > 0 && (
+                  <div className="bg-orange-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-orange-200">
+                    <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
+                        <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
+                      </div>
+                      <div className="flex-1 text-center sm:text-left ml-5">
+                        <div className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 block mb-2">
+                          Extra Days Charge
+                        </div>
+                        <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                          Your rental is {totalDays} days. Base price includes 3 days - {formatCurrency(25)} per extra day.
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-4">
+                          <span className="text-gray-700 text-sm sm:text-base font-medium">{extraDays} extra day{extraDays > 1 ? "s" : ""}</span>
                           <div className="text-base sm:text-lg lg:text-xl font-semibold text-orange-600">
                             +{formatCurrency(extraDays * 25)}
                           </div>
-                        )}
+                        </div>
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-2">Price includes 3 days (72 hours) rental period</p>
                     </div>
                   </div>
-                </div>
+                )}
 
                 <div className="bg-green-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-green-200">
                   <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
@@ -1951,7 +1949,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                     setDeliveryState("")
                     setDeliveryZipCode("")
                     setUseProfileAddress(false)
-                    setExtraDays(0)
                     setApplianceCount(0)
                     setNotes("")
                     setPaymentMethod("stripe")
