@@ -1137,3 +1137,111 @@ export async function sendCancellationEmail(data: {
   }
 }
 
+// Generate Google review request email HTML
+function generateReviewRequestEmail(data: {
+  customerName: string
+  bookingId: string
+}) {
+  const googleReviewUrl = 'https://search.google.com/local/writereview?placeid=ChIJe5BJ-qEYAygRZh7wBvm_CcA&source=g.page.m._&laa=merchant-review-solicitation'
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .card { background: white; padding: 25px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+    .stars { font-size: 48px; margin: 20px 0; }
+    .review-btn { display: inline-block; background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%); color: white !important; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 18px; margin: 20px 0; }
+    .review-btn:hover { opacity: 0.9; }
+    .google-logo { margin: 10px 0; }
+    .info { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 20px 0; color: #92400e; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
+      <h1>Thank You! 🙏</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">We hope you had a great experience</p>
+    </div>
+
+    <div class="content">
+      <p>Hi ${data.customerName},</p>
+
+      <p>Thank you for choosing SD Dumping Solutions for your container rental needs! We truly appreciate your business.</p>
+
+      <div class="card">
+        <p class="stars">⭐⭐⭐⭐⭐</p>
+        <h2 style="color: #1f2937; margin: 0 0 15px 0;">How was your experience?</h2>
+        <p style="color: #6b7280; margin-bottom: 20px;">
+          Your feedback helps us improve and helps other customers find quality service. Would you take a moment to share your experience?
+        </p>
+
+        <a href="${googleReviewUrl}" class="review-btn" style="color: white;">
+          📝 Leave a Google Review
+        </a>
+
+        <p style="font-size: 12px; color: #9ca3af; margin-top: 20px;">
+          Click the button above to leave a review on Google
+        </p>
+      </div>
+
+      <div class="info">
+        <p style="margin: 0; font-weight: bold;">💡 Quick & Easy!</p>
+        <p style="margin: 10px 0 0 0;">
+          Leaving a review only takes about 30 seconds and makes a huge difference for our small business. We read every review!
+        </p>
+      </div>
+
+      <p style="text-align: center; margin: 30px 0 10px 0; color: #6b7280;">
+        Thank you again for your support! We look forward to serving you in the future.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>SD Dumping Solutions</strong></p>
+      <p>Professional Waste Management Services</p>
+      <p style="font-size: 12px; color: #9ca3af;">
+        San Diego County | (760) 270-0312
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `
+}
+
+// Send Google review request email to customer after payment is collected
+export async function sendReviewRequestEmail(data: {
+  customerName: string
+  customerEmail: string
+  bookingId: string
+}) {
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping review request email')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"SD Dumping Solutions" <${process.env.SMTP_FROM}>`,
+      to: data.customerEmail,
+      subject: `⭐ How was your experience with SD Dumping Solutions?`,
+      html: generateReviewRequestEmail(data),
+    })
+    console.log('✅ Review request email sent to:', data.customerEmail)
+
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Error sending review request email:', error)
+    throw error
+  }
+}
+

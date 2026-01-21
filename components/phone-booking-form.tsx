@@ -31,6 +31,7 @@ import { formatPhoneNumber } from "@/lib/phone-utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { DayProps } from "react-day-picker"
 import { cn } from "@/lib/utils"
+import { calculateDistanceFee, DISTANCE_CONSTANTS, type DistanceResult } from "@/lib/distance"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -100,6 +101,10 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
   const [availability, setAvailability] = useState<{ booked: number; available: number } | null>(null)
   const [checkingAvailability, setCheckingAvailability] = useState(false)
   const [existingBookings, setExistingBookings] = useState<any[]>([])
+
+  // Distance fee state
+  const [distanceResult, setDistanceResult] = useState<DistanceResult | null>(null)
+  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false)
 
   const supabase = createClient()
   const router = useRouter()
@@ -247,8 +252,36 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
     const applianceAmount = (applianceCount || 0) * 25
     const travelFeeAmount = travelFee || 0
     const adjustment = priceAdjustment || 0
-    return baseAmount + extraDaysAmount + extraTonnageAmount + applianceAmount + travelFeeAmount + adjustment
+    const distanceFeeAmount = distanceResult?.distanceFee || 0
+    return baseAmount + extraDaysAmount + extraTonnageAmount + applianceAmount + travelFeeAmount + adjustment + distanceFeeAmount
   }
+
+  // Calculate distance when delivery zip code changes
+  useEffect(() => {
+    const zipToUse = serviceType === "delivery" ? deliveryZip : null
+
+    if (!zipToUse || zipToUse.length < 5) {
+      setDistanceResult(null)
+      return
+    }
+
+    const calculateDistance = async () => {
+      setIsCalculatingDistance(true)
+      try {
+        const result = await calculateDistanceFee(zipToUse)
+        setDistanceResult(result)
+      } catch (error) {
+        console.error("Error calculating distance:", error)
+        setDistanceResult(null)
+      } finally {
+        setIsCalculatingDistance(false)
+      }
+    }
+
+    // Debounce the calculation
+    const timeoutId = setTimeout(calculateDistance, 500)
+    return () => clearTimeout(timeoutId)
+  }, [deliveryZip, serviceType])
 
   const handleCopyLink = async () => {
     if (paymentLink) {
@@ -773,6 +806,32 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                 onChange={(e) => setDeliveryZip(e.target.value)}
                 required
               />
+              {/* Distance Fee Info */}
+              {deliveryZip.length >= 5 && (
+                <div className="mt-2">
+                  {isCalculatingDistance ? (
+                    <div className="text-sm text-gray-500 flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      Calculating delivery distance...
+                    </div>
+                  ) : distanceResult?.error ? (
+                    <div className="text-sm text-red-500">
+                      Unable to calculate distance.
+                    </div>
+                  ) : distanceResult && (
+                    <div className={`text-sm p-2 rounded ${distanceResult.isWithinFreeRange ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
+                      {distanceResult.isWithinFreeRange ? (
+                        <span>✓ {distanceResult.distanceMiles} mi - within free zone</span>
+                      ) : (
+                        <span>
+                          {distanceResult.distanceMiles} mi - Distance fee: <strong>{formatCurrency(distanceResult.distanceFee)}</strong>
+                          ({distanceResult.extraMiles} mi × ${DISTANCE_CONSTANTS.PRICE_PER_MILE}/mi)
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -916,6 +975,14 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Travel Fee:</span>
                   <span className="font-medium">{formatCurrency(travelFee)}</span>
+                </div>
+              )}
+              {distanceResult && distanceResult.distanceFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    Distance Fee ({distanceResult.extraMiles} mi beyond {DISTANCE_CONSTANTS.FREE_DISTANCE_MILES} mi):
+                  </span>
+                  <span className="font-medium text-orange-600">{formatCurrency(distanceResult.distanceFee)}</span>
                 </div>
               )}
               {priceAdjustment !== 0 && (

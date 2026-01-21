@@ -20,6 +20,7 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { SignaturePad } from "@/components/signature-pad"
 import { extractBase64FromDataUrl, getSignatureInfo } from "@/lib/signature-utils"
 import { uploadSignatureToCloudinary, getCloudinaryConfig } from "@/lib/cloudinary"
+import { calculateDistanceFee, DISTANCE_CONSTANTS, type DistanceResult } from "@/lib/distance"
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -123,6 +124,10 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
 
   // Signature state
   const [signatureImgUrl, setSignatureImgUrl] = useState<string>("")
+
+  // Distance fee state
+  const [distanceResult, setDistanceResult] = useState<DistanceResult | null>(null)
+  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -299,7 +304,35 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
   const extraDays = Math.max(0, totalDays - includedDays)
   const extraDaysAmount = extraDays * 25
   const applianceAmount = (applianceCount || 0) * 25
-  const totalAmount = baseAmount + extraDaysAmount + applianceAmount
+  const distanceFee = distanceResult?.distanceFee || 0
+  const totalAmount = baseAmount + extraDaysAmount + applianceAmount + distanceFee
+
+  // Calculate distance when delivery zip code changes
+  useEffect(() => {
+    const zipToUse = useProfileAddress ? profile?.zip_code : deliveryZipCode
+
+    if (!zipToUse || zipToUse.length < 5) {
+      setDistanceResult(null)
+      return
+    }
+
+    const calculateDistance = async () => {
+      setIsCalculatingDistance(true)
+      try {
+        const result = await calculateDistanceFee(zipToUse)
+        setDistanceResult(result)
+      } catch (error) {
+        console.error("Error calculating distance:", error)
+        setDistanceResult(null)
+      } finally {
+        setIsCalculatingDistance(false)
+      }
+    }
+
+    // Debounce the calculation
+    const timeoutId = setTimeout(calculateDistance, 500)
+    return () => clearTimeout(timeoutId)
+  }, [deliveryZipCode, useProfileAddress, profile?.zip_code])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1122,6 +1155,33 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                           />
                         </div>
                       </div>
+                      {/* Distance Fee Info */}
+                      {deliveryZipCode.length >= 5 && (
+                        <div className="mt-4">
+                          {isCalculatingDistance ? (
+                            <div className="text-sm text-gray-500 flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                              Calculating delivery distance...
+                            </div>
+                          ) : distanceResult?.error ? (
+                            <div className="text-sm text-red-500">
+                              Unable to calculate distance. The fee will be determined at delivery.
+                            </div>
+                          ) : distanceResult && (
+                            <div className={`text-sm p-3 rounded-lg ${distanceResult.isWithinFreeRange ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`}>
+                              {distanceResult.isWithinFreeRange ? (
+                                <span>✓ Your location is {distanceResult.distanceMiles} miles away - within our free delivery zone ({DISTANCE_CONSTANTS.FREE_DISTANCE_MILES} mi)</span>
+                              ) : (
+                                <span>
+                                  Your location is {distanceResult.distanceMiles} miles away.
+                                  A distance fee of <strong>{formatCurrency(distanceResult.distanceFee)}</strong> will be added
+                                  ({distanceResult.extraMiles} mi beyond {DISTANCE_CONSTANTS.FREE_DISTANCE_MILES} mi @ ${DISTANCE_CONSTANTS.PRICE_PER_MILE}/mi)
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </>
                   )}
                 </CardContent>
@@ -1309,6 +1369,19 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 gap-1 sm:gap-2">
                         <span className="text-sm sm:text-base lg:text-lg text-gray-700">Appliance Disposal ({applianceCount} items):</span>
                         <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(applianceAmount)}</span>
+                      </div>
+                    )}
+                    {distanceFee > 0 && (
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 gap-1 sm:gap-2">
+                        <span className="text-sm sm:text-base lg:text-lg text-gray-700">
+                          Distance Fee ({distanceResult?.extraMiles} mi beyond {DISTANCE_CONSTANTS.FREE_DISTANCE_MILES} mi):
+                        </span>
+                        <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">{formatCurrency(distanceFee)}</span>
+                      </div>
+                    )}
+                    {isCalculatingDistance && (
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 gap-1 sm:gap-2">
+                        <span className="text-sm sm:text-base lg:text-lg text-gray-500">Calculating distance...</span>
                       </div>
                     )}
                     <div className="pt-2">
@@ -1519,6 +1592,12 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                           <span>Service:</span>
                           <span className="capitalize">delivery</span>
                         </div>
+                        {distanceFee > 0 && (
+                          <div className="flex justify-between text-orange-600">
+                            <span>Distance Fee:</span>
+                            <span>{formatCurrency(distanceFee)}</span>
+                          </div>
+                        )}
                         <Separator />
                         <div className="flex justify-between font-semibold text-lg">
                           <span>Total:</span>

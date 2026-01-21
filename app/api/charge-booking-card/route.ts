@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
-import { sendPaymentReceiptEmail } from '@/lib/email'
+import { sendPaymentReceiptEmail, sendReviewRequestEmail } from '@/lib/email'
 import { format } from 'date-fns'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -275,11 +275,20 @@ export async function POST(request: NextRequest) {
             chargedDate: format(new Date(), "MMMM do, yyyy 'at' h:mm a"),
           })
           console.log('✅ [Charge Booking Card] Payment receipt email sent')
+
+          // Send Google review request email after payment is collected
+          console.log('📧 [Charge Booking Card] Sending review request email...')
+          await sendReviewRequestEmail({
+            customerName: customerName,
+            customerEmail: customerEmail,
+            bookingId: booking.id,
+          })
+          console.log('✅ [Charge Booking Card] Review request email sent')
         } else {
           console.warn('⚠️ [Charge Booking Card] Customer email or name not found, skipping receipt email')
         }
       } catch (emailError) {
-        console.error('❌ [Charge Booking Card] Error sending payment receipt email:', emailError)
+        console.error('❌ [Charge Booking Card] Error sending emails:', emailError)
         // Don't fail the request if email fails
       }
 
