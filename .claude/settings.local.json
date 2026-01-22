@@ -26,7 +26,8 @@
       "Bash(node -e:*)",
       "Bash(head:*)",
       "Bash(git merge:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

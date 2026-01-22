@@ -301,6 +301,59 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = fals
                 </div>
               </div>
 
+              {/* Pricing Breakdown */}
+              {booking.pricing_breakdown && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">Pricing Breakdown</span>
+                  </div>
+                  <div className="pl-6 space-y-1 bg-gray-50 rounded-lg p-3">
+                    <p className="text-sm">
+                      <span className="font-medium">Base Price ({booking.pricing_breakdown.includedDays} days):</span> {formatCurrency(booking.pricing_breakdown.basePrice)}
+                    </p>
+                    {booking.pricing_breakdown.extraDays > 0 && (
+                      <p className="text-sm">
+                        <span className="font-medium">Extra Days ({booking.pricing_breakdown.extraDays} x $25):</span> {formatCurrency(booking.pricing_breakdown.extraDaysAmount)}
+                      </p>
+                    )}
+                    {booking.pricing_breakdown.extraTonnage > 0 && (
+                      <p className="text-sm">
+                        <span className="font-medium">Extra Tonnage ({booking.pricing_breakdown.extraTonnage} x $125):</span> {formatCurrency(booking.pricing_breakdown.extraTonnageAmount)}
+                      </p>
+                    )}
+                    {booking.pricing_breakdown.applianceCount > 0 && (
+                      <p className="text-sm">
+                        <span className="font-medium">Appliances ({booking.pricing_breakdown.applianceCount} x $25):</span> {formatCurrency(booking.pricing_breakdown.applianceAmount)}
+                      </p>
+                    )}
+                    {booking.pricing_breakdown.distanceFee > 0 && (
+                      <p className="text-sm">
+                        <span className="font-medium">Distance Fee{booking.pricing_breakdown.distanceMiles ? ` (${booking.pricing_breakdown.distanceMiles.toFixed(1)} mi)` : ''}:</span> {formatCurrency(booking.pricing_breakdown.distanceFee)}
+                      </p>
+                    )}
+                    {booking.pricing_breakdown.travelFee > 0 && (
+                      <p className="text-sm">
+                        <span className="font-medium">Travel Fee:</span> {formatCurrency(booking.pricing_breakdown.travelFee)}
+                      </p>
+                    )}
+                    {booking.pricing_breakdown.priceAdjustment !== 0 && (
+                      <p className="text-sm">
+                        <span className="font-medium">{booking.pricing_breakdown.priceAdjustment < 0 ? 'Discount' : 'Additional Charge'}{booking.pricing_breakdown.adjustmentReason ? ` (${booking.pricing_breakdown.adjustmentReason})` : ''}:</span>{' '}
+                        <span className={booking.pricing_breakdown.priceAdjustment < 0 ? 'text-green-600' : 'text-red-600'}>
+                          {booking.pricing_breakdown.priceAdjustment < 0 ? '-' : '+'}{formatCurrency(Math.abs(booking.pricing_breakdown.priceAdjustment))}
+                        </span>
+                      </p>
+                    )}
+                    <div className="border-t border-gray-200 mt-2 pt-2">
+                      <p className="text-sm font-bold">
+                        <span className="font-medium">Total:</span> <span className="text-green-600">{formatCurrency(booking.pricing_breakdown.total)}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Admin: Charge Additional Amount */}
               {isAdmin && booking.payment_method_id && (
                 <div className="space-y-3 border-t pt-4">

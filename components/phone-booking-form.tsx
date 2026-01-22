@@ -42,6 +42,26 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
+// Pricing breakdown interface
+interface PricingBreakdown {
+  containerType: string
+  basePrice: number
+  includedDays: number
+  totalDays: number
+  extraDays: number
+  extraDaysAmount: number
+  extraTonnage: number
+  extraTonnageAmount: number
+  applianceCount: number
+  applianceAmount: number
+  distanceMiles: number | null
+  distanceFee: number
+  travelFee: number
+  priceAdjustment: number
+  adjustmentReason: string | null
+  total: number
+}
+
 // Format date to YYYY-MM-DD in local timezone (avoids UTC conversion issues)
 const formatDateLocal = (date: Date) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
@@ -332,6 +352,37 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
         ? `${deliveryStreet}, ${deliveryCity}, ${deliveryState} ${deliveryZip}`
         : null
 
+      // Calculate pricing breakdown details
+      const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+      const totalDays = Math.max(1, days)
+      const includedDays = 3
+      const baseAmount = selectedContainer?.price_per_day || 0
+      const extraDaysCount = Math.max(0, totalDays - includedDays)
+      const extraDaysAmount = extraDaysCount * 25
+      const extraTonnageAmount = (extraTonnage || 0) * 125
+      const applianceAmount = (applianceCount || 0) * 25
+      const distanceFeeAmount = distanceResult?.distanceFee || 0
+
+      // Build pricing breakdown
+      const pricingBreakdown: PricingBreakdown = {
+        containerType: selectedContainer?.size || 'Container',
+        basePrice: baseAmount,
+        includedDays: includedDays,
+        totalDays: totalDays,
+        extraDays: extraDaysCount,
+        extraDaysAmount: extraDaysAmount,
+        extraTonnage: extraTonnage || 0,
+        extraTonnageAmount: extraTonnageAmount,
+        applianceCount: applianceCount || 0,
+        applianceAmount: applianceAmount,
+        distanceMiles: distanceResult?.distanceMiles || null,
+        distanceFee: distanceFeeAmount,
+        travelFee: travelFee || 0,
+        priceAdjustment: priceAdjustment || 0,
+        adjustmentReason: priceAdjustment !== 0 ? (adjustmentReason || null) : null,
+        total: totalAmount,
+      }
+
       // Call API to create phone booking
       const response = await fetch("/api/admin/create-phone-booking", {
         method: "POST",
@@ -356,6 +407,7 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
           notes: notes || null,
           priceAdjustment: priceAdjustment !== 0 ? priceAdjustment : null,
           adjustmentReason: priceAdjustment !== 0 ? adjustmentReason : null,
+          pricingBreakdown,
         }),
       })
 

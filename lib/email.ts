@@ -42,6 +42,26 @@ if (isEmailConfigured) {
   console.warn('⚠️ Email not configured - emails will be skipped')
 }
 
+// Pricing breakdown interface
+interface PricingBreakdown {
+  containerType: string
+  basePrice: number
+  includedDays: number
+  totalDays: number
+  extraDays: number
+  extraDaysAmount: number
+  extraTonnage: number
+  extraTonnageAmount: number
+  applianceCount: number
+  applianceAmount: number
+  distanceMiles: number | null
+  distanceFee: number
+  travelFee: number
+  priceAdjustment: number
+  adjustmentReason: string | null
+  total: number
+}
+
 interface BookingEmailData {
   bookingId: string
   customerName: string
@@ -54,6 +74,7 @@ interface BookingEmailData {
   deliveryAddress?: string
   pickupTime?: string
   notes?: string
+  pricingBreakdown?: PricingBreakdown | null
 }
 
 interface GuestInquiryEmailData {
@@ -75,6 +96,62 @@ interface ContactFormData {
   phone?: string
   service?: string
   message: string
+}
+
+// Helper function to generate pricing breakdown HTML
+function generatePricingBreakdownHtml(breakdown: PricingBreakdown | null | undefined): string {
+  if (!breakdown) return ''
+
+  const lines: string[] = []
+
+  // Base price (includes days)
+  lines.push(`<div class="detail-row"><span class="label">Base Price (${breakdown.includedDays} days included):</span><span class="value">$${breakdown.basePrice.toFixed(2)}</span></div>`)
+
+  // Extra days
+  if (breakdown.extraDays > 0) {
+    lines.push(`<div class="detail-row"><span class="label">Extra Days (${breakdown.extraDays} x $25):</span><span class="value">$${breakdown.extraDaysAmount.toFixed(2)}</span></div>`)
+  }
+
+  // Extra tonnage
+  if (breakdown.extraTonnage > 0) {
+    lines.push(`<div class="detail-row"><span class="label">Extra Tonnage (${breakdown.extraTonnage} x $125):</span><span class="value">$${breakdown.extraTonnageAmount.toFixed(2)}</span></div>`)
+  }
+
+  // Appliances
+  if (breakdown.applianceCount > 0) {
+    lines.push(`<div class="detail-row"><span class="label">Appliances (${breakdown.applianceCount} x $25):</span><span class="value">$${breakdown.applianceAmount.toFixed(2)}</span></div>`)
+  }
+
+  // Distance fee
+  if (breakdown.distanceFee > 0) {
+    const milesText = breakdown.distanceMiles ? ` (${breakdown.distanceMiles.toFixed(1)} mi)` : ''
+    lines.push(`<div class="detail-row"><span class="label">Distance Fee${milesText}:</span><span class="value">$${breakdown.distanceFee.toFixed(2)}</span></div>`)
+  }
+
+  // Travel fee
+  if (breakdown.travelFee > 0) {
+    lines.push(`<div class="detail-row"><span class="label">Travel Fee:</span><span class="value">$${breakdown.travelFee.toFixed(2)}</span></div>`)
+  }
+
+  // Price adjustment
+  if (breakdown.priceAdjustment !== 0) {
+    const adjustLabel = breakdown.priceAdjustment < 0 ? 'Discount' : 'Additional Charge'
+    const reasonText = breakdown.adjustmentReason ? ` (${breakdown.adjustmentReason})` : ''
+    lines.push(`<div class="detail-row"><span class="label">${adjustLabel}${reasonText}:</span><span class="value" style="color: ${breakdown.priceAdjustment < 0 ? '#059669' : '#dc2626'};">${breakdown.priceAdjustment < 0 ? '-' : '+'}$${Math.abs(breakdown.priceAdjustment).toFixed(2)}</span></div>`)
+  }
+
+  if (lines.length === 0) return ''
+
+  return `
+    <div class="card">
+      <h2 style="color: #2563eb; margin-top: 0; font-size: 18px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">💰 Pricing Breakdown</h2>
+      ${lines.join('\n')}
+      <div class="detail-row" style="border-top: 2px solid #e5e7eb; margin-top: 10px; padding-top: 10px; font-weight: bold;">
+        <span class="label" style="font-size: 16px;">Total:</span>
+        <span class="value" style="font-size: 16px; color: #059669;">$${breakdown.total.toFixed(2)}</span>
+      </div>
+    </div>
+  `
 }
 
 function generateGuestInquiryEmail(data: GuestInquiryEmailData): string {
@@ -276,18 +353,20 @@ export function generateClientEmail(data: BookingEmailData): string {
         <p style="margin: 0; color: #4b5563;">${data.notes}</p>
       </div>
       ` : ''}
-      
+
+      ${generatePricingBreakdownHtml(data.pricingBreakdown)}
+
       <div class="total">
         Total Amount: $${data.totalAmount.toFixed(2)}
       </div>
-      
+
       <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 20px 0;">
         <p style="margin: 0; color: #92400e;"><strong>⏰ What's Next?</strong></p>
         <p style="margin: 10px 0 0 0; color: #92400e;">
           Our team will contact you 24 hours before your scheduled ${data.serviceType === 'delivery' ? 'delivery' : 'pickup'} date to confirm the details.
         </p>
       </div>
-      
+
       <p style="text-align: center; margin: 30px 0 10px 0;">
         <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.sddumpingsolutions.com'}/bookings" class="button">View My Bookings</a>
       </p>
@@ -415,11 +494,13 @@ export function generateAdminEmail(data: BookingEmailData): string {
         <p style="margin: 0; color: #4b5563; background: #f3f4f6; padding: 15px; border-radius: 6px;">${data.notes}</p>
       </div>
       ` : ''}
-      
+
+      ${generatePricingBreakdownHtml(data.pricingBreakdown)}
+
       <p style="text-align: center; margin: 30px 0 10px 0;">
         <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.sddumpingsolutions.com'}/admin/bookings" class="button">Manage Booking</a>
       </p>
-      
+
       <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0;">
         <p style="margin: 0; color: #1e40af;"><strong>📋 Action Items:</strong></p>
         <ul style="margin: 10px 0; padding-left: 20px; color: #1e40af;">
@@ -488,6 +569,7 @@ interface PhoneBookingEmailData {
   endDate: string
   totalAmount: number
   expiresAt: string
+  pricingBreakdown?: PricingBreakdown | null
 }
 
 // Customer email for phone booking
@@ -545,6 +627,8 @@ function generatePhoneBookingCustomerEmail(data: PhoneBookingEmailData): string 
           <span class="value" style="color: #059669; font-weight: bold;">$${data.totalAmount.toFixed(2)}</span>
         </div>
       </div>
+
+      ${generatePricingBreakdownHtml(data.pricingBreakdown)}
 
       <div class="alert">
         <p style="margin: 0; font-weight: bold;">💳 Important: Your card will NOT be charged yet!</p>

@@ -11,12 +11,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft, CreditCard, Wallet, Smartphone } from "lucide-react"
+import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft, CreditCard, Wallet } from "lucide-react"
 import { format, differenceInDays, eachDayOfInterval, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { StripeElements } from "@/components/stripe-elements"
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { SignaturePad } from "@/components/signature-pad"
 import { extractBase64FromDataUrl, getSignatureInfo } from "@/lib/signature-utils"
 import { uploadSignatureToCloudinary, getCloudinaryConfig } from "@/lib/cloudinary"
@@ -29,6 +28,26 @@ const formatCurrency = (amount: number) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount)
+}
+
+// Pricing breakdown interface
+interface PricingBreakdown {
+  containerType: string
+  basePrice: number
+  includedDays: number
+  totalDays: number
+  extraDays: number
+  extraDaysAmount: number
+  extraTonnage: number
+  extraTonnageAmount: number
+  applianceCount: number
+  applianceAmount: number
+  distanceMiles: number | null
+  distanceFee: number
+  travelFee: number
+  priceAdjustment: number
+  adjustmentReason: string | null
+  total: number
 }
 
 // Parse date string (YYYY-MM-DD) to local date to avoid timezone issues
@@ -427,6 +446,26 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         }
       }
 
+      // Build pricing breakdown
+      const pricingBreakdown: PricingBreakdown = {
+        containerType: selectedContainerType?.size || 'Container',
+        basePrice: baseAmount,
+        includedDays: includedDays,
+        totalDays: totalDays,
+        extraDays: extraDays,
+        extraDaysAmount: extraDaysAmount,
+        extraTonnage: 0,
+        extraTonnageAmount: 0,
+        applianceCount: applianceCount || 0,
+        applianceAmount: applianceAmount,
+        distanceMiles: distanceResult?.distanceMiles || null,
+        distanceFee: distanceFee,
+        travelFee: 0,
+        priceAdjustment: 0,
+        adjustmentReason: null,
+        total: totalAmount,
+      }
+
       // Create the booking with signature URL
       const insertData = {
         user_id: guestMode ? (process.env.NEXT_PUBLIC_GUEST_USER_ID as string) : user.id,
@@ -438,6 +477,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
         service_type: "delivery",
         total_amount: totalAmount,
+        pricing_breakdown: pricingBreakdown,
         notes: (() => {
           const base = notes.trim() || ""
           if (guestMode) {
@@ -575,6 +615,26 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         await supabase.from("profiles").update({ phone: currentUser.user_metadata.phone }).eq("id", user.id)
       }
 
+      // Build pricing breakdown
+      const pricingBreakdown: PricingBreakdown = {
+        containerType: selectedContainerType?.size || 'Container',
+        basePrice: baseAmount,
+        includedDays: includedDays,
+        totalDays: totalDays,
+        extraDays: extraDays,
+        extraDaysAmount: extraDaysAmount,
+        extraTonnage: 0,
+        extraTonnageAmount: 0,
+        applianceCount: applianceCount || 0,
+        applianceAmount: applianceAmount,
+        distanceMiles: distanceResult?.distanceMiles || null,
+        distanceFee: distanceFee,
+        travelFee: 0,
+        priceAdjustment: 0,
+        adjustmentReason: null,
+        total: totalAmount,
+      }
+
       // Create the booking with signature URL
       const insertData = {
         user_id: user.id,
@@ -586,6 +646,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         customer_address: `${streetAddress}, ${city}, ${state} ${zipCode}`,
         service_type: "delivery",
         total_amount: totalAmount,
+        pricing_breakdown: pricingBreakdown,
         notes: notes.trim() || null,
         status: "confirmed",
         payment_status: "paid",
@@ -607,7 +668,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
         })
         throw new Error(`Failed to create booking: ${bookingError.message}`)
       }
-
 
       // Create payment record
       const { error: paymentError } = await supabase.from("payments").insert({
@@ -643,6 +703,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
             deliveryAddress: deliveryAddress,
             pickupTime: pickupTime,
             notes: notes.trim() || undefined,
+            pricingBreakdown: pricingBreakdown,
           }),
         })
         
@@ -1669,18 +1730,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                               <CreditCard className="h-4 w-4" />
                               <span>Credit/Debit Card</span>
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setPaymentMethod("paypal")}
-                              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md transition-all ${
-                                paymentMethod === "paypal"
-                                  ? "bg-white shadow-sm text-gray-900"
-                                  : "text-gray-600 hover:text-gray-900"
-                              }`}
-                            >
-                              <Smartphone className="h-4 w-4" />
-                              <span>PayPal</span>
-                            </button>
                           </div>
                         </div>
 
@@ -1766,56 +1815,6 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                             }}
                             onError={(error) => setError(error)}
                           />
-                        )}
-
-                        {/* PayPal Section */}
-                        {paymentMethod === "paypal" && (
-                          <div className="space-y-3 sm:space-y-4">
-                            <PayPalScriptProvider 
-                              options={{ 
-                                clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "test",
-                                currency: "USD",
-                                intent: "capture"
-                              }}
-                            >
-                              <PayPalButtons
-                                createOrder={(data, actions) => {
-                                  return actions.order.create({
-                                    intent: "CAPTURE",
-                                    purchase_units: [
-                                      {
-                                        amount: {
-                                          value: totalAmount.toString(),
-                                          currency_code: "USD"
-                                        },
-                                        description: `Dumpster rental - ${containerTypes.find(c => c.id === selectedContainer)?.name || 'Container'} (${differenceInDays(endDate!, startDate!) + 1} days)`
-                                      }
-                                    ]
-                                  })
-                                }}
-                                onApprove={(data, actions) => {
-                                  return actions.order!.capture().then((details) => {
-                                    setIsSuccess(true)
-                                    setError(null)
-                                    handlePaymentSuccess('paypal', details.id || 'paypal_transaction')
-                                  })
-                                }}
-                                onError={(err) => {
-                                  console.error('PayPal error:', err)
-                                  setError('Payment failed. Please try again.')
-                                }}
-                                onCancel={() => {
-                                  setError('Payment was cancelled.')
-                                }}
-                                style={{
-                                  layout: 'vertical',
-                                  color: 'blue',
-                                  shape: 'rect',
-                                  label: 'paypal'
-                                }}
-                              />
-                            </PayPalScriptProvider>
-                          </div>
                         )}
 
                         {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</div>}

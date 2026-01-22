@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       notes,
       priceAdjustment,
       adjustmentReason,
+      pricingBreakdown,
     } = await request.json()
 
     // Validate required fields
@@ -129,6 +130,7 @@ export async function POST(request: Request) {
         travel_fee: travelFee || null,
         price_adjustment: priceAdjustment || null,
         adjustment_reason: priceAdjustment ? (adjustmentReason || null) : null,
+        pricing_breakdown: pricingBreakdown || null,
         notes: notesWithFlag,
         status: "pending",
         payment_status: "pending",
@@ -208,6 +210,7 @@ export async function POST(request: Request) {
         endDate: format(parseLocalDate(endDate), "PPP"),
         totalAmount,
         expiresAt: format(expiresAt, "PPP"),
+        pricingBreakdown: pricingBreakdown || null,
       })
     } catch (emailError) {
       console.error("Error sending email:", emailError)

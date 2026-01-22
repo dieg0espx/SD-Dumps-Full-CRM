@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       deliveryAddress: data.deliveryAddress,
       pickupTime: data.pickupTime,
       notes: data.notes,
+      pricingBreakdown: data.pricingBreakdown,
     })
 
     if (result.skipped) {
