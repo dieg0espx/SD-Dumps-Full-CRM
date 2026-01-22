@@ -41,11 +41,11 @@ export default function AboutPage() {
             
             <div className="flex justify-center">
               <Image
-                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster.png"
+                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107610/IMG_6035_gbo7ql.heic"
                 alt="Professional dumpster"
                 width={500}
                 height={400}
-                className="rounded-lg"
+                className="rounded-lg object-cover"
               />
             </div>
           </div>
@@ -58,11 +58,11 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
               <Image
-                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster.png"
+                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107609/IMG_0405_fxcujh.heic"
                 alt="Professional dumpster"
                 width={500}
                 height={400}
-                className="rounded-lg"
+                className="rounded-lg object-cover"
               />
             </div>
             

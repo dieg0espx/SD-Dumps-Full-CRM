@@ -83,18 +83,24 @@ export default function Services() {
       
       <div className="bg-background">
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-24 lg:py-32">
+        <section className="relative pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-20 lg:pb-24">
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107609/IMG_0405_fxcujh.heic')" }}
+          />
+          <div className="absolute inset-0 bg-black/70" />
+          <div className="relative z-10 container mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
             <Badge variant="secondary" className="mb-4 bg-main/10 text-main border-main/20">
               Dumpster Rental San Diego
             </Badge>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
               San Diego <span className="text-main">Dumpster Rental</span> Services
             </h1>
-            <p className="mt-6 text-lg leading-8 text-muted-foreground">
+            <p className="mt-6 text-lg leading-8 text-gray-300">
               Complete dumpster rental San Diego services: residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services San Diego. Same day dumpster rental available!
             </p>
-            <p className="mt-4 text-lg leading-8 text-muted-foreground">
+            <p className="mt-4 text-lg leading-8 text-gray-300">
               From small dumpster rental near me for home cleanouts to large roll off dumpster rental San Diego for major construction — we have the right solution.
             </p>
 
@@ -104,12 +110,13 @@ export default function Services() {
                   Get Free Quote
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" asChild>
+              <Button variant="outline" size="lg" asChild className="bg-white border-white text-black hover:bg-gray-100">
                 <Link href="/contact">
                   Call (760) 270-0312
                 </Link>
               </Button>
             </div>
+          </div>
           </div>
         </section>
 
@@ -168,7 +175,7 @@ export default function Services() {
             <div className="flex items-center justify-center">
               <div className="relative">
                 <Image
-                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster.png"
+                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107606/IMG_0211_huq8x0.heic"
                   alt="Roll off dumpster rental San Diego - Same day delivery available"
                   width={500}
                   height={400}

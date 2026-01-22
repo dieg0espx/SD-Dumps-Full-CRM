@@ -47,9 +47,15 @@ export default function ServiceAreasPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-24 pb-16">
-        <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/hero-bg')] opacity-10 bg-cover bg-center" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative text-white pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-20 lg:pb-24">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107608/IMG_0265_dkokq7.heic')"
+          }}
+        />
+        <div className="absolute inset-0 bg-black/70" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-main mb-4">
             <MapPin className="w-5 h-5" />
             <span className="text-sm font-medium uppercase tracking-wide">Service Areas</span>

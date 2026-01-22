@@ -54,9 +54,9 @@ export default function Header() {
               alt="SD Dumping Solutions Logo"
               width={40}
               height={40}
-              className="mr-3"
+              className="w-8 h-8 sm:w-10 sm:h-10"
             />
-            <span className="text-xl font-bold text-gray-900">SD Dumping Solutions</span>
+            <span className="ml-2 sm:ml-3 text-sm sm:text-xl font-bold text-gray-900 hidden sm:inline">SD Dumping Solutions</span>
           </Link>
 
           {/* Desktop Navigation */}

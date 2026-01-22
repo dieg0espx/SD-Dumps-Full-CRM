@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import MobileCTA from '@/components/MobileCTA'
 
 interface ConditionalLayoutProps {
   children: React.ReactNode
@@ -12,6 +13,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname()
   const isAdminRoute = pathname?.startsWith('/admin')
   const isBookingRoute = pathname === '/booking'
+  const isAuthRoute = pathname?.startsWith('/auth')
 
   if (isAdminRoute) {
     return <>{children}</>
@@ -20,10 +22,11 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   return (
     <>
       <Header />
-      <main className="mt-16">
+      <main className="mt-16 pb-14 md:pb-0">
         {children}
       </main>
       {!isBookingRoute && <Footer />}
+      {!isBookingRoute && !isAuthRoute && <MobileCTA />}
     </>
   )
 }

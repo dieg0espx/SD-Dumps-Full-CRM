@@ -96,7 +96,7 @@ function generateGuestInquiryEmail(data: GuestInquiryEmailData): string {
   <body>
     <div class="container">
       <div class="header">
-        <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
+        <img src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
         <h2>New Guest Booking Request</h2>
         <p style="margin: 6px 0 0 0">No account – follow-up required</p>
       </div>

@@ -9,7 +9,7 @@ export default function PricingSection() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 sm:mb-16">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
             Affordable Dumpster Rental San Diego Pricing
           </h2>
@@ -20,7 +20,7 @@ export default function PricingSection() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* 17 Yard Dumpster */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up delay-200">
             <div className="text-center mb-6">
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">$595</div>
               <div className="text-base sm:text-lg text-gray-600">17 Yard Roll Off Dumpster</div>
@@ -55,14 +55,14 @@ export default function PricingSection() {
             </div>
             <button
               onClick={() => router.push('/booking')}
-              className="w-full border border-gray-300 text-gray-700 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+              className="w-full border border-gray-300 text-gray-700 py-2 sm:py-3 rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-300 text-sm sm:text-base"
             >
               Book Now
             </button>
           </div>
 
           {/* 21 Yard Dumpster - Featured */}
-          <div className="bg-white border-2 border-main rounded-lg p-6 sm:p-8 shadow-lg relative">
+          <div className="bg-white border-2 border-main rounded-lg p-6 sm:p-8 shadow-lg relative hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up delay-400">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <div className="bg-main text-white px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm">Most Popular</div>
             </div>
@@ -104,14 +104,14 @@ export default function PricingSection() {
             </div>
             <button
               onClick={() => router.push('/booking')}
-              className="w-full bg-main text-white py-3 rounded-lg hover:bg-main/90 transition-colors"
+              className="w-full bg-main text-white py-3 rounded-lg hover:bg-main/90 hover:scale-105 transition-all duration-300"
             >
               Book Now
             </button>
           </div>
 
           {/* Concrete & Dirt */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up delay-600">
             <div className="text-center mb-6">
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Call Us</div>
               <div className="text-base sm:text-lg text-gray-600">Concrete & Heavy Debris</div>
@@ -146,7 +146,7 @@ export default function PricingSection() {
             </div>
             <button
               onClick={() => router.push('/contact')}
-              className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-300"
             >
               Call (760) 270-0312
             </button>
