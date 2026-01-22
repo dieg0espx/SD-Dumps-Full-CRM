@@ -464,6 +464,78 @@ export function PaymentTracker({ payments, onRefresh }: PaymentTrackerProps) {
                 </div>
               </div>
 
+              {/* Pricing Breakdown */}
+              {selectedBooking.pricing_breakdown && (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                      <span className="h-5 w-5 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">$</span>
+                      Pricing Breakdown
+                    </h3>
+                    <div className="bg-green-50 rounded-lg p-4 space-y-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-gray-500">Base Price ({selectedBooking.pricing_breakdown.includedDays} days)</Label>
+                          <p className="text-sm font-medium">{formatCurrency(selectedBooking.pricing_breakdown.basePrice)}</p>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-gray-500">Total Days</Label>
+                          <p className="text-sm font-medium">{selectedBooking.pricing_breakdown.totalDays} days</p>
+                        </div>
+                        {selectedBooking.pricing_breakdown.extraDays > 0 && (
+                          <div>
+                            <Label className="text-xs text-gray-500">Extra Days ({selectedBooking.pricing_breakdown.extraDays} x $25)</Label>
+                            <p className="text-sm font-medium">{formatCurrency(selectedBooking.pricing_breakdown.extraDaysAmount)}</p>
+                          </div>
+                        )}
+                        {selectedBooking.pricing_breakdown.extraTonnage > 0 && (
+                          <div>
+                            <Label className="text-xs text-gray-500">Extra Tonnage ({selectedBooking.pricing_breakdown.extraTonnage} x $125)</Label>
+                            <p className="text-sm font-medium">{formatCurrency(selectedBooking.pricing_breakdown.extraTonnageAmount)}</p>
+                          </div>
+                        )}
+                        {selectedBooking.pricing_breakdown.applianceCount > 0 && (
+                          <div>
+                            <Label className="text-xs text-gray-500">Appliances ({selectedBooking.pricing_breakdown.applianceCount} x $25)</Label>
+                            <p className="text-sm font-medium">{formatCurrency(selectedBooking.pricing_breakdown.applianceAmount)}</p>
+                          </div>
+                        )}
+                        {selectedBooking.pricing_breakdown.distanceFee > 0 && (
+                          <div>
+                            <Label className="text-xs text-gray-500">Distance Fee{selectedBooking.pricing_breakdown.distanceMiles ? ` (${selectedBooking.pricing_breakdown.distanceMiles.toFixed(1)} mi)` : ''}</Label>
+                            <p className="text-sm font-medium">{formatCurrency(selectedBooking.pricing_breakdown.distanceFee)}</p>
+                          </div>
+                        )}
+                        {selectedBooking.pricing_breakdown.travelFee > 0 && (
+                          <div>
+                            <Label className="text-xs text-gray-500">Travel Fee</Label>
+                            <p className="text-sm font-medium">{formatCurrency(selectedBooking.pricing_breakdown.travelFee)}</p>
+                          </div>
+                        )}
+                        {selectedBooking.pricing_breakdown.priceAdjustment !== 0 && (
+                          <div className="col-span-2">
+                            <Label className="text-xs text-gray-500">
+                              {selectedBooking.pricing_breakdown.priceAdjustment < 0 ? 'Discount' : 'Additional Charge'}
+                              {selectedBooking.pricing_breakdown.adjustmentReason ? ` (${selectedBooking.pricing_breakdown.adjustmentReason})` : ''}
+                            </Label>
+                            <p className={`text-sm font-medium ${selectedBooking.pricing_breakdown.priceAdjustment < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {selectedBooking.pricing_breakdown.priceAdjustment < 0 ? '-' : '+'}{formatCurrency(Math.abs(selectedBooking.pricing_breakdown.priceAdjustment))}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="border-t border-green-200 mt-3 pt-3">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-sm font-semibold text-gray-700">Total</Label>
+                          <p className="text-lg font-bold text-green-600">{formatCurrency(selectedBooking.pricing_breakdown.total)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
               <Separator />
 
               {/* Payment Information */}
