@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { Star } from 'lucide-react'
 
 export default function Testimonials() {
@@ -17,7 +18,13 @@ export default function Testimonials() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm">
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-300 rounded-full mr-3 sm:mr-4 flex-shrink-0"></div>
+              <Image
+                src="https://randomuser.me/api/portraits/men/32.jpg"
+                alt="Mike Davis"
+                width={48}
+                height={48}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-3 sm:mr-4 flex-shrink-0 object-cover"
+              />
               <div>
                 <div className="font-semibold text-gray-900 text-sm sm:text-base">Mike Davis</div>
                 <div className="text-xs sm:text-sm text-gray-600">General Contractor, La Jolla</div>
@@ -35,7 +42,13 @@ export default function Testimonials() {
 
           <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm">
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-300 rounded-full mr-3 sm:mr-4 flex-shrink-0"></div>
+              <Image
+                src="https://randomuser.me/api/portraits/women/44.jpg"
+                alt="Emily Chen"
+                width={48}
+                height={48}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-3 sm:mr-4 flex-shrink-0 object-cover"
+              />
               <div>
                 <div className="font-semibold text-gray-900 text-sm sm:text-base">Emily Chen</div>
                 <div className="text-xs sm:text-sm text-gray-600">Property Manager, Chula Vista</div>
@@ -53,7 +66,13 @@ export default function Testimonials() {
 
           <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm">
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-300 rounded-full mr-3 sm:mr-4 flex-shrink-0"></div>
+              <Image
+                src="https://randomuser.me/api/portraits/men/67.jpg"
+                alt="Carlos Rivero"
+                width={48}
+                height={48}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-3 sm:mr-4 flex-shrink-0 object-cover"
+              />
               <div>
                 <div className="font-semibold text-gray-900 text-sm sm:text-base">Carlos Rivero</div>
                 <div className="text-xs sm:text-sm text-gray-600">Homeowner, El Cajon</div>
