@@ -9,21 +9,21 @@ export default function WhyChooseUs() {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="order-1">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
-              Why Choose Our{' '}
+              Why San Diego Chooses Our{' '}
               <span className="text-main">Dumpster Rental Service</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-              We provide professional waste management solutions with transparent pricing, reliable service, and expert support for projects of any size.
+              Looking for affordable dumpster rental in San Diego? We offer the best cost of dumpster rental in the area — transparent pricing, same day dumpster rental San Diego delivery, and waste management San Diego trusts. Whether you need a small dumpster rental near me or a large roll off dumpster rental San Diego, we've got you covered.
             </p>
             <button className="bg-main text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-main/90 transition-colors mb-6 sm:mb-8 text-sm sm:text-base">
-              Learn More
+              View Pricing
             </button>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-main mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Fast & Reliable</h3>
-                  <p className="text-gray-600 text-sm sm:text-base">Same-day delivery and pickup available for urgent projects.</p>
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Same Day Dumpster Rental San Diego</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">Need a dumpster today? We offer same day delivery throughout San Diego County for urgent construction and junk removal projects.</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
@@ -31,8 +31,8 @@ export default function WhyChooseUs() {
                   <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full"></div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Professional Service</h3>
-                  <p className="text-gray-600 text-sm sm:text-base">Experienced team with modern equipment and competitive pricing.</p>
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Cheap Dumpster Rental San Diego</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">Affordable pricing with no hidden fees. Residential dumpster rental San Diego and commercial dumpster rental at competitive rates.</p>
                 </div>
               </div>
             </div>
@@ -40,7 +40,7 @@ export default function WhyChooseUs() {
           <div className="order-2 flex justify-center">
             <Image
               src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
-              alt="Professional dumpster service"
+              alt="Roll off dumpster rental San Diego - Affordable waste management services"
               width={500}
               height={400}
               className="rounded-lg w-full max-w-md lg:max-w-none"

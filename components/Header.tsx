@@ -64,6 +64,7 @@ export default function Header() {
             <Link href="/" className="text-gray-700 hover:text-main transition-colors">Home</Link>
             <Link href="/about" className="text-gray-700 hover:text-main transition-colors">About</Link>
             <Link href="/services" className="text-gray-700 hover:text-main transition-colors">Services</Link>
+            <Link href="/service-areas" className="text-gray-700 hover:text-main transition-colors">Service Areas</Link>
             <Link href="/contact" className="text-gray-700 hover:text-main transition-colors">Contact</Link>
           </nav>
 
@@ -131,6 +132,13 @@ export default function Header() {
                 className="block text-center px-3 py-3 text-gray-700 hover:text-main hover:bg-gray-50 rounded-md transition-colors font-medium"
               >
                 Services
+              </Link>
+              <Link
+                href="/service-areas"
+                onClick={closeMobileMenu}
+                className="block text-center px-3 py-3 text-gray-700 hover:text-main hover:bg-gray-50 rounded-md transition-colors font-medium"
+              >
+                Service Areas
               </Link>
               <Link
                 href="/contact"

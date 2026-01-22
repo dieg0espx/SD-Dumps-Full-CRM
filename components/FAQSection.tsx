@@ -9,28 +9,28 @@ import {
 export default function FAQSection() {
   const faqData = [
     {
-      question: "What sizes of dumpsters do you offer?",
-      answer: "We offer a variety of dumpster sizes including 10-yard, 17-yard, and 21-yard containers to accommodate different project needs. Our team can help you choose the right size based on your specific requirements."
+      question: "What is the cost of dumpster rental in San Diego?",
+      answer: "Our dumpster rental San Diego prices start at $595 for a 17-yard roll off dumpster, which includes 3 days and 2 tons of disposal. We're known for offering cheap dumpster rental San Diego with no hidden fees. Our 21-yard dumpster is $695 — the best value for construction dumpster rental San Diego projects."
     },
     {
-      question: "How long can I keep the dumpster?",
-      answer: "Our standard rental period is 3 days, but we offer flexible rental terms. You can extend your rental period for an additional fee. Contact us to discuss your specific timeline needs."
+      question: "Do you offer same day dumpster rental San Diego?",
+      answer: "Yes! We offer same day dumpster rental San Diego for orders placed before 2 PM on weekdays. Need a dumpster delivered today? Call (760) 270-0312 for same day delivery throughout San Diego County."
     },
     {
-      question: "What materials are prohibited from dumpsters?",
-      answer: "Prohibited materials include hazardous waste, chemicals, paint, batteries, electronics, tires, and medical waste. We can provide guidance on proper disposal methods for these items."
+      question: "What sizes are available for small dumpster rental near me?",
+      answer: "Looking for a small dumpster rental near me or 2 yard dumpster rental near me? We offer 10 yard dumpster rental for small cleanouts, plus 17-yard and 21-yard roll off dumpster rental San Diego for larger projects. Call us to find the right size for your needs."
     },
     {
-      question: "Do you offer same-day delivery?",
-      answer: "Yes, we offer same-day delivery for orders placed before 2 PM on weekdays. Weekend deliveries are also available with advance notice. Contact us for availability in your area."
+      question: "Do you offer commercial dumpster rental and commercial trash dumpsters?",
+      answer: "Absolutely! We provide commercial dumpster rental and commercial trash dumpsters for businesses, restaurants, retail stores, and construction sites throughout San Diego. Regular pickup schedules available."
     },
     {
-      question: "What areas do you serve?",
-      answer: "We serve the greater metropolitan area and surrounding suburbs within a 50-mile radius. Contact us with your specific location to confirm service availability and delivery fees."
+      question: "What areas do you serve for dumpster rental in San Diego?",
+      answer: "We serve all of San Diego County for dumpster rental San Diego CA, including La Jolla, Chula Vista, El Cajon, Oceanside, Escondido, Carlsbad, and surrounding communities. Our waste management San Diego services cover the entire region."
     },
     {
-      question: "How do I schedule a pickup?",
-      answer: "You can schedule a pickup by calling our customer service line or using our online booking system. We'll coordinate with you to find the best time for pickup that works with your schedule."
+      question: "What services do you offer besides garbage dumpster rental?",
+      answer: "Beyond garbage dumpster rental and roll off dumpster rental San Diego, we offer junk removal services San Diego, dump trailer rental for heavy materials, residential dumpster rental San Diego for home projects, and full-service waste management San Diego solutions."
     }
   ];
 
@@ -39,10 +39,10 @@ export default function FAQSection() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
-            Frequently Asked Questions
+            Dumpster Rental San Diego FAQ
           </h2>
           <p className="text-base sm:text-lg text-gray-600">
-            Find answers to common questions about our dumpster rental services.
+            Common questions about affordable dumpster rental San Diego, pricing, and our services.
           </p>
         </div>
 
