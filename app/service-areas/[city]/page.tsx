@@ -161,7 +161,7 @@ export default async function CityPage({ params }: CityPageProps) {
                 alt={`Dumpster delivery in ${city.name}`}
                 width={600}
                 height={400}
-                className="rounded-xl shadow-lg"
+                className="rounded-xl"
               />
             </div>
           </div>
