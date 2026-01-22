@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Clock, Check, Phone, ArrowUp } from 'lucide-react'
 
 export default function Footer() {
@@ -43,11 +44,11 @@ export default function Footer() {
             <div>
               <h3 className="font-semibold mb-4">Dumpster Rental Services</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="/services" className="hover:text-white transition-colors">Residential Dumpster Rental</a></li>
-                <li><a href="/services" className="hover:text-white transition-colors">Commercial Dumpster Rental</a></li>
-                <li><a href="/services" className="hover:text-white transition-colors">Construction Dumpster Rental</a></li>
-                <li><a href="/services" className="hover:text-white transition-colors">Roll Off Dumpster Rental</a></li>
-                <li><a href="/services" className="hover:text-white transition-colors">Junk Removal Services</a></li>
+                <li><Link href="/services" className="hover:text-white transition-colors">Residential Dumpster Rental</Link></li>
+                <li><Link href="/services" className="hover:text-white transition-colors">Commercial Dumpster Rental</Link></li>
+                <li><Link href="/services" className="hover:text-white transition-colors">Construction Dumpster Rental</Link></li>
+                <li><Link href="/services" className="hover:text-white transition-colors">Roll Off Dumpster Rental</Link></li>
+                <li><Link href="/services" className="hover:text-white transition-colors">Junk Removal Services</Link></li>
               </ul>
             </div>
           </div>
@@ -56,17 +57,17 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
-              <li><a href="/service-areas" className="hover:text-white transition-colors">Service Areas</a></li>
-              <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
+              <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link href="/service-areas" className="hover:text-white transition-colors">Service Areas</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
             </ul>
             <h3 className="font-semibold mb-4 mt-6">Top Cities</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="/service-areas/san-diego" className="hover:text-white transition-colors">San Diego</a></li>
-              <li><a href="/service-areas/chula-vista" className="hover:text-white transition-colors">Chula Vista</a></li>
-              <li><a href="/service-areas/oceanside" className="hover:text-white transition-colors">Oceanside</a></li>
-              <li><a href="/service-areas/escondido" className="hover:text-white transition-colors">Escondido</a></li>
-              <li><a href="/service-areas/carlsbad" className="hover:text-white transition-colors">Carlsbad</a></li>
+              <li><Link href="/service-areas/san-diego" className="hover:text-white transition-colors">San Diego</Link></li>
+              <li><Link href="/service-areas/chula-vista" className="hover:text-white transition-colors">Chula Vista</Link></li>
+              <li><Link href="/service-areas/oceanside" className="hover:text-white transition-colors">Oceanside</Link></li>
+              <li><Link href="/service-areas/escondido" className="hover:text-white transition-colors">Escondido</Link></li>
+              <li><Link href="/service-areas/carlsbad" className="hover:text-white transition-colors">Carlsbad</Link></li>
             </ul>
           </div>
         </div>
