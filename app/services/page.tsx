@@ -168,7 +168,7 @@ export default function Services() {
             <div className="flex items-center justify-center">
               <div className="relative">
                 <Image
-                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
+                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster.png"
                   alt="Roll off dumpster rental San Diego - Same day delivery available"
                   width={500}
                   height={400}
