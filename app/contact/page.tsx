@@ -83,10 +83,10 @@ export default function Contact() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
-                Get in Touch
+                Get Your San Diego Dumpster Rental Quote
               </h1>
               <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-                Have questions about our waste management services? We're here to help. Contact us for quotes, support, or any inquiries.
+                Ready for affordable dumpster rental San Diego? Get a free quote for roll off dumpster rental, residential dumpster rental San Diego, or commercial dumpster rental. Same day dumpster rental San Diego available — call (760) 270-0312!
               </p>
             </div>
           </div>
@@ -99,8 +99,8 @@ export default function Contact() {
               {/* Contact Form */}
               <div className="bg-white shadow-xl rounded-2xl p-8 sm:p-10 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
                 <div className="mb-8">
-                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Send us a Message</h2>
-                  <p className="text-gray-600">Fill out the form below and we'll get back to you as soon as possible.</p>
+                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Request Your Free Dumpster Rental Quote</h2>
+                  <p className="text-gray-600">Tell us about your project and get a free quote for dumpster rental San Diego. Same day response guaranteed!</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -191,10 +191,12 @@ export default function Contact() {
                       className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-main/50 focus:border-main transition-all duration-200 hover:border-gray-400 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="">Select a service</option>
-                      <option value="Residential Dumpster Rental">Residential Dumpster Rental</option>
-                      <option value="Commercial Waste Solutions">Commercial Waste Solutions</option>
-                      <option value="Construction & Demolition">Construction & Demolition</option>
-                      <option value="Yard Waste & Landscaping">Yard Waste & Landscaping</option>
+                      <option value="Residential Dumpster Rental San Diego">Residential Dumpster Rental San Diego</option>
+                      <option value="Commercial Dumpster Rental">Commercial Dumpster Rental</option>
+                      <option value="Construction Dumpster Rental San Diego">Construction Dumpster Rental San Diego</option>
+                      <option value="Roll Off Dumpster Rental">Roll Off Dumpster Rental</option>
+                      <option value="Junk Removal Services San Diego">Junk Removal Services San Diego</option>
+                      <option value="Same Day Dumpster Rental">Same Day Dumpster Rental</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
@@ -229,8 +231,8 @@ export default function Contact() {
               {/* Contact Details */}
               <div className="lg:sticky lg:top-24">
                 <div className="mb-8">
-                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Contact Information</h2>
-                  <p className="text-gray-600">Reach out to us through any of these channels.</p>
+                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">San Diego Dumpster Rental Contact</h2>
+                  <p className="text-gray-600">Get your dumpster rental San Diego quote today. Same day service available!</p>
                 </div>
 
                 <div className="space-y-5">
@@ -242,9 +244,9 @@ export default function Contact() {
                       <Phone className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-main transition-colors">Phone</h3>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-main transition-colors">Call for Same Day Dumpster Rental</h3>
                       <p className="text-xl font-semibold text-gray-900 mb-1">(760) 270-0312</p>
-                      <p className="text-sm text-gray-500">Available 24/7 for urgent requests</p>
+                      <p className="text-sm text-gray-500">Same day dumpster rental San Diego available!</p>
                     </div>
                   </a>
 
@@ -256,9 +258,9 @@ export default function Contact() {
                       <Mail className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-main transition-colors">Email</h3>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-main transition-colors">Email for Quote</h3>
                       <p className="text-base font-semibold text-gray-900 mb-1 break-all">sandiegodumpingsolutions@gmail.com</p>
-                      <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
+                      <p className="text-sm text-gray-500">Free quotes within 24 hours</p>
                     </div>
                   </a>
 
@@ -267,9 +269,9 @@ export default function Contact() {
                       <MapPin className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">Service Area</h3>
-                      <p className="text-base font-semibold text-gray-900 mb-1">San Diego County</p>
-                      <p className="text-sm text-gray-500">Including surrounding communities</p>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">Dumpster Rental in San Diego</h3>
+                      <p className="text-base font-semibold text-gray-900 mb-1">All of San Diego County</p>
+                      <p className="text-sm text-gray-500">La Jolla, Chula Vista, El Cajon, Oceanside & more</p>
                     </div>
                   </div>
 
@@ -278,7 +280,7 @@ export default function Contact() {
                       <Clock className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-2">Business Hours</h3>
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">Dumpster Delivery Hours</h3>
                       <div className="space-y-1 text-gray-700">
                         <p className="flex justify-between">
                           <span className="font-medium">Monday - Friday:</span>
@@ -293,7 +295,7 @@ export default function Contact() {
                           <span>Closed</span>
                         </p>
                       </div>
-                      <p className="text-sm text-main font-semibold mt-3">Emergency service available 24/7</p>
+                      <p className="text-sm text-main font-semibold mt-3">Same day dumpster rental available before 2 PM!</p>
                     </div>
                   </div>
                 </div>
@@ -306,46 +308,46 @@ export default function Contact() {
         <section className="py-12 sm:py-16 lg:py-20 bg-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">San Diego Dumpster Rental FAQ</h2>
               <p className="text-lg text-gray-600">
-                Find quick answers to common questions about our services
+                Common questions about dumpster rental San Diego pricing, delivery, and services
               </p>
             </div>
 
             <div className="space-y-6">
               <div className="border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  How quickly can you deliver a dumpster?
+                  Do you offer same day dumpster rental San Diego?
                 </h3>
                 <p className="text-gray-600">
-                  We offer same-day delivery for most areas. Contact us early in the day for the best availability.
+                  Yes! We offer same day dumpster rental San Diego for orders placed before 2 PM. Call (760) 270-0312 for same day delivery anywhere in San Diego County.
                 </p>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  What size dumpster do I need for my project?
+                  What is the cost of dumpster rental in San Diego?
                 </h3>
                 <p className="text-gray-600">
-                  Our team can help you choose the right size based on your project type and scope. We offer containers from 10 to 40 yards.
+                  Our affordable dumpster rental San Diego starts at $595 for a 17-yard roll off dumpster (includes 3 days and 2 tons). We offer cheap dumpster rental San Diego with transparent pricing — no hidden fees!
                 </p>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Do you handle permits for street placement?
+                  What sizes do you have for small dumpster rental near me?
                 </h3>
                 <p className="text-gray-600">
-                  Yes, we can assist with permit applications for placing dumpsters on public property or streets.
+                  Looking for a small dumpster rental near me or 10 yard dumpster rental? We offer multiple sizes from small residential dumpsters to large roll off dumpster rental San Diego for construction projects.
                 </p>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  What materials can I put in the dumpster?
+                  Do you provide commercial dumpster rental and junk removal services?
                 </h3>
                 <p className="text-gray-600">
-                  We accept most construction debris, household items, and general waste. Hazardous materials and certain items may have restrictions.
+                  Yes! We offer commercial dumpster rental, commercial trash dumpsters, and full junk removal services San Diego. Whether you need garbage dumpster rental for your business or dump trailer rental for heavy materials, we've got you covered.
                 </p>
               </div>
             </div>

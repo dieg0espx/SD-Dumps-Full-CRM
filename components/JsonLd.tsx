@@ -4,8 +4,8 @@ export function OrganizationSchema() {
     "@type": "LocalBusiness",
     "@id": "https://sddumps.com/#organization",
     "name": "SD Dumping Solutions",
-    "alternateName": "San Diego Dumping Solutions",
-    "description": "Professional container rental services for construction, renovation, and waste management in San Diego County.",
+    "alternateName": ["San Diego Dumping Solutions", "San Diego Dumpster Rental", "SD Dumpster Rental"],
+    "description": "Affordable dumpster rental San Diego with same day delivery. Roll off dumpster rental, residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services in San Diego County.",
     "url": "https://sddumps.com",
     "logo": {
       "@type": "ImageObject",
@@ -115,8 +115,8 @@ export function WebSiteSchema() {
     "@type": "WebSite",
     "@id": "https://sddumps.com/#website",
     "url": "https://sddumps.com",
-    "name": "SD Dumping Solutions",
-    "description": "Professional container rental services for construction, renovation, and waste management in San Diego.",
+    "name": "SD Dumping Solutions - Dumpster Rental San Diego",
+    "description": "Affordable dumpster rental San Diego with same day delivery. Roll off dumpster rental, residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services. Call (760) 270-0312 for cheap dumpster rental San Diego!",
     "publisher": {
       "@id": "https://sddumps.com/#organization"
     },
@@ -213,7 +213,7 @@ export function ServiceSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Service",
-    "serviceType": "Dumpster Rental",
+    "serviceType": "Dumpster Rental San Diego",
     "provider": {
       "@id": "https://sddumps.com/#organization"
     },
@@ -225,42 +225,42 @@ export function ServiceSchema() {
     },
     "hasOfferCatalog": {
       "@type": "OfferCatalog",
-      "name": "Container Rental Services",
+      "name": "San Diego Dumpster Rental Services",
       "itemListElement": [
         {
           "@type": "OfferCatalog",
-          "name": "Container Sizes",
+          "name": "Dumpster Sizes",
           "itemListElement": [
             {
               "@type": "Offer",
               "itemOffered": {
                 "@type": "Product",
-                "name": "10 Yard Dumpster",
-                "description": "Ideal for small projects and cleanouts"
+                "name": "10 Yard Dumpster Rental",
+                "description": "Small dumpster rental near me - ideal for residential dumpster rental San Diego, garage cleanouts, and small renovation projects"
               }
             },
             {
               "@type": "Offer",
               "itemOffered": {
                 "@type": "Product",
-                "name": "20 Yard Dumpster",
-                "description": "Perfect for medium-sized renovations"
+                "name": "17 Yard Dumpster Rental",
+                "description": "Affordable dumpster rental San Diego - perfect for residential dumpster rental, home renovations, and medium cleanout projects"
               }
             },
             {
               "@type": "Offer",
               "itemOffered": {
                 "@type": "Product",
-                "name": "30 Yard Dumpster",
-                "description": "Great for large construction projects"
+                "name": "21 Yard Dumpster Rental",
+                "description": "Roll off dumpster rental San Diego - great for construction dumpster rental San Diego and large renovation projects"
               }
             },
             {
               "@type": "Offer",
               "itemOffered": {
                 "@type": "Product",
-                "name": "40 Yard Dumpster",
-                "description": "Maximum capacity for major demolition"
+                "name": "Concrete Dumpster Rental",
+                "description": "Dump trailer rental for heavy materials - concrete, dirt, asphalt, and construction debris disposal"
               }
             }
           ]
@@ -280,28 +280,28 @@ export function ServiceSchema() {
 export function FAQSchema() {
   const faqs = [
     {
-      question: "How quickly can you deliver a dumpster?",
-      answer: "We offer same-day delivery for most areas. Contact us early in the day for the best availability."
+      question: "What is the cost of dumpster rental in San Diego?",
+      answer: "Our dumpster rental San Diego prices start at $595 for a 17-yard container including 3-day rental. Pricing varies by container size, rental duration, and debris type. Call (760) 270-0312 for affordable dumpster rental San Diego pricing."
     },
     {
-      question: "What size dumpster do I need for my project?",
-      answer: "Our team can help you choose the right size based on your project type and scope. We offer containers from 10 to 40 yards."
+      question: "Do you offer same day dumpster rental San Diego?",
+      answer: "Yes! We offer same day dumpster rental San Diego for orders placed before 2 PM. Whether you need a small dumpster rental near me for a quick cleanout or a roll off dumpster rental San Diego for construction, we can deliver today."
     },
     {
-      question: "Do you handle permits for street placement?",
-      answer: "Yes, we can assist with permit applications for placing dumpsters on public property or streets."
+      question: "What sizes do you offer for residential dumpster rental San Diego?",
+      answer: "We offer 10 yard, 17 yard, and 21 yard containers for residential dumpster rental San Diego. Most homeowners choose our 17-yard for garage cleanouts and renovations. Need help choosing? Our team will recommend the right affordable dumpster rental San Diego for your project."
     },
     {
-      question: "What materials can I put in the dumpster?",
-      answer: "We accept most construction debris, household items, and general waste. Hazardous materials and certain items may have restrictions."
+      question: "Do you offer commercial dumpster rental and commercial trash dumpsters?",
+      answer: "Yes! We provide commercial dumpster rental for businesses throughout San Diego County. Our commercial trash dumpsters are available for restaurants, retail stores, offices, and construction sites with flexible pickup schedules."
     },
     {
-      question: "How long can I keep the dumpster?",
-      answer: "We offer flexible rental periods to suit your project needs. Standard rentals are typically 7-14 days, but we can accommodate longer periods."
+      question: "What can I put in a garbage dumpster rental?",
+      answer: "Our garbage dumpster rental accepts household junk, furniture, appliances, construction debris, yard waste, and more. We also offer specialized dump trailer rental for concrete, dirt, and heavy materials. Hazardous waste restrictions apply."
     },
     {
-      question: "What areas do you serve?",
-      answer: "We proudly serve San Diego County and surrounding communities."
+      question: "Do you provide junk removal services San Diego?",
+      answer: "Yes! Beyond dumpster rental in San Diego, we offer full junk removal services San Diego. Our team handles loading and hauling for furniture, appliances, yard debris, and more. Call (760) 270-0312 for waste management San Diego solutions."
     }
   ]
 
@@ -330,8 +330,8 @@ export function ContactPageSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    "name": "Contact SD Dumping Solutions",
-    "description": "Contact SD Dumping Solutions for professional waste management services. Get free quotes, schedule pickups, or get support.",
+    "name": "Contact SD Dumping Solutions - Dumpster Rental San Diego Quote",
+    "description": "Get a free dumpster rental San Diego quote! Call (760) 270-0312 for same day dumpster rental, roll off dumpster rental San Diego, residential dumpster rental, and commercial dumpster rental. Affordable pricing, fast response.",
     "url": "https://sddumps.com/contact",
     "mainEntity": {
       "@id": "https://sddumps.com/#organization"
@@ -350,8 +350,8 @@ export function AboutPageSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "AboutPage",
-    "name": "About SD Dumping Solutions",
-    "description": "Learn about SD Dumping Solutions, a trusted waste management company with over 10 years of experience providing professional dumpster rental services in San Diego.",
+    "name": "About SD Dumping Solutions - San Diego Dumpster Rental Company",
+    "description": "Learn about SD Dumping Solutions, San Diego's trusted dumpster rental company. We provide affordable dumpster rental San Diego, same day dumpster rental, residential dumpster rental, commercial dumpster rental, and junk removal services San Diego.",
     "url": "https://sddumps.com/about",
     "mainEntity": {
       "@id": "https://sddumps.com/#organization"
@@ -371,8 +371,8 @@ export function BookingPageSchema() {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "@id": "https://sddumps.com/booking#webpage",
-    "name": "Book Container Rental",
-    "description": "Book your container rental online. Get instant quotes, choose your delivery date, and schedule professional waste management services in San Diego.",
+    "name": "Book Dumpster Rental San Diego - Same Day Delivery Available",
+    "description": "Book your dumpster rental San Diego online. Get instant quotes for affordable dumpster rental, roll off dumpster rental San Diego, residential dumpster rental, and construction dumpster rental. Same day dumpster rental San Diego available!",
     "url": "https://sddumps.com/booking",
     "isPartOf": {
       "@id": "https://sddumps.com/#website"
@@ -392,7 +392,7 @@ export function BookingPageSchema() {
       },
       "result": {
         "@type": "Reservation",
-        "name": "Container Rental Reservation"
+        "name": "Dumpster Rental San Diego Reservation"
       }
     },
     "breadcrumb": {
@@ -427,11 +427,12 @@ export function LocalBusinessWithReviewsSchema() {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": "https://sddumps.com/#localbusiness",
-    "name": "SD Dumping Solutions",
+    "name": "SD Dumping Solutions - Dumpster Rental San Diego",
     "image": "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo.png",
     "telephone": "+1-760-270-0312",
     "email": "sandiegodumpingsolutions@gmail.com",
     "url": "https://sddumps.com",
+    "description": "Affordable dumpster rental San Diego with same day delivery. Roll off dumpster rental, residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services San Diego.",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "San Diego",
@@ -479,7 +480,7 @@ export function LocalBusinessWithReviewsSchema() {
           "ratingValue": "5",
           "bestRating": "5"
         },
-        "reviewBody": "Excellent service! The dumpster was delivered on time and picked up exactly when promised. Very professional team."
+        "reviewBody": "Best dumpster rental San Diego! Same day delivery as promised. The roll off dumpster rental was perfect for my construction project. Affordable pricing and great service!"
       },
       {
         "@type": "Review",
@@ -493,7 +494,7 @@ export function LocalBusinessWithReviewsSchema() {
           "ratingValue": "5",
           "bestRating": "5"
         },
-        "reviewBody": "Great prices and fantastic customer service. They helped me choose the right size for my renovation project."
+        "reviewBody": "Used SD Dumping Solutions for residential dumpster rental San Diego. Cheap dumpster rental prices and they helped me pick the right size for my garage cleanout. Highly recommend!"
       },
       {
         "@type": "Review",
@@ -507,7 +508,7 @@ export function LocalBusinessWithReviewsSchema() {
           "ratingValue": "5",
           "bestRating": "5"
         },
-        "reviewBody": "Used SD Dumping Solutions for my construction project. Reliable, affordable, and easy to work with. Highly recommend!"
+        "reviewBody": "Needed construction dumpster rental San Diego for my remodel. SD Dumping Solutions delivered on time and the cost of dumpster rental was very reasonable. Best waste management San Diego!"
       }
     ]
   }

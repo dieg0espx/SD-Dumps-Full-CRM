@@ -11,40 +11,47 @@ import { Badge } from '@/components/ui/badge'
 import { ServiceSchema, BreadcrumbSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
-  title: 'Waste Management Services | Container Rental Solutions',
-  description: 'Professional waste management services including residential dumpster rental, commercial waste solutions, construction debris removal, and yard waste disposal in San Diego.',
+  title: 'Dumpster Rental Services San Diego | Roll Off, Residential & Commercial | SD Dumping Solutions',
+  description: 'Full-service dumpster rental San Diego: residential dumpster rental, commercial dumpster rental, construction dumpster rental, junk removal services, and dump trailer rental. Same day delivery. Call (760) 270-0312!',
   keywords: [
-    'waste management services',
-    'residential dumpster rental',
-    'commercial waste solutions',
-    'construction debris removal',
-    'yard waste disposal',
-    'demolition waste',
-    'landscaping debris',
-    'San Diego waste management'
+    'dumpster rental san diego',
+    'san diego dumpster rental',
+    'residential dumpster rental san diego',
+    'commercial dumpster rental',
+    'commercial trash dumpsters',
+    'construction dumpster rental san diego',
+    'roll off dumpster rental san diego',
+    'junk removal services san diego',
+    'garbage dumpster rental',
+    'dump trailer rental',
+    'same day dumpster rental san diego',
+    'affordable dumpster rental san diego',
+    'waste management san diego',
+    '10 yard dumpster rental',
+    'small dumpster rental near me'
   ],
-      openGraph: {
-      title: 'Waste Management Services | Container Rental Solutions',
-      description: 'Professional waste management services including residential dumpster rental, commercial waste solutions, construction debris removal, and yard waste disposal in San Diego.',
-      url: 'https://sddumps.com/services',
-      siteName: 'SD Dumping Solutions',
-      images: [
-        {
-          url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
-          width: 1200,
-          height: 630,
-          alt: 'SD Dumping Solutions Waste Management Services',
-        },
-      ],
-      locale: 'en_US',
-      type: 'website',
-    },
-      twitter: {
-      card: 'summary_large_image',
-      title: 'Waste Management Services | Container Rental Solutions',
-      description: 'Professional waste management services including residential dumpster rental, commercial waste solutions, and construction debris removal.',
-      images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
-    },
+  openGraph: {
+    title: 'Dumpster Rental Services San Diego | Roll Off, Residential & Commercial',
+    description: 'Full-service dumpster rental San Diego: residential, commercial, construction. Same day delivery available. Call (760) 270-0312!',
+    url: 'https://sddumps.com/services',
+    siteName: 'SD Dumping Solutions',
+    images: [
+      {
+        url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
+        width: 1200,
+        height: 630,
+        alt: 'San Diego Dumpster Rental Services - Roll Off Containers',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Dumpster Rental Services San Diego | SD Dumping Solutions',
+    description: 'Residential, commercial & construction dumpster rental San Diego. Same day delivery. Affordable pricing.',
+    images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
+  },
   alternates: {
     canonical: '/services',
   },
@@ -79,18 +86,18 @@ export default function Services() {
         <section className="container mx-auto px-4 py-24 lg:py-32">
           <div className="mx-auto max-w-4xl text-center">
             <Badge variant="secondary" className="mb-4 bg-main/10 text-main border-main/20">
-              Professional Waste Management
+              Dumpster Rental San Diego
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Our <span className="text-main">Waste Management</span> Services
+              San Diego <span className="text-main">Dumpster Rental</span> Services
             </h1>
             <p className="mt-6 text-lg leading-8 text-muted-foreground">
-              Professional dumpster rental and waste management solutions for every project type and size.
+              Complete dumpster rental San Diego services: residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services San Diego. Same day dumpster rental available!
             </p>
             <p className="mt-4 text-lg leading-8 text-muted-foreground">
-              From small residential cleanouts to large commercial construction projects.
+              From small dumpster rental near me for home cleanouts to large roll off dumpster rental San Diego for major construction — we have the right solution.
             </p>
-            
+
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Button asChild size="lg" className="bg-main hover:bg-main/90">
                 <Link href="/booking">
@@ -99,7 +106,7 @@ export default function Services() {
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <Link href="/contact">
-                  Contact Us
+                  Call (760) 270-0312
                 </Link>
               </Button>
             </div>
@@ -112,37 +119,37 @@ export default function Services() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <Badge variant="outline" className="border-main text-main">
-                  Our Process
+                  Easy Dumpster Rental
                 </Badge>
                 <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                  Simple Process, <span className="text-main">Professional Results</span>
+                  How Our <span className="text-main">San Diego Dumpster Rental</span> Works
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                  Our streamlined process makes it easy to get the waste management solutions you need, when you need them.
+                  Getting affordable dumpster rental San Diego is easy. Our simple 4-step process gets you a roll off dumpster when you need it — including same day dumpster rental San Diego.
                 </p>
               </div>
-              
+
               <div className="space-y-6">
                 {[
                   {
                     step: "1",
-                    title: "Get a Quote",
-                    description: "Contact us for a free quote based on your project needs and timeline."
+                    title: "Get Your Free Quote",
+                    description: "Call (760) 270-0312 or book online. We'll help you find the right size — from 10 yard dumpster rental to large construction containers."
                   },
                   {
-                    step: "2", 
-                    title: "Schedule Delivery",
-                    description: "Choose your delivery date and container size. Same-day delivery available."
+                    step: "2",
+                    title: "Same Day Dumpster Delivery",
+                    description: "Pick your delivery date. Need it today? Same day dumpster rental San Diego available for orders placed before 2 PM."
                   },
                   {
                     step: "3",
-                    title: "Fill & Use", 
-                    description: "Use the container for your project duration with flexible rental periods."
+                    title: "Fill Your Dumpster",
+                    description: "Load your garbage dumpster rental at your pace. Standard rental is 3 days — extend if needed with flexible daily rates."
                   },
                   {
                     step: "4",
-                    title: "Professional Pickup",
-                    description: "We handle pickup and proper disposal when you're finished."
+                    title: "We Pick Up & Haul Away",
+                    description: "Call when you're done. Our waste management San Diego team handles pickup and responsible disposal."
                   }
                 ].map((item) => (
                   <div key={item.step} className="flex gap-4">
@@ -157,12 +164,12 @@ export default function Services() {
                 ))}
               </div>
             </div>
-            
+
             <div className="flex items-center justify-center">
               <div className="relative">
                 <Image
                   src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
-                  alt="Professional dumpster services"
+                  alt="Roll off dumpster rental San Diego - Same day delivery available"
                   width={500}
                   height={400}
                   className="rounded-lg object-cover"
@@ -178,37 +185,37 @@ export default function Services() {
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <Badge variant="secondary" className="mb-4 bg-main/10 text-main border-main/20">
-                Additional Services
+                Full Service Waste Management San Diego
               </Badge>
               <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Comprehensive Support Services
+                More Than Just Dumpster Rental
               </h2>
               <p className="mt-6 text-lg text-muted-foreground">
-                Make your waste management project as smooth as possible with our additional support services.
+                Beyond roll off dumpster rental San Diego, we offer complete junk removal services San Diego and waste management solutions.
               </p>
             </div>
-            
+
             <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 {
                   icon: Clock,
-                  title: "Same-Day Delivery",
-                  description: "Need a dumpster today? We offer same-day delivery for urgent projects and last-minute needs."
+                  title: "Same Day Dumpster Rental",
+                  description: "Need a dumpster today in San Diego? Same day dumpster rental San Diego available for orders before 2 PM. Fast, reliable delivery."
                 },
                 {
                   icon: Truck,
-                  title: "Professional Pickup",
-                  description: "Scheduled pickup service with professional drivers and modern equipment for safe, efficient service."
+                  title: "Junk Removal Services",
+                  description: "Full junk removal services San Diego — we load and haul furniture, appliances, yard debris, and more. You don't lift a finger."
                 },
                 {
                   icon: Award,
-                  title: "Recycling Programs",
-                  description: "Environmentally responsible disposal with recycling options for appropriate materials and waste streams."
+                  title: "Dump Trailer Rental",
+                  description: "Need a dump trailer rental for heavy materials? We offer specialized containers for concrete, dirt, and construction debris."
                 },
                 {
                   icon: Shield,
                   title: "Permit Assistance",
-                  description: "Help navigating local permits and regulations for dumpster placement on public property or streets."
+                  description: "Need your dumpster on the street? We help navigate San Diego permits and regulations for public placement."
                 }
               ].map((service) => (
                 <Card key={service.title} className="text-center">
@@ -231,41 +238,41 @@ export default function Services() {
         <section className="container mx-auto px-4 py-24 lg:py-32">
           <div className="mx-auto max-w-3xl text-center">
             <Badge variant="secondary" className="mb-4 bg-main/10 text-main border-main/20">
-              Service Categories
+              Dumpster Rental Services
             </Badge>
             <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Specialized Solutions
+              Dumpster Rental San Diego for Every Project
             </h2>
             <p className="mt-6 text-lg text-muted-foreground">
-              Tailored to different project types and requirements.
+              From small dumpster rental near me for garage cleanouts to large construction dumpster rental San Diego — find the right size and service.
             </p>
           </div>
-          
+
           <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2">
             {[
               {
                 icon: Home,
-                title: "Residential Dumpster Rental",
-                description: "Perfect for home renovations, cleanouts, and landscaping projects. Available in multiple sizes to fit your needs.",
-                features: ["10-40 yard containers", "Flexible rental periods", "Same-day delivery", "Homeowner-friendly pricing"]
+                title: "Residential Dumpster Rental San Diego",
+                description: "Affordable dumpster rental San Diego for homeowners. Perfect for cleanouts, garage clearing, moving, and home renovations. Small dumpster rental near me available!",
+                features: ["10 yard dumpster rental for small jobs", "2 yard dumpster rental near me available", "Same day dumpster rental San Diego", "Cheap dumpster rental San Diego pricing"]
               },
               {
                 icon: Building,
-                title: "Commercial Waste Solutions",
-                description: "Comprehensive waste management for businesses, retail locations, and office buildings with scheduled pickups.",
-                features: ["Regular pickup schedules", "Multiple container sizes", "Recycling programs", "Commercial pricing"]
+                title: "Commercial Dumpster Rental",
+                description: "Commercial trash dumpsters for businesses, restaurants, retail stores, and office buildings. Regular pickup schedules and commercial dumpster rental contracts available.",
+                features: ["Commercial trash dumpsters all sizes", "Regular scheduled pickups", "Garbage dumpster rental contracts", "Waste management San Diego for business"]
               },
               {
                 icon: Wrench,
-                title: "Construction & Demolition",
-                description: "Heavy-duty containers for construction debris, renovation waste, and demolition projects of any size.",
-                features: ["Heavy debris handling", "Large capacity containers", "Job site delivery", "Permit assistance"]
+                title: "Construction Dumpster Rental San Diego",
+                description: "Heavy-duty roll off dumpster rental San Diego for construction sites, remodels, roofing projects, and demolition. The construction dumpster rental contractors trust.",
+                features: ["Roll off dumpster rental San Diego", "Heavy debris & construction waste", "Large capacity containers", "Job site delivery & pickup"]
               },
               {
                 icon: Leaf,
-                title: "Yard Waste & Landscaping",
-                description: "Specialized containers for yard waste, tree trimming, and landscaping debris with eco-friendly disposal.",
-                features: ["Organic waste disposal", "Seasonal availability", "Environmentally responsible", "Compost programs"]
+                title: "Junk Removal Services San Diego",
+                description: "Full-service junk removal services San Diego. We load and haul away furniture, appliances, yard waste, and more. Garbage dumpster rental or full-service — you choose!",
+                features: ["Junk removal services San Diego", "Yard waste & landscaping debris", "Furniture & appliance removal", "Dump trailer rental for heavy loads"]
               }
             ].map((service) => (
               <Card key={service.title} className="overflow-hidden">
@@ -300,10 +307,10 @@ export default function Services() {
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Ready to Get Started?
+                Get Your San Diego Dumpster Rental Today
               </h2>
               <p className="mt-6 text-lg text-muted-foreground">
-                Choose the right dumpster for your project and get professional waste management service you can count on.
+                Ready for affordable dumpster rental San Diego? Whether you need residential dumpster rental San Diego, commercial trash dumpsters, or construction dumpster rental — call (760) 270-0312 or book online. Same day dumpster rental San Diego available!
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                                  <Button asChild size="lg" className="bg-main hover:bg-main/90">
@@ -312,8 +319,8 @@ export default function Services() {
                    </Link>
                  </Button>
                 <Button variant="outline" size="lg" asChild>
-                  <Link href="/about">
-                    Learn More About Us
+                  <Link href="/contact">
+                    Call (760) 270-0312
                   </Link>
                 </Button>
               </div>
