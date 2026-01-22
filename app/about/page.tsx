@@ -77,44 +77,32 @@ export default function About() {
         {/* About Us Section */}
         <section className="py-12 sm:py-16 lg:py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-8 lg:gap-10 items-center">
-                             <div className="order-1">
-                 <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 text-center lg:text-left">
-                   San Diego's Trusted<br />
-                   <span className="text-main">Dumpster Rental Company</span>
-                 </h1>
-                <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-                  For over a decade, SD Dumping Solutions has been San Diego's go-to provider for affordable dumpster rental. We offer residential dumpster rental San Diego, commercial dumpster rental, construction dumpster rental San Diego, and comprehensive waste management San Diego services to homeowners, contractors, and businesses.
-                </p>
+            <div className="max-w-4xl mx-auto text-center">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
+                San Diego's Trusted<br />
+                <span className="text-main">Dumpster Rental Company</span>
+              </h1>
+              <p className="text-base sm:text-lg text-gray-600 mb-8 sm:mb-10">
+                For over a decade, SD Dumping Solutions has been San Diego's go-to provider for affordable dumpster rental. We offer residential dumpster rental San Diego, commercial dumpster rental, construction dumpster rental San Diego, and comprehensive waste management San Diego services to homeowners, contractors, and businesses.
+              </p>
 
-                <div className="grid grid-cols-2 gap-4 sm:gap-6 mx-auto w-fit">
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-400 mb-1 sm:mb-2">10+</div>
-                    <div className="text-xs sm:text-sm lg:text-base text-gray-600">Years in San Diego</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-400 mb-1 sm:mb-2">99%</div>
-                    <div className="text-xs sm:text-sm lg:text-base text-gray-600">Customer Satisfaction</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-400 mb-1 sm:mb-2">5000+</div>
-                    <div className="text-xs sm:text-sm lg:text-base text-gray-600">Dumpsters Delivered</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-400 mb-1 sm:mb-2">24/7</div>
-                    <div className="text-xs sm:text-sm lg:text-base text-gray-600">Same Day Service</div>
-                  </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-main mb-1 sm:mb-2">10+</div>
+                  <div className="text-xs sm:text-sm lg:text-base text-gray-600">Years in San Diego</div>
                 </div>
-              </div>
-
-              <div className="order-2 flex justify-center">
-                <Image
-                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster.png"
-                  alt="San Diego dumpster rental - Roll off containers for residential and commercial projects"
-                  width={500}
-                  height={400}
-                  className="rounded-lg w-full max-w-md lg:max-w-none"
-                />
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-main mb-1 sm:mb-2">5000+</div>
+                  <div className="text-xs sm:text-sm lg:text-base text-gray-600">Dumpsters Delivered</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-main mb-1 sm:mb-2">99%</div>
+                  <div className="text-xs sm:text-sm lg:text-base text-gray-600">Customer Satisfaction</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-main mb-1 sm:mb-2">24/7</div>
+                  <div className="text-xs sm:text-sm lg:text-base text-gray-600">Same Day Service</div>
+                </div>
               </div>
             </div>
           </div>
