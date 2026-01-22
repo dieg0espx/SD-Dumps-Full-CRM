@@ -42,6 +42,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname !== "/about" &&
     request.nextUrl.pathname !== "/services" &&
     request.nextUrl.pathname !== "/contact" &&
+    !request.nextUrl.pathname.startsWith("/service-areas") &&
     // Allow unauthenticated access to booking entry and guest booking
     !request.nextUrl.pathname.startsWith("/booking") &&
     !request.nextUrl.pathname.startsWith("/guest-booking") &&

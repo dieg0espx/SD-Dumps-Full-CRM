@@ -157,11 +157,11 @@ export default async function CityPage({ params }: CityPageProps) {
             </div>
             <div className="relative">
               <Image
-                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster.png"
+                src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107601/IMG_0151_fbcaue.heic"
                 alt={`Dumpster delivery in ${city.name}`}
                 width={600}
                 height={400}
-                className="rounded-xl"
+                className="rounded-xl object-cover"
               />
             </div>
           </div>

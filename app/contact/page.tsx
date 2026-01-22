@@ -77,15 +77,25 @@ export default function Contact() {
       <div className="min-h-screen bg-white">
         <Header />
       
-      <div className="pt-16">
+      <div>
         {/* Hero Section */}
-        <section className="py-12 sm:py-16 lg:py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-20 lg:pb-24">
+          {/* Background Image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: "url('https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107609/IMG_2592_ni693c.heic')"
+            }}
+          />
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-black/70" />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
                 Get Your San Diego Dumpster Rental Quote
               </h1>
-              <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+              <p className="text-lg sm:text-xl text-gray-200 max-w-3xl mx-auto">
                 Ready for affordable dumpster rental San Diego? Get a free quote for roll off dumpster rental, residential dumpster rental San Diego, or commercial dumpster rental. Same day dumpster rental San Diego available — call (760) 270-0312!
               </p>
             </div>

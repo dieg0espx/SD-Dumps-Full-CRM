@@ -22,7 +22,11 @@
       "Bash(kill:*)",
       "Bash(npx tsc:*)",
       "Bash(timeout 15 npm run dev:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(node -e:*)",
+      "Bash(head:*)",
+      "Bash(git merge:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []

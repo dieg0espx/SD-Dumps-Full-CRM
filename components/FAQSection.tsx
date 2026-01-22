@@ -37,7 +37,7 @@ export default function FAQSection() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 sm:mb-16">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
             Dumpster Rental San Diego FAQ
           </h2>
@@ -48,11 +48,11 @@ export default function FAQSection() {
 
         <Accordion type="single" collapsible className="w-full">
           {faqData.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`} className="border border-gray-200 rounded-lg mb-4">
-              <AccordionTrigger className="px-6 py-4 text-left font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+            <AccordionItem key={index} value={`item-${index}`} className={`border border-gray-200 rounded-lg mb-3 sm:mb-4 hover:shadow-md transition-all duration-300 animate-fade-in-up delay-${(index + 1) * 100}`}>
+              <AccordionTrigger className="px-4 sm:px-6 py-3 sm:py-4 text-left font-semibold text-gray-900 hover:bg-gray-50 transition-colors text-sm sm:text-base">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4 text-gray-600">
+              <AccordionContent className="px-4 sm:px-6 pb-3 sm:pb-4 text-gray-600 text-sm sm:text-base">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>

@@ -6,7 +6,7 @@ export default function Testimonials() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 sm:mb-16">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
             San Diego Dumpster Rental Reviews
           </h2>
@@ -16,7 +16,7 @@ export default function Testimonials() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm">
+          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up delay-200">
             <div className="flex items-center mb-4">
               <Image
                 src="https://randomuser.me/api/portraits/men/32.jpg"
@@ -40,7 +40,7 @@ export default function Testimonials() {
             </p>
           </div>
 
-          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm">
+          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up delay-400">
             <div className="flex items-center mb-4">
               <Image
                 src="https://randomuser.me/api/portraits/women/44.jpg"
@@ -64,7 +64,7 @@ export default function Testimonials() {
             </p>
           </div>
 
-          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm">
+          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-fade-in-up delay-600">
             <div className="flex items-center mb-4">
               <Image
                 src="https://randomuser.me/api/portraits/men/67.jpg"

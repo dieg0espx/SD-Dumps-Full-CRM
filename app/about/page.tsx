@@ -151,11 +151,11 @@ export default function About() {
 
               <div className="order-2 flex justify-center">
                 <Image
-                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster.png"
+                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107609/IMG_0405_fxcujh.heic"
                   alt="Affordable dumpster rental San Diego - Construction and residential roll off containers"
                   width={500}
                   height={400}
-                  className="rounded-lg w-full max-w-md lg:max-w-none"
+                  className="rounded-lg w-full max-w-md lg:max-w-none object-cover"
                 />
               </div>
             </div>
