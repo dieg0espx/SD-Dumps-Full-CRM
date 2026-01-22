@@ -30,7 +30,7 @@ export default function HeroSection() {
            </div>
           <div className="flex justify-center px-4">
             <Image
-              src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster"
+              src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/dumpster.png"
               alt="Affordable dumpster rental San Diego - Roll off container for residential and construction projects"
               width={900}
               height={400}
