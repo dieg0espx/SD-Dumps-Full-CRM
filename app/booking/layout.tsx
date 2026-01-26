@@ -2,22 +2,24 @@ import type { Metadata } from 'next'
 import { BookingPageSchema, BreadcrumbSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
-  title: 'Book Container Rental | Get Free Quote & Schedule',
-  description: 'Book your container rental online. Get instant quotes, choose your delivery date, and schedule professional waste management services in San Diego. Fast, reliable, and convenient.',
+  title: 'Book Dumpster Rental San Diego | Same Day Delivery | Free Quote',
+  description: 'Book your dumpster rental San Diego online. Same day delivery available! Get instant quotes for roll off containers, residential & commercial dumpster rental. Call (760) 270-0312.',
   keywords: [
-    'book container rental',
-    'dumpster rental booking',
-    'online booking',
-    'instant quote',
-    'schedule delivery',
-    'waste management booking',
-    'container rental quote',
-    'San Diego booking'
+    'dumpster rental san diego',
+    'book dumpster rental',
+    'same day dumpster rental san diego',
+    'roll off dumpster rental san diego',
+    'dumpster rental quote',
+    'residential dumpster rental san diego',
+    'commercial dumpster rental',
+    'construction dumpster rental san diego',
+    'cheap dumpster rental san diego',
+    'affordable dumpster rental san diego'
   ],
   openGraph: {
-    title: 'Book Container Rental | Get Free Quote & Schedule',
-    description: 'Book your container rental online. Get instant quotes, choose your delivery date, and schedule professional waste management services in San Diego.',
-    url: 'https://sddumps.com/booking',
+    title: 'Book Dumpster Rental San Diego | Same Day Delivery Available',
+    description: 'Book your dumpster rental San Diego online. Same day delivery! Roll off containers for residential & commercial projects. Call (760) 270-0312.',
+    url: 'https://www.sddumpingsolutions.com/booking',
     siteName: 'SD Dumping Solutions',
     images: [
       {
@@ -53,8 +55,8 @@ export const metadata: Metadata = {
 }
 
 const breadcrumbs = [
-  { name: 'Home', url: 'https://sddumps.com' },
-  { name: 'Booking', url: 'https://sddumps.com/booking' }
+  { name: 'Home', url: 'https://www.sddumpingsolutions.com' },
+  { name: 'Booking', url: 'https://www.sddumpingsolutions.com/booking' }
 ]
 
 export default function BookingLayout({

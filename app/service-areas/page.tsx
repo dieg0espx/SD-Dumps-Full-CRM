@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Service Areas | Dumpster Rental San Diego County | SD Dumping Solutions',
     description: 'Professional dumpster rental services throughout San Diego County. Same-day delivery available.',
-    url: 'https://sddumps.com/service-areas',
+    url: 'https://www.sddumpingsolutions.com/service-areas',
     siteName: 'SD Dumping Solutions',
     images: [
       {

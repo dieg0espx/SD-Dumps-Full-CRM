@@ -1,14 +1,16 @@
 import { MetadataRoute } from 'next'
+import { cities } from '@/lib/cities'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://sddumps.com'
+  const baseUrl = 'https://www.sddumpingsolutions.com'
 
   // Use specific dates for better SEO - update these when content changes
-  const lastContentUpdate = new Date('2025-01-15')
-  const servicesUpdate = new Date('2025-01-10')
-  const staticPagesUpdate = new Date('2025-01-01')
+  const lastContentUpdate = new Date('2025-01-26')
+  const servicesUpdate = new Date('2025-01-26')
+  const staticPagesUpdate = new Date('2025-01-26')
 
-  return [
+  // Core pages
+  const corePages: MetadataRoute.Sitemap = [
     // Homepage - Highest priority, frequently updated
     {
       url: baseUrl,
@@ -37,6 +39,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.85,
     },
+    // Service Areas main page - Important for local SEO
+    {
+      url: `${baseUrl}/service-areas`,
+      lastModified: lastContentUpdate,
+      changeFrequency: 'monthly',
+      priority: 0.85,
+    },
     // Contact - Important for local SEO
     {
       url: `${baseUrl}/contact`,
@@ -52,4 +61,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
   ]
+
+  // Generate service area city pages - Critical for local SEO
+  const cityPages: MetadataRoute.Sitemap = cities.map((city) => ({
+    url: `${baseUrl}/service-areas/${city.slug}`,
+    lastModified: lastContentUpdate,
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }))
+
+  return [...corePages, ...cityPages]
 }

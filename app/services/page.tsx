@@ -13,8 +13,8 @@ import SectionDivider from '@/components/SectionDivider'
 
 export default function Services() {
   const breadcrumbs = [
-    { name: 'Home', url: 'https://sddumps.com' },
-    { name: 'Services', url: 'https://sddumps.com/services' }
+    { name: 'Home', url: 'https://www.sddumpingsolutions.com' },
+    { name: 'Services', url: 'https://www.sddumpingsolutions.com/services' }
   ]
 
   const dumpsterSizes = [

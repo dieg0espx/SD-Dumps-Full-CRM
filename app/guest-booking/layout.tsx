@@ -2,21 +2,23 @@ import type { Metadata } from 'next'
 import { BreadcrumbSchema } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
-  title: 'Guest Booking | Book Without Account | SD Dumping Solutions',
-  description: 'Book a container rental without creating an account. Quick and easy guest booking for dumpster rentals in San Diego. No registration required.',
+  title: 'Quick Dumpster Rental San Diego | Book Online Now | No Account Needed',
+  description: 'Book dumpster rental San Diego instantly - no account required! Same day delivery for roll off containers, residential dumpster rental, and construction dumpsters. Fast, easy online booking.',
   keywords: [
-    'guest booking',
-    'book without account',
+    'dumpster rental san diego',
     'quick dumpster rental',
-    'no registration booking',
-    'San Diego dumpster',
-    'fast container rental',
-    'easy waste management booking'
+    'book dumpster online',
+    'same day dumpster rental san diego',
+    'roll off dumpster rental san diego',
+    'residential dumpster rental san diego',
+    'construction dumpster rental san diego',
+    'fast dumpster delivery',
+    'affordable dumpster rental san diego'
   ],
   openGraph: {
-    title: 'Guest Booking | Book Without Account | SD Dumping Solutions',
-    description: 'Book a container rental without creating an account. Quick and easy guest booking for dumpster rentals in San Diego.',
-    url: 'https://sddumps.com/guest-booking',
+    title: 'Quick Dumpster Rental San Diego | Book Online - No Account Needed',
+    description: 'Book dumpster rental San Diego instantly! Same day delivery, no account required. Roll off containers for any project.',
+    url: 'https://www.sddumpingsolutions.com/guest-booking',
     siteName: 'SD Dumping Solutions',
     images: [
       {
@@ -52,8 +54,8 @@ export const metadata: Metadata = {
 }
 
 const breadcrumbs = [
-  { name: 'Home', url: 'https://sddumps.com' },
-  { name: 'Guest Booking', url: 'https://sddumps.com/guest-booking' }
+  { name: 'Home', url: 'https://www.sddumpingsolutions.com' },
+  { name: 'Guest Booking', url: 'https://www.sddumpingsolutions.com/guest-booking' }
 ]
 
 export default function GuestBookingLayout({

@@ -40,7 +40,10 @@
       "mcp__ahrefs__site-explorer-metrics",
       "mcp__ahrefs__site-explorer-organic-keywords",
       "mcp__ahrefs__site-explorer-organic-competitors",
-      "mcp__ahrefs__keywords-explorer-overview"
+      "mcp__ahrefs__keywords-explorer-overview",
+      "mcp__ahrefs__management-projects",
+      "mcp__ahrefs__site-explorer-domain-rating",
+      "mcp__ahrefs__serp-overview-serp-overview"
     ],
     "deny": [],
     "ask": []

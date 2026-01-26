@@ -33,7 +33,7 @@ export function OrganizationSchema() {
       type="organization"
       data={{
         name: 'SD Dumping Solutions',
-        url: 'https://sddumps.com',
+        url: 'https://www.sddumpingsolutions.com',
         logo: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
         description: 'Professional container rental services for construction, renovation, and waste management in San Diego.',
         address: {
@@ -64,7 +64,7 @@ export function LocalBusinessSchema() {
       data={{
         name: 'SD Dumping Solutions',
         description: 'Professional container rental and waste management services in San Diego County.',
-        url: 'https://sddumps.com',
+        url: 'https://www.sddumpingsolutions.com',
         telephone: '+1-760-270-0312',
         email: 'sandiegodumpingsolutions@gmail.com',
         address: {
@@ -150,7 +150,7 @@ export function WebsiteSchema() {
       type="website"
       data={{
         name: 'SD Dumping Solutions',
-        url: 'https://sddumps.com',
+        url: 'https://www.sddumpingsolutions.com',
         description: 'Professional container rental services for construction, renovation, and waste management in San Diego.',
         publisher: {
           '@type': 'Organization',
@@ -160,7 +160,7 @@ export function WebsiteSchema() {
           '@type': 'SearchAction',
           target: {
             '@type': 'EntryPoint',
-            urlTemplate: 'https://sddumps.com/search?q={search_term_string}',
+            urlTemplate: 'https://www.sddumpingsolutions.com/search?q={search_term_string}',
           },
           'query-input': 'required name=search_term_string',
         },

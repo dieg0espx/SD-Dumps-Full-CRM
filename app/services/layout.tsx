@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Dumpster Rental Services San Diego | Roll Off, Residential & Commercial',
     description: 'Full-service dumpster rental San Diego: residential, commercial, construction. Same day delivery available. Call (760) 270-0312!',
-    url: 'https://sddumps.com/services',
+    url: 'https://www.sddumpingsolutions.com/services',
     siteName: 'SD Dumping Solutions',
     images: [
       {

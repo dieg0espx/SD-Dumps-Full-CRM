@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Sign In | SD Dumping Solutions Account Access',
     description: 'Sign in to your SD Dumping Solutions account to manage your container rentals, view bookings, and access your payment history.',
-    url: 'https://sddumps.com/auth/login',
+    url: 'https://www.sddumpingsolutions.com/auth/login',
     siteName: 'SD Dumping Solutions',
     images: [
       {

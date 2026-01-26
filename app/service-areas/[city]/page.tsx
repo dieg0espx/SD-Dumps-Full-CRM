@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { MapPin, Phone, CheckCircle, ArrowRight, Truck, Clock, Shield, Star } from 'lucide-react'
 import { cities, getCityBySlug, getAllCitySlugs } from '@/lib/cities'
+import { ServiceAreaSchema, BreadcrumbSchema } from '@/components/JsonLd'
 
 interface CityPageProps {
   params: Promise<{ city: string }>
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
     openGraph: {
       title: `Dumpster Rental in ${city.name}, CA | SD Dumping Solutions`,
       description: `Professional dumpster rental services in ${city.name}, California. Same-day delivery and competitive pricing.`,
-      url: `https://sddumps.com/service-areas/${city.slug}`,
+      url: `https://www.sddumpingsolutions.com/service-areas/${city.slug}`,
       siteName: 'SD Dumping Solutions',
       images: [
         {
@@ -69,8 +70,22 @@ export default async function CityPage({ params }: CityPageProps) {
 
   const otherCities = cities.filter(c => c.slug !== city.slug).slice(0, 6)
 
+  const breadcrumbs = [
+    { name: 'Home', url: 'https://www.sddumpingsolutions.com' },
+    { name: 'Service Areas', url: 'https://www.sddumpingsolutions.com/service-areas' },
+    { name: city.name, url: `https://www.sddumpingsolutions.com/service-areas/${city.slug}` }
+  ]
+
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <ServiceAreaSchema
+        cityName={city.name}
+        citySlug={city.slug}
+        description={city.description}
+        zipCodes={city.zipCodes}
+      />
+      <BreadcrumbSchema items={breadcrumbs} />
+      <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-24 pb-16">
         <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/hero-bg')] opacity-10 bg-cover bg-center" />
@@ -384,5 +399,6 @@ export default async function CityPage({ params }: CityPageProps) {
         </div>
       </section>
     </div>
+    </>
   )
 }

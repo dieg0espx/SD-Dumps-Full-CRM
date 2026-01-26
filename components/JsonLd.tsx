@@ -2,11 +2,11 @@ export function OrganizationSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "@id": "https://sddumps.com/#organization",
+    "@id": "https://www.sddumpingsolutions.com/#organization",
     "name": "SD Dumping Solutions",
     "alternateName": ["San Diego Dumping Solutions", "San Diego Dumpster Rental", "SD Dumpster Rental"],
     "description": "Affordable dumpster rental San Diego with same day delivery. Roll off dumpster rental, residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services in San Diego County.",
-    "url": "https://sddumps.com",
+    "url": "https://www.sddumpingsolutions.com",
     "logo": {
       "@type": "ImageObject",
       "url": "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo.png",
@@ -113,18 +113,18 @@ export function WebSiteSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "@id": "https://sddumps.com/#website",
-    "url": "https://sddumps.com",
+    "@id": "https://www.sddumpingsolutions.com/#website",
+    "url": "https://www.sddumpingsolutions.com",
     "name": "SD Dumping Solutions - Dumpster Rental San Diego",
     "description": "Affordable dumpster rental San Diego with same day delivery. Roll off dumpster rental, residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services. Call (760) 270-0312 for cheap dumpster rental San Diego!",
     "publisher": {
-      "@id": "https://sddumps.com/#organization"
+      "@id": "https://www.sddumpingsolutions.com/#organization"
     },
     "potentialAction": {
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://sddumps.com/services?search={search_term_string}"
+        "urlTemplate": "https://www.sddumpingsolutions.com/services?search={search_term_string}"
       },
       "query-input": "required name=search_term_string"
     }
@@ -179,10 +179,10 @@ export function WebPageSchema({ title, description, url, breadcrumbs }: WebPageS
     "name": title,
     "description": description,
     "isPartOf": {
-      "@id": "https://sddumps.com/#website"
+      "@id": "https://www.sddumpingsolutions.com/#website"
     },
     "about": {
-      "@id": "https://sddumps.com/#organization"
+      "@id": "https://www.sddumpingsolutions.com/#organization"
     },
     "primaryImageOfPage": {
       "@type": "ImageObject",
@@ -215,7 +215,7 @@ export function ServiceSchema() {
     "@type": "Service",
     "serviceType": "Dumpster Rental San Diego",
     "provider": {
-      "@id": "https://sddumps.com/#organization"
+      "@id": "https://www.sddumpingsolutions.com/#organization"
     },
     "areaServed": {
       "@type": "City",
@@ -332,9 +332,9 @@ export function ContactPageSchema() {
     "@type": "ContactPage",
     "name": "Contact SD Dumping Solutions - Dumpster Rental San Diego Quote",
     "description": "Get a free dumpster rental San Diego quote! Call (760) 270-0312 for same day dumpster rental, roll off dumpster rental San Diego, residential dumpster rental, and commercial dumpster rental. Affordable pricing, fast response.",
-    "url": "https://sddumps.com/contact",
+    "url": "https://www.sddumpingsolutions.com/contact",
     "mainEntity": {
-      "@id": "https://sddumps.com/#organization"
+      "@id": "https://www.sddumpingsolutions.com/#organization"
     }
   }
 
@@ -352,9 +352,9 @@ export function AboutPageSchema() {
     "@type": "AboutPage",
     "name": "About SD Dumping Solutions - San Diego Dumpster Rental Company",
     "description": "Learn about SD Dumping Solutions, San Diego's trusted dumpster rental company. We provide affordable dumpster rental San Diego, same day dumpster rental, residential dumpster rental, commercial dumpster rental, and junk removal services San Diego.",
-    "url": "https://sddumps.com/about",
+    "url": "https://www.sddumpingsolutions.com/about",
     "mainEntity": {
-      "@id": "https://sddumps.com/#organization"
+      "@id": "https://www.sddumpingsolutions.com/#organization"
     }
   }
 
@@ -370,21 +370,21 @@ export function BookingPageSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": "https://sddumps.com/booking#webpage",
+    "@id": "https://www.sddumpingsolutions.com/booking#webpage",
     "name": "Book Dumpster Rental San Diego - Same Day Delivery Available",
     "description": "Book your dumpster rental San Diego online. Get instant quotes for affordable dumpster rental, roll off dumpster rental San Diego, residential dumpster rental, and construction dumpster rental. Same day dumpster rental San Diego available!",
-    "url": "https://sddumps.com/booking",
+    "url": "https://www.sddumpingsolutions.com/booking",
     "isPartOf": {
-      "@id": "https://sddumps.com/#website"
+      "@id": "https://www.sddumpingsolutions.com/#website"
     },
     "about": {
-      "@id": "https://sddumps.com/#organization"
+      "@id": "https://www.sddumpingsolutions.com/#organization"
     },
     "potentialAction": {
       "@type": "ReserveAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://sddumps.com/booking",
+        "urlTemplate": "https://www.sddumpingsolutions.com/booking",
         "actionPlatform": [
           "http://schema.org/DesktopWebPlatform",
           "http://schema.org/MobileWebPlatform"
@@ -402,13 +402,13 @@ export function BookingPageSchema() {
           "@type": "ListItem",
           "position": 1,
           "name": "Home",
-          "item": "https://sddumps.com"
+          "item": "https://www.sddumpingsolutions.com"
         },
         {
           "@type": "ListItem",
           "position": 2,
           "name": "Booking",
-          "item": "https://sddumps.com/booking"
+          "item": "https://www.sddumpingsolutions.com/booking"
         }
       ]
     }
@@ -426,12 +426,12 @@ export function LocalBusinessWithReviewsSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "@id": "https://sddumps.com/#localbusiness",
+    "@id": "https://www.sddumpingsolutions.com/#localbusiness",
     "name": "SD Dumping Solutions - Dumpster Rental San Diego",
     "image": "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/logo.png",
     "telephone": "+1-760-270-0312",
     "email": "sandiegodumpingsolutions@gmail.com",
-    "url": "https://sddumps.com",
+    "url": "https://www.sddumpingsolutions.com",
     "description": "Affordable dumpster rental San Diego with same day delivery. Roll off dumpster rental, residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services San Diego.",
     "address": {
       "@type": "PostalAddress",
@@ -511,6 +511,79 @@ export function LocalBusinessWithReviewsSchema() {
         "reviewBody": "Needed construction dumpster rental San Diego for my remodel. SD Dumping Solutions delivered on time and the cost of dumpster rental was very reasonable. Best waste management San Diego!"
       }
     ]
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  )
+}
+
+interface ServiceAreaSchemaProps {
+  cityName: string
+  citySlug: string
+  description: string
+  zipCodes: string[]
+}
+
+export function ServiceAreaSchema({ cityName, citySlug, description, zipCodes }: ServiceAreaSchemaProps) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": `Dumpster Rental ${cityName}`,
+    "name": `Dumpster Rental in ${cityName}, CA`,
+    "description": description,
+    "url": `https://www.sddumpingsolutions.com/service-areas/${citySlug}`,
+    "provider": {
+      "@type": "LocalBusiness",
+      "@id": "https://www.sddumpingsolutions.com/#organization",
+      "name": "SD Dumping Solutions",
+      "telephone": "+1-760-270-0312",
+      "email": "sandiegodumpingsolutions@gmail.com"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": cityName,
+      "addressRegion": "CA",
+      "addressCountry": "US",
+      "postalCode": zipCodes
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": `${cityName} Dumpster Rental Services`,
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Product",
+            "name": "17 Yard Dumpster",
+            "description": `17 yard roll off dumpster rental in ${cityName} - Perfect for home cleanouts and small renovations`
+          },
+          "price": "595",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Product",
+            "name": "21 Yard Dumpster",
+            "description": `21 yard roll off dumpster rental in ${cityName} - Ideal for construction and large projects`
+          },
+          "price": "695",
+          "priceCurrency": "USD"
+        }
+      ]
+    },
+    "availableChannel": {
+      "@type": "ServiceChannel",
+      "serviceType": "Same Day Delivery",
+      "serviceLocation": {
+        "@type": "Place",
+        "name": `${cityName}, CA`
+      }
+    }
   }
 
   return (
