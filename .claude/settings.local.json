@@ -35,7 +35,12 @@
       "Bash(claude mcp add:*)",
       "Bash(claude mcp remove:*)",
       "Bash(claude mcp:*)",
-      "Bash(npx tailwindcss --help:*)"
+      "Bash(npx tailwindcss --help:*)",
+      "mcp__ahrefs__doc",
+      "mcp__ahrefs__site-explorer-metrics",
+      "mcp__ahrefs__site-explorer-organic-keywords",
+      "mcp__ahrefs__site-explorer-organic-competitors",
+      "mcp__ahrefs__keywords-explorer-overview"
     ],
     "deny": [],
     "ask": []
