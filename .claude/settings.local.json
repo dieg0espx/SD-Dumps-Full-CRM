@@ -43,7 +43,22 @@
       "mcp__ahrefs__keywords-explorer-overview",
       "mcp__ahrefs__management-projects",
       "mcp__ahrefs__site-explorer-domain-rating",
-      "mcp__ahrefs__serp-overview-serp-overview"
+      "mcp__ahrefs__serp-overview-serp-overview",
+      "mcp__ahrefs__site-explorer-backlinks-stats",
+      "mcp__ahrefs__site-explorer-top-pages",
+      "mcp__ahrefs__site-explorer-refdomains",
+      "mcp__ahrefs__site-explorer-all-backlinks",
+      "mcp__ahrefs__keywords-explorer-volume-history",
+      "mcp__ahrefs__keywords-explorer-volume-by-country",
+      "mcp__ahrefs__keywords-explorer-matching-terms",
+      "mcp__ahrefs__keywords-explorer-related-terms",
+      "mcp__ahrefs__keywords-explorer-search-suggestions",
+      "mcp__ahrefs__rank-tracker-overview",
+      "mcp__ahrefs__batch-analysis-batch-analysis",
+      "mcp__ahrefs__site-explorer-metrics-history",
+      "mcp__ahrefs__site-explorer-domain-rating-history",
+      "mcp__ahrefs__site-explorer-anchors",
+      "mcp__ahrefs__site-explorer-linkeddomains"
     ],
     "deny": [],
     "ask": []
