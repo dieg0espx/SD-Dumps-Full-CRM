@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Dumpster Rental San Diego | Affordable Roll Off Container Rental | SD Dumping Solutions',
     description: 'Looking for affordable dumpster rental in San Diego? Same day delivery, competitive pricing, residential & commercial dumpster rental. Call (760) 270-0312!',
-    url: 'https://sddumps.com',
+    url: 'https://www.sddumpingsolutions.com',
     siteName: 'SD Dumping Solutions',
     images: [
       {

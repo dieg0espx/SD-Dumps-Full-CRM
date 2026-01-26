@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'About SD Dumping Solutions | San Diego Dumpster Rental Company',
     description: 'SD Dumping Solutions is San Diego\'s trusted dumpster rental company. 10+ years providing affordable dumpster rental, roll off containers, and waste management services.',
-    url: 'https://sddumps.com/about',
+    url: 'https://www.sddumpingsolutions.com/about',
     siteName: 'SD Dumping Solutions',
     images: [
       {
@@ -60,8 +60,8 @@ export const metadata: Metadata = {
 
 export default function About() {
   const breadcrumbs = [
-    { name: 'Home', url: 'https://sddumps.com' },
-    { name: 'About', url: 'https://sddumps.com/about' }
+    { name: 'Home', url: 'https://www.sddumpingsolutions.com' },
+    { name: 'About', url: 'https://www.sddumpingsolutions.com/about' }
   ]
 
   const stats = [

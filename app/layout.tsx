@@ -19,10 +19,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'SD Dumping Solutions - Professional Container Rental Services',
+    default: 'Dumpster Rental San Diego | Affordable Roll Off Containers | SD Dumping Solutions',
     template: '%s | SD Dumping Solutions'
   },
-  description: 'Professional container rental services for construction, renovation, and waste management. Fast delivery, competitive pricing, and reliable service across San Diego.',
+  description: 'Affordable dumpster rental San Diego with same day delivery. Roll off containers, residential & commercial dumpster rental, construction debris removal. Call (760) 270-0312 for a free quote!',
   keywords: [
     'container rental',
     'dumpster rental',
@@ -43,23 +43,23 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://sddumps.com'),
+  metadataBase: new URL('https://www.sddumpingsolutions.com'),
   alternates: {
     canonical: '/',
   },
       openGraph: {
       type: 'website',
       locale: 'en_US',
-      url: 'https://sddumps.com',
+      url: 'https://www.sddumpingsolutions.com',
       siteName: 'SD Dumping Solutions',
-      title: 'SD Dumping Solutions - Professional Container Rental Services',
-      description: 'Professional container rental services for construction, renovation, and waste management. Fast delivery, competitive pricing, and reliable service across San Diego.',
+      title: 'SD Dumping Solutions - Dumpster Rental San Diego',
+      description: 'Affordable dumpster rental San Diego with same day delivery. Roll off containers, residential & commercial dumpster rental. Call (760) 270-0312!',
       images: [
         {
           url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
           width: 1200,
           height: 630,
-          alt: 'SD Dumping Solutions - Professional Container Rental Services',
+          alt: 'SD Dumping Solutions - Dumpster Rental San Diego',
         },
       ],
     },
@@ -82,9 +82,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: 'your-google-verification-code',
-    yandex: 'your-yandex-verification-code',
-    yahoo: 'your-yahoo-verification-code',
+    google: '', // Add your Google Search Console verification code
   },
   category: 'construction services',
   classification: 'business',

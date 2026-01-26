@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Contact Us | San Diego Dumpster Rental Quote | SD Dumping Solutions',
     description: 'Get a free dumpster rental San Diego quote! Call (760) 270-0312 for same day delivery. Affordable residential & commercial dumpster rental.',
-    url: 'https://sddumps.com/contact',
+    url: 'https://www.sddumpingsolutions.com/contact',
     siteName: 'SD Dumping Solutions',
     images: [
       {
@@ -57,8 +57,8 @@ export const metadata: Metadata = {
 }
 
 const breadcrumbs = [
-  { name: 'Home', url: 'https://sddumps.com' },
-  { name: 'Contact', url: 'https://sddumps.com/contact' }
+  { name: 'Home', url: 'https://www.sddumpingsolutions.com' },
+  { name: 'Contact', url: 'https://www.sddumpingsolutions.com/contact' }
 ]
 
 export default function ContactLayout({

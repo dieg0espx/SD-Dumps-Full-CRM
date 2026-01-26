@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://sddumps.com'
+  const baseUrl = 'https://www.sddumpingsolutions.com'
 
   return {
     rules: [
@@ -15,6 +15,8 @@ export default function robots(): MetadataRoute.Robots {
           '/contact',
           '/booking',
           '/guest-booking',
+          '/service-areas',
+          '/service-areas/*',
         ],
         disallow: [
           '/admin/',
@@ -48,6 +50,8 @@ export default function robots(): MetadataRoute.Robots {
           '/contact',
           '/booking',
           '/guest-booking',
+          '/service-areas',
+          '/service-areas/*',
         ],
         disallow: [
           '/admin/',
@@ -72,6 +76,8 @@ export default function robots(): MetadataRoute.Robots {
           '/contact',
           '/booking',
           '/guest-booking',
+          '/service-areas',
+          '/service-areas/*',
         ],
         disallow: [
           '/admin/',
@@ -94,6 +100,8 @@ export default function robots(): MetadataRoute.Robots {
           '/about',
           '/services',
           '/contact',
+          '/service-areas',
+          '/service-areas/*',
           '/llms.txt',
         ],
         disallow: [
@@ -116,6 +124,8 @@ export default function robots(): MetadataRoute.Robots {
           '/about',
           '/services',
           '/contact',
+          '/service-areas',
+          '/service-areas/*',
           '/llms.txt',
         ],
         disallow: [
@@ -138,6 +148,8 @@ export default function robots(): MetadataRoute.Robots {
           '/about',
           '/services',
           '/contact',
+          '/service-areas',
+          '/service-areas/*',
         ],
         disallow: [
           '/admin/',
@@ -151,11 +163,21 @@ export default function robots(): MetadataRoute.Robots {
           '/chat/',
         ],
       },
-      // Disallow bad bots
+      // Allow AhrefsBot since you have Ahrefs analytics
       {
         userAgent: 'AhrefsBot',
-        disallow: ['/'],
+        allow: ['/'],
+        disallow: [
+          '/admin/',
+          '/api/',
+          '/auth/',
+          '/profile/',
+          '/bookings/',
+          '/payments/',
+          '/chat/',
+        ],
       },
+      // Disallow bad bots
       {
         userAgent: 'MJ12bot',
         disallow: ['/'],
