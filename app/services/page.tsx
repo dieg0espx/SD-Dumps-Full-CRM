@@ -1,72 +1,15 @@
+'use client'
+
 import React from 'react'
-import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Check, Truck, Clock, Shield, Users, Award, Phone, Calendar, Home, Building, Wrench, Leaf } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import {
+  Check, Truck, Clock, Shield, Award, Phone, Home, Building,
+  Wrench, Leaf, Star, ArrowRight, ChevronDown, Sparkles, MessageSquare,
+  Package, Ruler, CheckCircle, HelpCircle
+} from 'lucide-react'
 import { ServiceSchema, BreadcrumbSchema } from '@/components/JsonLd'
-
-export const metadata: Metadata = {
-  title: 'Dumpster Rental Services San Diego | Roll Off, Residential & Commercial | SD Dumping Solutions',
-  description: 'Full-service dumpster rental San Diego: residential dumpster rental, commercial dumpster rental, construction dumpster rental, junk removal services, and dump trailer rental. Same day delivery. Call (760) 270-0312!',
-  keywords: [
-    'dumpster rental san diego',
-    'san diego dumpster rental',
-    'residential dumpster rental san diego',
-    'commercial dumpster rental',
-    'commercial trash dumpsters',
-    'construction dumpster rental san diego',
-    'roll off dumpster rental san diego',
-    'junk removal services san diego',
-    'garbage dumpster rental',
-    'dump trailer rental',
-    'same day dumpster rental san diego',
-    'affordable dumpster rental san diego',
-    'waste management san diego',
-    '10 yard dumpster rental',
-    'small dumpster rental near me'
-  ],
-  openGraph: {
-    title: 'Dumpster Rental Services San Diego | Roll Off, Residential & Commercial',
-    description: 'Full-service dumpster rental San Diego: residential, commercial, construction. Same day delivery available. Call (760) 270-0312!',
-    url: 'https://sddumps.com/services',
-    siteName: 'SD Dumping Solutions',
-    images: [
-      {
-        url: 'https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png',
-        width: 1200,
-        height: 630,
-        alt: 'San Diego Dumpster Rental Services - Roll Off Containers',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Dumpster Rental Services San Diego | SD Dumping Solutions',
-    description: 'Residential, commercial & construction dumpster rental San Diego. Same day delivery. Affordable pricing.',
-    images: ['https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/sddumps/miniature.png'],
-  },
-  alternates: {
-    canonical: '/services',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-}
+import SectionDivider from '@/components/SectionDivider'
 
 export default function Services() {
   const breadcrumbs = [
@@ -74,267 +17,551 @@ export default function Services() {
     { name: 'Services', url: 'https://sddumps.com/services' }
   ]
 
+  const dumpsterSizes = [
+    {
+      size: '17',
+      name: '17 Yard Dumpster',
+      dimensions: '16\' x 7.5\' x 4.5\'',
+      ideal: 'Home cleanouts, garage clearing, small renovations',
+      holds: '~5 pickup truck loads',
+      price: '$595',
+      popular: false
+    },
+    {
+      size: '21',
+      name: '21 Yard Dumpster',
+      dimensions: '20\' x 7.5\' x 4.5\'',
+      ideal: 'Construction, remodels, roofing, commercial',
+      holds: '~7 pickup truck loads',
+      price: '$695',
+      popular: true
+    }
+  ]
+
+  const services = [
+    {
+      icon: Home,
+      title: "Residential Dumpster Rental",
+      description: "Perfect for homeowners tackling cleanouts, renovations, moving, or yard projects. Our residential dumpsters fit in your driveway and handle everything from old furniture to construction debris.",
+      features: ["Driveway-friendly sizes", "Same day delivery available", "3-day rental included", "Flexible pickup scheduling"],
+      image: "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107606/IMG_0211_huq8x0.heic"
+    },
+    {
+      icon: Building,
+      title: "Commercial Dumpster Rental",
+      description: "Keep your business running smoothly with reliable commercial waste solutions. We serve restaurants, retail stores, offices, and industrial facilities throughout San Diego.",
+      features: ["Scheduled regular pickups", "Multiple container sizes", "Volume discounts available", "24/7 service support"],
+      image: "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107609/IMG_0405_fxcujh.heic"
+    },
+    {
+      icon: Wrench,
+      title: "Construction Dumpster Rental",
+      description: "Heavy-duty roll-off containers built for job sites. Handle demolition debris, roofing materials, drywall, and more. Trusted by San Diego contractors.",
+      features: ["Heavy debris approved", "Job site delivery", "Extended rental options", "Weight-based pricing available"],
+      image: "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107608/IMG_0265_dkokq7.heic"
+    },
+    {
+      icon: Leaf,
+      title: "Junk Removal Services",
+      description: "Don't want to lift a finger? Our full-service junk removal team loads and hauls everything for you. Furniture, appliances, yard waste — we handle it all.",
+      features: ["We do all the loading", "Same day service", "Eco-friendly disposal", "Upfront pricing"],
+      image: "https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107606/IMG_0211_huq8x0.heic"
+    }
+  ]
+
+  const processSteps = [
+    {
+      number: "01",
+      title: "Get Your Free Quote",
+      description: "Call us or book online. Tell us about your project and we'll recommend the perfect dumpster size for your needs."
+    },
+    {
+      number: "02",
+      title: "Schedule Delivery",
+      description: "Pick a delivery date that works for you. Need it today? Same day delivery available for orders placed before 2 PM."
+    },
+    {
+      number: "03",
+      title: "Fill It Up",
+      description: "Take your time — standard rental includes 3 full days. Need more time? Flexible daily extensions available."
+    },
+    {
+      number: "04",
+      title: "We Haul It Away",
+      description: "When you're done, give us a call. We'll pick up and responsibly dispose of everything."
+    }
+  ]
+
+  const testimonials = [
+    {
+      name: "Mike Davis",
+      role: "General Contractor",
+      review: "Best construction dumpster rental in San Diego. Same day delivery and the price was right.",
+      rating: 5
+    },
+    {
+      name: "Sarah Martinez",
+      role: "Homeowner, La Jolla",
+      review: "Made my garage cleanout so easy. The dumpster fit perfectly in my driveway!",
+      rating: 5
+    }
+  ]
+
+  const faqs = [
+    {
+      question: "What size dumpster do I need?",
+      answer: "For small cleanouts or single room renovations, our 17-yard dumpster works great. For larger projects, remodels, or construction, the 21-yard is the most popular choice. Not sure? Call us and we'll help you choose!"
+    },
+    {
+      question: "How long can I keep the dumpster?",
+      answer: "Standard rental includes 3 days (72 hours). Need more time? No problem — extend for just $25/day. We're flexible and want to work with your schedule."
+    },
+    {
+      question: "Do you offer same day delivery?",
+      answer: "Yes! Same day dumpster delivery is available throughout San Diego County for orders placed before 2 PM. Just give us a call at (760) 270-0312."
+    },
+    {
+      question: "What can I put in the dumpster?",
+      answer: "Most household junk, construction debris, furniture, appliances, and yard waste are accepted. Hazardous materials, tires, and certain electronics require special handling. We'll explain everything when you book."
+    },
+    {
+      question: "Do I need a permit?",
+      answer: "If the dumpster is placed on your private property (driveway, yard), no permit is needed. For street placement, a city permit may be required. We can help guide you through the process."
+    }
+  ]
+
+  const [openFaq, setOpenFaq] = React.useState<number | null>(0)
+
   return (
     <>
       <ServiceSchema />
       <BreadcrumbSchema items={breadcrumbs} />
-      <div className="min-h-screen bg-background">
-        <Header />
-      
-      <div className="bg-background">
+      <div className="min-h-screen bg-white">
         {/* Hero Section */}
-        <section className="relative pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-20 lg:pb-24">
+        <section className="relative pt-28 sm:pt-32 lg:pt-40 pb-20 sm:pb-28 lg:pb-36 -mt-[88px] overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: "url('https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107609/IMG_0405_fxcujh.heic')" }}
           />
-          <div className="absolute inset-0 bg-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/80" />
+
+          {/* Decorative elements */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-main/20 rounded-full blur-3xl animate-pulse-soft" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse-soft" style={{ animationDelay: '1s' }} />
+
           <div className="relative z-10 container mx-auto px-4">
-          <div className="mx-auto max-w-4xl text-center">
-            <Badge variant="secondary" className="mb-4 bg-main/10 text-main border-main/20">
-              Dumpster Rental San Diego
-            </Badge>
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-              San Diego <span className="text-main">Dumpster Rental</span> Services
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-300">
-              Complete dumpster rental San Diego services: residential dumpster rental, commercial dumpster rental, construction dumpster rental, and junk removal services San Diego. Same day dumpster rental available!
-            </p>
-            <p className="mt-4 text-lg leading-8 text-gray-300">
-              From small dumpster rental near me for home cleanouts to large roll off dumpster rental San Diego for major construction — we have the right solution.
-            </p>
+            <div className="mx-auto max-w-4xl text-center">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 animate-fade-in-down border border-white/20">
+                <Sparkles className="w-4 h-4 text-main" />
+                <span className="text-main text-sm font-semibold">San Diego's Trusted Dumpster Rental</span>
+              </div>
 
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Button asChild size="lg" className="bg-main hover:bg-main/90">
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl animate-slide-up">
+                Dumpster Rental <span className="text-main">Services</span>
+              </h1>
+
+              <p className="mt-6 text-lg leading-8 text-gray-300 max-w-2xl mx-auto animate-slide-up delay-100">
+                From small home cleanouts to major construction projects — we have the right dumpster for every job. Same day delivery available throughout San Diego County.
+              </p>
+
+              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up delay-200">
                 <Link href="/booking">
-                  Get Free Quote
+                  <button className="group bg-main text-white px-8 py-4 rounded-2xl font-semibold shadow-glow hover:shadow-glow-lg hover:bg-main/90 transition-all duration-300 flex items-center gap-2 hover:-translate-y-1">
+                    Get Free Quote
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild className="bg-white border-white text-black hover:bg-gray-100">
-                <Link href="/contact">
-                  Call (760) 270-0312
-                </Link>
-              </Button>
-            </div>
-          </div>
-          </div>
-        </section>
-
-        {/* Simple Process Section */}
-        <section className="container mx-auto px-4 py-24 lg:py-32">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <Badge variant="outline" className="border-main text-main">
-                  Easy Dumpster Rental
-                </Badge>
-                <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                  How Our <span className="text-main">San Diego Dumpster Rental</span> Works
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Getting affordable dumpster rental San Diego is easy. Our simple 4-step process gets you a roll off dumpster when you need it — including same day dumpster rental San Diego.
-                </p>
+                <a href="tel:+17602700312">
+                  <button className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-2xl font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2">
+                    <Phone className="w-5 h-5" />
+                    (760) 270-0312
+                  </button>
+                </a>
               </div>
 
-              <div className="space-y-6">
-                {[
-                  {
-                    step: "1",
-                    title: "Get Your Free Quote",
-                    description: "Call (760) 270-0312 or book online. We'll help you find the right size — from 10 yard dumpster rental to large construction containers."
-                  },
-                  {
-                    step: "2",
-                    title: "Same Day Dumpster Delivery",
-                    description: "Pick your delivery date. Need it today? Same day dumpster rental San Diego available for orders placed before 2 PM."
-                  },
-                  {
-                    step: "3",
-                    title: "Fill Your Dumpster",
-                    description: "Load your garbage dumpster rental at your pace. Standard rental is 3 days — extend if needed with flexible daily rates."
-                  },
-                  {
-                    step: "4",
-                    title: "We Pick Up & Haul Away",
-                    description: "Call when you're done. Our waste management San Diego team handles pickup and responsible disposal."
-                  }
-                ].map((item) => (
-                  <div key={item.step} className="flex gap-4">
-                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-main text-white text-sm font-medium">
-                       {item.step}
-                     </div>
-                    <div className="space-y-1">
-                      <h3 className="font-semibold text-foreground">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                    </div>
+              {/* Trust badges */}
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-6 animate-fade-in-up delay-300">
+                <div className="flex items-center gap-2 text-white/80">
+                  <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-green-400" />
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center">
-              <div className="relative">
-                <Image
-                  src="https://res.cloudinary.com/dku1gnuat/image/upload/f_auto,q_auto/v1769107606/IMG_0211_huq8x0.heic"
-                  alt="Roll off dumpster rental San Diego - Same day delivery available"
-                  width={500}
-                  height={400}
-                  className="rounded-lg object-cover"
-                />
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-background/20 to-transparent" />
+                  <span className="text-sm">Same Day Delivery</span>
+                </div>
+                <div className="flex items-center gap-2 text-white/80">
+                  <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-green-400" />
+                  </div>
+                  <span className="text-sm">Transparent Pricing</span>
+                </div>
+                <div className="flex items-center gap-2 text-white/80">
+                  <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-green-400" />
+                  </div>
+                  <span className="text-sm">Locally Owned</span>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Bottom wave */}
+          <div className="absolute bottom-0 left-0 right-0">
+            <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" preserveAspectRatio="none">
+              <path d="M0 80L60 70C120 60 240 40 360 35C480 30 600 40 720 45C840 50 960 50 1080 45C1200 40 1320 30 1380 25L1440 20V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0Z" fill="white"/>
+            </svg>
+          </div>
         </section>
 
-        {/* Additional Services Section */}
-        <section className="bg-muted/50 py-24 lg:py-32">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-3xl text-center">
-              <Badge variant="secondary" className="mb-4 bg-main/10 text-main border-main/20">
-                Full Service Waste Management San Diego
-              </Badge>
-              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                More Than Just Dumpster Rental
+        {/* Dumpster Sizes Section */}
+        <section className="py-20 sm:py-28 lg:py-32 bg-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-main/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-main/10 rounded-full px-4 py-1.5 mb-6 animate-fade-in-down">
+                <Ruler className="w-4 h-4 text-main" />
+                <span className="text-main text-sm font-semibold">Dumpster Sizes</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+                Choose Your <span className="text-main">Perfect Size</span>
               </h2>
-              <p className="mt-6 text-lg text-muted-foreground">
-                Beyond roll off dumpster rental San Diego, we offer complete junk removal services San Diego and waste management solutions.
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Not sure which size you need? Our team can help you choose the right container for your project.
               </p>
             </div>
 
-            <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                {
-                  icon: Clock,
-                  title: "Same Day Dumpster Rental",
-                  description: "Need a dumpster today in San Diego? Same day dumpster rental San Diego available for orders before 2 PM. Fast, reliable delivery."
-                },
-                {
-                  icon: Truck,
-                  title: "Junk Removal Services",
-                  description: "Full junk removal services San Diego — we load and haul furniture, appliances, yard debris, and more. You don't lift a finger."
-                },
-                {
-                  icon: Award,
-                  title: "Dump Trailer Rental",
-                  description: "Need a dump trailer rental for heavy materials? We offer specialized containers for concrete, dirt, and construction debris."
-                },
-                {
-                  icon: Shield,
-                  title: "Permit Assistance",
-                  description: "Need your dumpster on the street? We help navigate San Diego permits and regulations for public placement."
-                }
-              ].map((service) => (
-                <Card key={service.title} className="text-center">
-                  <CardHeader>
-                                         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-main/10">
-                       <service.icon className="h-6 w-6 text-main" />
-                     </div>
-                    <CardTitle className="text-lg">{service.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{service.description}</p>
-                  </CardContent>
-                </Card>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {dumpsterSizes.map((dumpster, index) => (
+                <div
+                  key={dumpster.size}
+                  className={`relative rounded-3xl p-8 transition-all duration-300 hover:-translate-y-2 ${
+                    dumpster.popular
+                      ? 'bg-main text-white shadow-2xl shadow-main/30 hover:shadow-glow-lg'
+                      : 'bg-white border border-gray-200 shadow-card hover:shadow-card-hover'
+                  }`}
+                >
+                  {dumpster.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <div className="bg-white text-main px-4 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Most Popular
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-center mb-6">
+                    <div className={`text-6xl font-bold mb-2 ${dumpster.popular ? 'text-white' : 'text-gray-900'}`}>
+                      {dumpster.size}
+                      <span className="text-2xl font-normal ml-1">yard</span>
+                    </div>
+                    <div className={`text-lg font-medium ${dumpster.popular ? 'text-white/90' : 'text-gray-700'}`}>
+                      {dumpster.name}
+                    </div>
+                  </div>
+
+                  <div className={`space-y-4 mb-8 ${dumpster.popular ? 'text-white/90' : 'text-gray-600'}`}>
+                    <div className="flex items-center gap-3">
+                      <Package className={`w-5 h-5 ${dumpster.popular ? 'text-white/70' : 'text-main'}`} />
+                      <span className="text-sm">{dumpster.dimensions}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Truck className={`w-5 h-5 ${dumpster.popular ? 'text-white/70' : 'text-main'}`} />
+                      <span className="text-sm">{dumpster.holds}</span>
+                    </div>
+                    <p className={`text-sm ${dumpster.popular ? 'text-white/70' : 'text-gray-500'}`}>
+                      Ideal for: {dumpster.ideal}
+                    </p>
+                  </div>
+
+                  <div className="text-center mb-6">
+                    <div className={`text-4xl font-bold ${dumpster.popular ? 'text-white' : 'text-gray-900'}`}>
+                      {dumpster.price}
+                    </div>
+                    <div className={`text-sm ${dumpster.popular ? 'text-white/70' : 'text-gray-500'}`}>
+                      Includes 3 days & 2 tons
+                    </div>
+                  </div>
+
+                  <Link href="/booking">
+                    <button className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 ${
+                      dumpster.popular
+                        ? 'bg-white text-main hover:bg-gray-100 shadow-lg'
+                        : 'bg-main text-white hover:bg-main/90 shadow-glow hover:shadow-glow-lg'
+                    }`}>
+                      Book Now
+                    </button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center mt-10">
+              <p className="text-gray-500 text-sm">
+                Need a custom solution for concrete, dirt, or heavy debris?{' '}
+                <a href="tel:+17602700312" className="text-main font-semibold hover:underline">Call us for a quote</a>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section Divider */}
+        <SectionDivider type="tilt" fromColor="white" toColor="#f8fafc" />
+
+        {/* How It Works Section */}
+        <section className="py-20 sm:py-28 lg:py-32 bg-gray-50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-pattern opacity-40" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-main/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-main/10 rounded-full px-4 py-1.5 mb-6">
+                <Clock className="w-4 h-4 text-main" />
+                <span className="text-main text-sm font-semibold">Simple Process</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+                How It <span className="text-main">Works</span>
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Getting a dumpster has never been easier. Four simple steps from quote to cleanup.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {processSteps.map((step, index) => (
+                <div
+                  key={step.number}
+                  className="relative group"
+                >
+                  {/* Connector line */}
+                  {index < processSteps.length - 1 && (
+                    <div className="hidden lg:block absolute top-10 left-1/2 w-full h-0.5 bg-gradient-to-r from-main/50 to-main/20" />
+                  )}
+
+                  <div className="bg-white rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-2 relative z-10">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-main to-main/80 text-white text-xl font-bold flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      {step.number}
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">{step.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">{step.description}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Service Categories Section */}
-        <section className="container mx-auto px-4 py-24 lg:py-32">
-          <div className="mx-auto max-w-3xl text-center">
-            <Badge variant="secondary" className="mb-4 bg-main/10 text-main border-main/20">
-              Dumpster Rental Services
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Dumpster Rental San Diego for Every Project
-            </h2>
-            <p className="mt-6 text-lg text-muted-foreground">
-              From small dumpster rental near me for garage cleanouts to large construction dumpster rental San Diego — find the right size and service.
-            </p>
-          </div>
+        {/* Section Divider */}
+        <SectionDivider type="tilt" fromColor="#f8fafc" toColor="white" />
 
-          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2">
-            {[
-              {
-                icon: Home,
-                title: "Residential Dumpster Rental San Diego",
-                description: "Affordable dumpster rental San Diego for homeowners. Perfect for cleanouts, garage clearing, moving, and home renovations. Small dumpster rental near me available!",
-                features: ["10 yard dumpster rental for small jobs", "2 yard dumpster rental near me available", "Same day dumpster rental San Diego", "Cheap dumpster rental San Diego pricing"]
-              },
-              {
-                icon: Building,
-                title: "Commercial Dumpster Rental",
-                description: "Commercial trash dumpsters for businesses, restaurants, retail stores, and office buildings. Regular pickup schedules and commercial dumpster rental contracts available.",
-                features: ["Commercial trash dumpsters all sizes", "Regular scheduled pickups", "Garbage dumpster rental contracts", "Waste management San Diego for business"]
-              },
-              {
-                icon: Wrench,
-                title: "Construction Dumpster Rental San Diego",
-                description: "Heavy-duty roll off dumpster rental San Diego for construction sites, remodels, roofing projects, and demolition. The construction dumpster rental contractors trust.",
-                features: ["Roll off dumpster rental San Diego", "Heavy debris & construction waste", "Large capacity containers", "Job site delivery & pickup"]
-              },
-              {
-                icon: Leaf,
-                title: "Junk Removal Services San Diego",
-                description: "Full-service junk removal services San Diego. We load and haul away furniture, appliances, yard waste, and more. Garbage dumpster rental or full-service — you choose!",
-                features: ["Junk removal services San Diego", "Yard waste & landscaping debris", "Furniture & appliance removal", "Dump trailer rental for heavy loads"]
-              }
-            ].map((service) => (
-              <Card key={service.title} className="overflow-hidden">
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-main/10">
-                       <service.icon className="h-6 w-6 text-main" />
-                     </div>
-                    <div className="space-y-1">
-                      <CardTitle>{service.title}</CardTitle>
-                      <CardDescription>{service.description}</CardDescription>
+        {/* Services Grid Section */}
+        <section className="py-20 sm:py-28 lg:py-32 bg-white relative overflow-hidden">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-purple-500/5 rounded-full blur-3xl" />
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-main/10 rounded-full px-4 py-1.5 mb-6">
+                <Package className="w-4 h-4 text-main" />
+                <span className="text-main text-sm font-semibold">Our Services</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+                Dumpster Rental for <span className="text-main">Every Project</span>
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Whether you're a homeowner, business owner, or contractor — we've got you covered.
+              </p>
+            </div>
+
+            <div className="space-y-16">
+              {services.map((service, index) => (
+                <div
+                  key={service.title}
+                  className={`grid lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-dense' : ''}`}
+                >
+                  <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
+                    <div className="relative">
+                      <div className="absolute -inset-4 bg-gradient-to-tr from-main/20 to-purple-400/20 rounded-3xl blur-2xl" />
+                      <div className="relative aspect-[3/2] w-full overflow-hidden rounded-2xl shadow-professional-2xl">
+                        <Image
+                          src={service.image}
+                          alt={service.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {service.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                                                 <Check className="h-4 w-4 text-main" />
-                        <span className="text-sm text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
+
+                  <div className={index % 2 === 1 ? 'lg:col-start-1' : ''}>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-main/20 to-main/5 flex items-center justify-center">
+                        <service.icon className="w-7 h-7 text-main" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900">{service.title}</h3>
+                    </div>
+
+                    <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
+
+                    <ul className="space-y-3 mb-8">
+                      {service.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-4 h-4 text-green-600" />
+                          </div>
+                          <span className="text-gray-700">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Link href="/booking">
+                      <button className="group bg-main text-white px-6 py-3 rounded-xl font-semibold shadow-glow hover:shadow-glow-lg hover:bg-main/90 transition-all duration-300 flex items-center gap-2 hover:-translate-y-1">
+                        Get Started
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Call to Action Section */}
-        <section className="bg-muted/50 py-24 lg:py-32">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Get Your San Diego Dumpster Rental Today
-              </h2>
-              <p className="mt-6 text-lg text-muted-foreground">
-                Ready for affordable dumpster rental San Diego? Whether you need residential dumpster rental San Diego, commercial trash dumpsters, or construction dumpster rental — call (760) 270-0312 or book online. Same day dumpster rental San Diego available!
-              </p>
-              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                                 <Button asChild size="lg" className="bg-main hover:bg-main/90">
-                   <Link href="/booking">
-                     Get Free Quote
-                   </Link>
-                 </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link href="/contact">
-                    Call (760) 270-0312
-                  </Link>
-                </Button>
+        {/* Mini Testimonials */}
+        <section className="py-16 sm:py-20 bg-slate-900 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-4">
+                  <MessageSquare className="w-4 h-4 text-main" />
+                  <span className="text-main text-sm font-semibold">Customer Reviews</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                  Trusted by San Diego
+                </h3>
+                <div className="flex items-center gap-2">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <span className="text-white font-semibold">4.9/5</span>
+                  <span className="text-slate-400">from 200+ reviews</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                {testimonials.map((testimonial, index) => (
+                  <div
+                    key={index}
+                    className="bg-slate-800 rounded-2xl p-6 border border-slate-700 max-w-xs"
+                  >
+                    <div className="flex mb-3">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      ))}
+                    </div>
+                    <p className="text-slate-300 text-sm mb-4">"{testimonial.review}"</p>
+                    <div>
+                      <div className="text-white font-semibold text-sm">{testimonial.name}</div>
+                      <div className="text-slate-400 text-xs">{testimonial.role}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
-      </div>
+
+        {/* FAQ Section */}
+        <section className="py-20 sm:py-28 lg:py-32 bg-white relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-main/5 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2" />
+
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-main/10 rounded-full px-4 py-1.5 mb-6">
+                <HelpCircle className="w-4 h-4 text-main" />
+                <span className="text-main text-sm font-semibold">FAQ</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+                Common <span className="text-main">Questions</span>
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Got questions? We've got answers. If you don't see what you're looking for, give us a call.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {faqs.map((faq, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-card"
+                >
+                  <button
+                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                    className="w-full px-6 py-5 flex items-center justify-between text-left"
+                  >
+                    <span className="font-semibold text-gray-900">{faq.question}</span>
+                    <ChevronDown
+                      className={`w-5 h-5 text-main transition-transform duration-300 ${openFaq === index ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <div
+                    className={`px-6 overflow-hidden transition-all duration-300 ${
+                      openFaq === index ? 'pb-5 max-h-48' : 'max-h-0'
+                    }`}
+                  >
+                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section className="py-20 sm:py-28 lg:py-32 bg-gradient-to-br from-main to-main/90 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-white rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+          </div>
+
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 tracking-tight">
+              Ready to Get Started?
+            </h2>
+            <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
+              Get your free quote today and experience why San Diego trusts us for dumpster rental. Same day delivery available!
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/booking">
+                <button className="bg-white text-main px-8 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-300 hover:-translate-y-1 flex items-center gap-2">
+                  Get Free Quote
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </Link>
+              <a href="tel:+17602700312">
+                <button className="bg-white/10 backdrop-blur-sm border border-white/30 text-white px-8 py-4 rounded-2xl font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2">
+                  <Phone className="w-5 h-5" />
+                  Call (760) 270-0312
+                </button>
+              </a>
+            </div>
+
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-white/70">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-white" />
+                <span>Same Day Delivery</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-white" />
+                <span>Transparent Pricing</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-white" />
+                <span>Free Quotes</span>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </>
   )
