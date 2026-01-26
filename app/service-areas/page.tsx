@@ -47,7 +47,7 @@ export default function ServiceAreasPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative text-white pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-20 lg:pb-24">
+      <section className="relative text-white pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-20 lg:pb-24 -mt-[88px]">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{

@@ -27,7 +27,15 @@
       "Bash(head:*)",
       "Bash(git merge:*)",
       "Bash(git pull:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(cd:*)",
+      "Bash(pnpm install)",
+      "WebFetch(domain:docs.ahrefs.com)",
+      "WebSearch",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp remove:*)",
+      "Bash(claude mcp:*)",
+      "Bash(npx tailwindcss --help:*)"
     ],
     "deny": [],
     "ask": []

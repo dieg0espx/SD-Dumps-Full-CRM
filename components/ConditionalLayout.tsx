@@ -22,7 +22,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   return (
     <>
       <Header />
-      <main className="mt-16 pb-14 md:pb-0">
+      <main className="pb-14 md:pb-0">
         {children}
       </main>
       {!isBookingRoute && <Footer />}
