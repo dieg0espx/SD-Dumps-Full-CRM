@@ -1221,6 +1221,142 @@ export async function sendCancellationEmail(data: {
   }
 }
 
+// Generate booking extension email HTML
+function generateBookingExtensionEmail(data: {
+  customerName: string
+  bookingId: string
+  containerType: string
+  startDate: string
+  previousEndDate: string
+  newEndDate: string
+  additionalDays: number
+  additionalCost: number
+  newTotalAmount: number
+}) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card h2 { color: #2563eb; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .detail-row:last-child { border-bottom: none; }
+    .label { font-weight: bold; color: #6b7280; }
+    .value { color: #111827; }
+    .highlight { background: #dbeafe; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0; color: #1e40af; }
+    .success { background: #d1fae5; border-left: 4px solid #059669; padding: 15px; border-radius: 4px; margin: 20px 0; color: #065f46; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://www.sddumpingsolutions.com/logo.png" alt="SD Dumping Solutions" style="max-width: 180px; height: auto; margin-bottom: 16px;" />
+      <h1>📅 Booking Extended</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">Your rental period has been extended</p>
+    </div>
+
+    <div class="content">
+      <p>Hi ${data.customerName},</p>
+
+      <div class="success">
+        <p style="margin: 0; font-weight: bold;">Your booking has been extended!</p>
+        <p style="margin: 10px 0 0 0;">
+          We've extended your container rental by ${data.additionalDays} day${data.additionalDays > 1 ? 's' : ''}.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>📦 Updated Booking Details</h2>
+        <div class="detail-row">
+          <span class="label">Booking ID:</span>
+          <span class="value">#${data.bookingId.slice(0, 8).toUpperCase()}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Container:</span>
+          <span class="value">${data.containerType}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Start Date:</span>
+          <span class="value">${data.startDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Previous End Date:</span>
+          <span class="value" style="text-decoration: line-through; color: #9ca3af;">${data.previousEndDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">New End Date:</span>
+          <span class="value" style="color: #059669; font-weight: bold;">${data.newEndDate}</span>
+        </div>
+      </div>
+
+      <div class="highlight">
+        <p style="margin: 0; font-weight: bold;">💳 Payment Information</p>
+        <p style="margin: 10px 0 0 0;">
+          The additional cost for the extension will be charged to your saved payment method, or you may be contacted by our team for payment.
+        </p>
+      </div>
+
+      <p style="text-align: center; margin: 30px 0 10px 0; color: #6b7280;">
+        Questions? Contact us anytime - we're here to help!
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>SD Dumping Solutions</strong></p>
+      <p>Professional Waste Management Services</p>
+      <p style="font-size: 12px; color: #9ca3af;">
+        Thank you for choosing SD Dumping Solutions!
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `
+}
+
+// Send booking extension email to customer
+export async function sendBookingExtensionEmail(data: {
+  customerName: string
+  customerEmail: string
+  bookingId: string
+  containerType: string
+  startDate: string
+  previousEndDate: string
+  newEndDate: string
+  additionalDays: number
+  additionalCost: number
+  newTotalAmount: number
+}) {
+  if (!transporter) {
+    console.warn('⚠️ Email not configured - skipping booking extension email')
+    return { success: true, skipped: true, reason: 'Email not configured' }
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"SD Dumping Solutions" <${process.env.SMTP_FROM}>`,
+      to: data.customerEmail,
+      cc: ['sandiegodumpingsolutions@gmail.com', 'diego@comcreate.org'],
+      subject: `📅 Booking Extended - #${data.bookingId.slice(0, 8)} - New End Date: ${data.newEndDate}`,
+      html: generateBookingExtensionEmail(data),
+    })
+    console.log('✅ Booking extension email sent to:', data.customerEmail)
+
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Error sending booking extension email:', error)
+    throw error
+  }
+}
+
 // Generate Google review request email HTML
 function generateReviewRequestEmail(data: {
   customerName: string
