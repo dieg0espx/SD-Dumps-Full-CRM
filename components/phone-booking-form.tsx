@@ -78,13 +78,10 @@ interface PhoneBookingFormProps {
 }
 
 export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
-  // Test data for development
-  const isDev = process.env.NODE_ENV === 'development'
-
   // Customer Info
-  const [customerName, setCustomerName] = useState(isDev ? "John Doe" : "")
-  const [customerEmail, setCustomerEmail] = useState(isDev ? "diego@comcreate.org" : "")
-  const [customerPhone, setCustomerPhone] = useState(isDev ? "(555) 123-4567" : "")
+  const [customerName, setCustomerName] = useState("")
+  const [customerEmail, setCustomerEmail] = useState("")
+  const [customerPhone, setCustomerPhone] = useState("")
 
   // Booking Details
   const [containerType, setContainerType] = useState("")
@@ -94,14 +91,14 @@ export function PhoneBookingForm({ containerTypes }: PhoneBookingFormProps) {
   const [pickupTime, setPickupTime] = useState("09:00")
 
   // Addresses
-  const [billingStreet, setBillingStreet] = useState(isDev ? "123 Main Street" : "")
-  const [billingCity, setBillingCity] = useState(isDev ? "San Diego" : "")
-  const [billingState, setBillingState] = useState(isDev ? "CA" : "")
-  const [billingZip, setBillingZip] = useState(isDev ? "92101" : "")
-  const [deliveryStreet, setDeliveryStreet] = useState(isDev ? "123 Main Street" : "")
-  const [deliveryCity, setDeliveryCity] = useState(isDev ? "San Diego" : "")
-  const [deliveryState, setDeliveryState] = useState(isDev ? "CA" : "")
-  const [deliveryZip, setDeliveryZip] = useState(isDev ? "92101" : "")
+  const [billingStreet, setBillingStreet] = useState("")
+  const [billingCity, setBillingCity] = useState("")
+  const [billingState, setBillingState] = useState("")
+  const [billingZip, setBillingZip] = useState("")
+  const [deliveryStreet, setDeliveryStreet] = useState("")
+  const [deliveryCity, setDeliveryCity] = useState("")
+  const [deliveryState, setDeliveryState] = useState("")
+  const [deliveryZip, setDeliveryZip] = useState("")
 
   // Additional
   const [extraTonnage, setExtraTonnage] = useState<number>(0)

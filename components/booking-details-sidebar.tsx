@@ -1,11 +1,11 @@
 "use client"
 
-import { X, Calendar, Package, User, CreditCard, Clock, DollarSign, Ban } from "lucide-react"
+import { X, Calendar, Package, User, CreditCard, Clock, DollarSign, Ban, CalendarPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { format } from "date-fns"
+import { format, addDays, differenceInDays } from "date-fns"
 import { formatPhoneNumber } from "@/lib/phone-utils"
 import { parseLocalDate } from "@/lib/utils"
 import { useState } from "react"
@@ -47,6 +47,9 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = fals
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelReason, setCancelReason] = useState("")
   const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [showExtendDialog, setShowExtendDialog] = useState(false)
+  const [isExtending, setIsExtending] = useState(false)
+  const [newEndDate, setNewEndDate] = useState("")
   const { toast } = useToast()
 
   if (!isOpen || !booking) return null
@@ -181,6 +184,81 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = fals
       setIsCancelling(false)
     }
   }
+
+  const handleExtendBooking = async () => {
+    if (!newEndDate) {
+      toast({
+        title: "Missing Date",
+        description: "Please select a new end date",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsExtending(true)
+
+    try {
+      const response = await fetch('/api/admin/extend-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          newEndDate,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to extend booking')
+      }
+
+      toast({
+        title: "Booking Extended",
+        description: data.emailSent
+          ? `Extended by ${data.additionalDays} day(s). Additional cost: $${data.additionalCost}. Customer notified via email.`
+          : `Extended by ${data.additionalDays} day(s). Additional cost: $${data.additionalCost}.`,
+      })
+
+      // Reset form and close dialog
+      setNewEndDate("")
+      setShowExtendDialog(false)
+
+      // Refresh booking data
+      if (onUpdate) {
+        onUpdate()
+      }
+    } catch (error) {
+      console.error('Extend booking error:', error)
+      toast({
+        title: "Extension Failed",
+        description: error instanceof Error ? error.message : "Failed to extend booking",
+        variant: "destructive",
+      })
+    } finally {
+      setIsExtending(false)
+    }
+  }
+
+  // Calculate additional days and cost for preview
+  const calculateExtensionPreview = () => {
+    if (!newEndDate || !booking.end_date) return null
+
+    const currentEnd = parseLocalDate(booking.end_date)
+    const newEnd = parseLocalDate(newEndDate)
+    const additionalDays = differenceInDays(newEnd, currentEnd)
+
+    if (additionalDays <= 0) return null
+
+    const extraDayRate = 25 // $25 per extra day
+    const additionalCost = additionalDays * extraDayRate
+
+    return { additionalDays, additionalCost }
+  }
+
+  const extensionPreview = calculateExtensionPreview()
 
   return (
     <>
@@ -458,6 +536,76 @@ export function BookingDetailsSidebar({ booking, isOpen, onClose, isAdmin = fals
                   </p>
                 )}
               </div>
+
+              {/* Admin: Extend Booking */}
+              {isAdmin && booking.status !== "cancelled" && booking.status !== "completed" && (
+                <div className="space-y-3 border-t pt-4">
+                  <AlertDialog open={showExtendDialog} onOpenChange={setShowExtendDialog}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                        disabled={isExtending}
+                      >
+                        <CalendarPlus className="h-4 w-4 mr-2" />
+                        Extend End Date
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Extend Booking End Date</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Extend the rental period by selecting a new end date. The customer will be charged $25 per additional day.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>Current End Date</Label>
+                          <p className="text-sm text-gray-600 font-medium">
+                            {format(parseLocalDate(booking.end_date), "MMMM d, yyyy")}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="new-end-date">New End Date *</Label>
+                          <Input
+                            id="new-end-date"
+                            type="date"
+                            min={format(addDays(parseLocalDate(booking.end_date), 1), "yyyy-MM-dd")}
+                            value={newEndDate}
+                            onChange={(e) => setNewEndDate(e.target.value)}
+                            disabled={isExtending}
+                          />
+                        </div>
+                        {extensionPreview && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-1">
+                            <p className="text-sm text-blue-800">
+                              <span className="font-medium">Additional Days:</span> {extensionPreview.additionalDays}
+                            </p>
+                            <p className="text-sm text-blue-800">
+                              <span className="font-medium">Additional Cost:</span> ${extensionPreview.additionalCost.toFixed(2)}
+                            </p>
+                            <p className="text-sm text-blue-800">
+                              <span className="font-medium">New Total:</span> ${(booking.total_amount + extensionPreview.additionalCost).toFixed(2)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isExtending} onClick={() => setNewEndDate("")}>
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleExtendBooking}
+                          disabled={isExtending || !newEndDate || !extensionPreview}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          {isExtending ? "Extending..." : "Extend Booking"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
 
               {/* Admin: Cancel Booking */}
               {isAdmin && booking.status !== "cancelled" && (

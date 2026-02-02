@@ -11,10 +11,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft, CreditCard, Wallet } from "lucide-react"
+import { CalendarIcon, Truck, MapPin, AlertCircle, ChevronRight, ChevronLeft, CreditCard, Wallet, Phone } from "lucide-react"
 import { format, differenceInDays, eachDayOfInterval, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { StripeElements } from "@/components/stripe-elements"
 import { SignaturePad } from "@/components/signature-pad"
 import { extractBase64FromDataUrl, getSignatureInfo } from "@/lib/signature-utils"
@@ -147,6 +156,9 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
   // Distance fee state
   const [distanceResult, setDistanceResult] = useState<DistanceResult | null>(null)
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false)
+
+  // Fully booked popup state
+  const [showFullyBookedPopup, setShowFullyBookedPopup] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -1011,13 +1023,37 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                         mode="range"
                         selected={{ from: startDate, to: endDate }}
                         onSelect={(range) => {
-                          setStartDate(range?.from)
-                          setEndDate(range?.to)
+                          // Check if any selected date is unavailable
+                          const from = range?.from
+                          const to = range?.to
+
+                          if (from && isDateUnavailable(from)) {
+                            setShowFullyBookedPopup(true)
+                            return // Don't update selection
+                          }
+
+                          if (to && isDateUnavailable(to)) {
+                            setShowFullyBookedPopup(true)
+                            return // Don't update selection
+                          }
+
+                          // If selecting a range, check all dates in between
+                          if (from && to) {
+                            const daysInRange = eachDayOfInterval({ start: from, end: to })
+                            const hasUnavailableDate = daysInRange.some(day => isDateUnavailable(day))
+                            if (hasUnavailableDate) {
+                              setShowFullyBookedPopup(true)
+                              return // Don't update selection
+                            }
+                          }
+
+                          setStartDate(from)
+                          setEndDate(to)
                         }}
                         disabled={(date) => {
                           const today = new Date()
                           today.setHours(0, 0, 0, 0)
-                          return date < today || isDateUnavailable(date)
+                          return date < today // Only disable past dates
                         }}
                         initialFocus
                         numberOfMonths={isMobile ? 1 : 2}
@@ -1030,7 +1066,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                           },
                         }}
                         modifiersStyles={{
-                          unavailable: { backgroundColor: "#fee2e2", color: "#dc2626" },
+                          unavailable: { backgroundColor: "#fee2e2", color: "#dc2626", cursor: "pointer" },
                           limited: { backgroundColor: "#fef3c7", color: "#d97706" },
                         }}
                         className="rounded-md border shadow-lg"
@@ -2053,6 +2089,36 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
           )}
         </div>
       </form>
+
+      {/* Fully Booked Date Popup */}
+      <AlertDialog open={showFullyBookedPopup} onOpenChange={setShowFullyBookedPopup}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <div className="mx-auto mb-4 w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <Phone className="w-8 h-8 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-center text-xl">Date Fully Booked</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-base">
+              This date is fully booked. Please call us for availability or to be added to our waitlist.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col items-center gap-3 py-4">
+            <a
+              href="tel:7602700312"
+              className="flex items-center gap-2 text-lg font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <Phone className="w-5 h-5" />
+              (760) 270-0312
+            </a>
+            <p className="text-sm text-gray-500">We're here to help!</p>
+          </div>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction className="w-full sm:w-auto">
+              Got it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

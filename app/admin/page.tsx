@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { AdminLayout } from "@/components/admin-layout"
 import { AdminStats } from "@/components/admin-stats"
+import { subMonths, startOfMonth, endOfMonth, format } from "date-fns"
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
@@ -33,13 +34,32 @@ export default async function AdminDashboardPage() {
   console.log("[v0] Admin check - User is admin, loading dashboard")
 
   // Fetch dashboard stats
-  const [{ count: totalBookings }, { count: pendingBookings }, { count: totalUsers }, { data: bookings }] =
-    await Promise.all([
-      supabase.from("bookings").select("*", { count: "exact", head: true }),
-      supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "pending"),
-      supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("bookings").select("*").order("created_at", { ascending: false }).limit(5),
-    ])
+  const [
+    { count: totalBookings },
+    { count: pendingBookings },
+    { count: confirmedBookings },
+    { count: completedBookings },
+    { count: cancelledBookings },
+    { count: totalUsers },
+    { data: bookings },
+    { data: allBookingsForCharts },
+    { data: containerTypes },
+  ] = await Promise.all([
+    supabase.from("bookings").select("*", { count: "exact", head: true }),
+    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "confirmed"),
+    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "completed"),
+    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "cancelled"),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("bookings").select("*").order("created_at", { ascending: false }).limit(5),
+    // Fetch all bookings from last 6 months for charts
+    supabase
+      .from("bookings")
+      .select("id, created_at, total_amount, status, container_type_id")
+      .gte("created_at", subMonths(new Date(), 6).toISOString())
+      .order("created_at", { ascending: true }),
+    supabase.from("container_types").select("id, name"),
+  ])
 
   console.log("[v0] Admin dashboard - Total bookings:", totalBookings)
   console.log("[v0] Admin dashboard - Pending bookings:", pendingBookings)
@@ -81,6 +101,54 @@ export default async function AdminDashboardPage() {
     })
   }
 
+  // Process data for monthly charts (last 6 months)
+  const monthlyData: { month: string; bookings: number; revenue: number }[] = []
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = subMonths(new Date(), i)
+    const monthStart = startOfMonth(monthDate)
+    const monthEnd = endOfMonth(monthDate)
+    const monthName = format(monthDate, "MMM")
+
+    const monthBookings = allBookingsForCharts?.filter((b) => {
+      const createdAt = new Date(b.created_at)
+      return createdAt >= monthStart && createdAt <= monthEnd && b.status !== "cancelled"
+    }) || []
+
+    const monthRevenue = monthBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0)
+
+    monthlyData.push({
+      month: monthName,
+      bookings: monthBookings.length,
+      revenue: monthRevenue,
+    })
+  }
+
+  // Status breakdown for pie chart
+  const statusData = [
+    { name: "Pending", value: pendingBookings || 0, color: "#eab308" },
+    { name: "Confirmed", value: confirmedBookings || 0, color: "#22c55e" },
+    { name: "Completed", value: completedBookings || 0, color: "#3b82f6" },
+    { name: "Cancelled", value: cancelledBookings || 0, color: "#ef4444" },
+  ].filter((item) => item.value > 0)
+
+  // Container type distribution
+  const containerTypeMap = new Map<string, number>()
+  allBookingsForCharts?.forEach((b) => {
+    if (b.status !== "cancelled") {
+      const containerName = containerTypes?.find((ct) => ct.id === b.container_type_id)?.name || "Unknown"
+      containerTypeMap.set(containerName, (containerTypeMap.get(containerName) || 0) + 1)
+    }
+  })
+  const containerData = Array.from(containerTypeMap.entries()).map(([name, value]) => ({
+    name,
+    value,
+  }))
+
+  // Calculate total revenue
+  const totalRevenue = allBookingsForCharts
+    ?.filter((b) => b.status !== "cancelled")
+    .reduce((sum, b) => sum + (b.total_amount || 0), 0) || 0
+
   return (
     <AdminLayout user={user}>
       <div className="mb-8">
@@ -92,7 +160,11 @@ export default async function AdminDashboardPage() {
         totalBookings={totalBookings || 0}
         pendingBookings={pendingBookings || 0}
         totalUsers={totalUsers || 0}
+        totalRevenue={totalRevenue}
         recentBookings={recentBookings || []}
+        monthlyData={monthlyData}
+        statusData={statusData}
+        containerData={containerData}
       />
     </AdminLayout>
   )
