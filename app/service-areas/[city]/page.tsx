@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { MapPin, Phone, CheckCircle, ArrowRight, Truck, Clock, Shield, Star } from 'lucide-react'
-import { cities, getCityBySlug, getAllCitySlugs } from '@/lib/cities'
+import { MapPin, Phone, CheckCircle, ArrowRight, Truck, Clock, Shield, Star, Briefcase, Home as HomeIcon, HardHat } from 'lucide-react'
+import { cities, getCityBySlug, getAllCitySlugs, getProjectsByCity } from '@/lib/cities'
 import { ServiceAreaSchema, BreadcrumbSchema } from '@/components/JsonLd'
 
 interface CityPageProps {
@@ -69,6 +69,20 @@ export default async function CityPage({ params }: CityPageProps) {
   }
 
   const otherCities = cities.filter(c => c.slug !== city.slug).slice(0, 6)
+  const projects = getProjectsByCity(city.slug)
+
+  const getProjectIcon = (type: string) => {
+    switch (type) {
+      case 'Residential':
+        return HomeIcon
+      case 'Commercial':
+        return Briefcase
+      case 'Construction':
+        return HardHat
+      default:
+        return CheckCircle
+    }
+  }
 
   const breadcrumbs = [
     { name: 'Home', url: 'https://www.sddumpingsolutions.com' },
@@ -158,17 +172,6 @@ export default async function CityPage({ params }: CityPageProps) {
                   </li>
                 ))}
               </ul>
-              <div className="mt-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-main/10 rounded-full flex items-center justify-center">
-                    <MapPin className="w-6 h-6 text-main" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Population</p>
-                    <p className="text-xl font-bold text-gray-900">{city.population}</p>
-                  </div>
-                </div>
-              </div>
             </div>
             <div className="relative">
               <Image
@@ -199,6 +202,76 @@ export default async function CityPage({ params }: CityPageProps) {
                   {neighborhood}
                 </span>
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Projects Section */}
+      {projects.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Recent Projects in {city.name}
+              </h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                See how we've helped homeowners and businesses in {city.name} with their dumpster rental needs.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((project, index) => {
+                const Icon = getProjectIcon(project.type)
+                return (
+                  <div
+                    key={index}
+                    className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-main/10 rounded-lg flex items-center justify-center">
+                          <Icon className="w-6 h-6 text-main" />
+                        </div>
+                        <div>
+                          <span className="inline-block px-2 py-1 bg-main/10 text-main text-xs font-semibold rounded">
+                            {project.type}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                      {project.title}
+                    </h3>
+                    {project.neighborhood && (
+                      <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{project.neighborhood}</span>
+                      </div>
+                    )}
+                    <p className="text-gray-600 text-sm mb-4">
+                      {project.description}
+                    </p>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Truck className="w-3.5 h-3.5" />
+                        <span>{project.containerSize}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{project.duration}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="text-center mt-8">
+              <Link href="/contact">
+                <button className="inline-flex items-center gap-2 bg-main text-white px-6 py-3 rounded-lg hover:bg-main/90 transition-colors font-semibold">
+                  <span>Start Your Project</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
             </div>
           </div>
         </section>

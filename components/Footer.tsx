@@ -26,17 +26,6 @@ export default function Footer() {
             <p className="text-gray-400 mb-6 text-sm sm:text-base leading-relaxed">
               Affordable dumpster rental San Diego with same day delivery. Roll off dumpster rental, residential dumpster rental San Diego, commercial dumpster rental, and junk removal services. Call (760) 270-0312 for cheap dumpster rental San Diego!
             </p>
-            <div className="flex space-x-3">
-              <div className="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-main transition-all duration-200 cursor-pointer border border-gray-700 hover:border-main">
-                <span className="text-xs font-medium">f</span>
-              </div>
-              <div className="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-main transition-all duration-200 cursor-pointer border border-gray-700 hover:border-main">
-                <span className="text-xs font-medium">in</span>
-              </div>
-              <div className="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-main transition-all duration-200 cursor-pointer border border-gray-700 hover:border-main">
-                <span className="text-xs font-medium">ig</span>
-              </div>
-            </div>
           </div>
 
           {/* Services */}

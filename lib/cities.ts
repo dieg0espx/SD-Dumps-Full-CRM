@@ -9,6 +9,16 @@ export interface City {
   neighborhoods?: string[]
 }
 
+export interface Project {
+  title: string
+  type: 'Residential' | 'Commercial' | 'Construction'
+  description: string
+  containerSize: string
+  duration: string
+  neighborhood?: string
+  image?: string
+}
+
 export const cities: City[] = [
   {
     slug: 'san-diego',
@@ -243,4 +253,290 @@ export function getCityBySlug(slug: string): City | undefined {
 
 export function getAllCitySlugs(): string[] {
   return cities.map(city => city.slug)
+}
+
+// Projects by city
+export const projectsByCity: Record<string, Project[]> = {
+  'san-diego': [
+    {
+      title: 'Downtown High-Rise Renovation',
+      type: 'Commercial',
+      description: 'Complete office renovation with demolition debris removal for a 10-story building in the Gaslamp Quarter.',
+      containerSize: '21 Yard Container',
+      duration: '2 weeks',
+      neighborhood: 'Gaslamp Quarter'
+    },
+    {
+      title: 'La Jolla Home Remodel',
+      type: 'Residential',
+      description: 'Kitchen and bathroom renovation with efficient waste management and same-day delivery.',
+      containerSize: '17 Yard Container',
+      duration: '5 days',
+      neighborhood: 'La Jolla'
+    },
+    {
+      title: 'Pacific Beach Construction Site',
+      type: 'Construction',
+      description: 'New construction project with ongoing debris removal and multiple container swaps.',
+      containerSize: '21 Yard Container',
+      duration: '3 weeks',
+      neighborhood: 'Pacific Beach'
+    }
+  ],
+  'chula-vista': [
+    {
+      title: 'Eastlake Garage Cleanout',
+      type: 'Residential',
+      description: 'Complete garage and attic cleanout with disposal of old furniture and household items.',
+      containerSize: '17 Yard Container',
+      duration: '3 days',
+      neighborhood: 'Eastlake'
+    },
+    {
+      title: 'Otay Ranch Landscaping Project',
+      type: 'Residential',
+      description: 'Large-scale yard renovation with tree removal, soil disposal, and green waste management.',
+      containerSize: '21 Yard Container',
+      duration: '1 week',
+      neighborhood: 'Otay Ranch'
+    }
+  ],
+  'oceanside': [
+    {
+      title: 'Beachfront Property Renovation',
+      type: 'Residential',
+      description: 'Complete home renovation near the pier with careful debris management in coastal area.',
+      containerSize: '21 Yard Container',
+      duration: '2 weeks',
+      neighborhood: 'Downtown Oceanside'
+    },
+    {
+      title: 'Fire Mountain Commercial Center',
+      type: 'Commercial',
+      description: 'Retail space renovation with regular pickups and efficient waste disposal.',
+      containerSize: '21 Yard Container',
+      duration: '10 days',
+      neighborhood: 'Fire Mountain'
+    }
+  ],
+  'escondido': [
+    {
+      title: 'Historic Downtown Building Restoration',
+      type: 'Commercial',
+      description: 'Careful restoration work with specialized debris handling for historic materials.',
+      containerSize: '17 Yard Container',
+      duration: '2 weeks',
+      neighborhood: 'Downtown Escondido'
+    },
+    {
+      title: 'Vineyard Property Cleanup',
+      type: 'Residential',
+      description: 'Estate cleanout and property preparation for vineyard expansion.',
+      containerSize: '21 Yard Container',
+      duration: '1 week',
+      neighborhood: 'San Pasqual Valley'
+    }
+  ],
+  'carlsbad': [
+    {
+      title: 'La Costa Luxury Home Remodel',
+      type: 'Residential',
+      description: 'High-end kitchen and master suite renovation with premium service and discreet placement.',
+      containerSize: '17 Yard Container',
+      duration: '1 week',
+      neighborhood: 'La Costa'
+    },
+    {
+      title: 'Bressi Ranch New Construction',
+      type: 'Construction',
+      description: 'New home construction with ongoing debris removal and coordinated delivery schedule.',
+      containerSize: '21 Yard Container',
+      duration: '3 weeks',
+      neighborhood: 'Bressi Ranch'
+    }
+  ],
+  'el-cajon': [
+    {
+      title: 'Fletcher Hills Home Addition',
+      type: 'Residential',
+      description: 'Room addition with construction debris removal and flexible scheduling for homeowner.',
+      containerSize: '21 Yard Container',
+      duration: '2 weeks',
+      neighborhood: 'Fletcher Hills'
+    },
+    {
+      title: 'Rancho San Diego Cleanout',
+      type: 'Residential',
+      description: 'Estate cleanout following property sale with furniture and household items disposal.',
+      containerSize: '17 Yard Container',
+      duration: '4 days',
+      neighborhood: 'Rancho San Diego'
+    }
+  ],
+  'vista': [
+    {
+      title: 'Downtown Vista Brewery Renovation',
+      type: 'Commercial',
+      description: 'Tasting room expansion with demolition and construction debris management.',
+      containerSize: '21 Yard Container',
+      duration: '2 weeks',
+      neighborhood: 'Downtown Vista'
+    },
+    {
+      title: 'Shadowridge Backyard Remodel',
+      type: 'Residential',
+      description: 'Complete backyard transformation with old deck removal and soil disposal.',
+      containerSize: '17 Yard Container',
+      duration: '1 week',
+      neighborhood: 'Shadowridge'
+    }
+  ],
+  'san-marcos': [
+    {
+      title: 'CSUSM Student Housing Complex',
+      type: 'Commercial',
+      description: 'Multi-unit renovation project with coordinated debris removal and regular pickups.',
+      containerSize: '21 Yard Container',
+      duration: '3 weeks',
+      neighborhood: 'Near CSUSM'
+    },
+    {
+      title: 'Discovery Hills Home Renovation',
+      type: 'Residential',
+      description: 'Whole-home renovation with kitchen, bathroom, and flooring replacement.',
+      containerSize: '21 Yard Container',
+      duration: '2 weeks',
+      neighborhood: 'Discovery Hills'
+    }
+  ],
+  'encinitas': [
+    {
+      title: 'Leucadia Beach House Remodel',
+      type: 'Residential',
+      description: 'Coastal home renovation with specialized delivery on narrow beach streets.',
+      containerSize: '17 Yard Container',
+      duration: '1 week',
+      neighborhood: 'Leucadia'
+    },
+    {
+      title: 'Cardiff Garden Project',
+      type: 'Residential',
+      description: 'Extensive landscaping renovation with green waste and soil removal.',
+      containerSize: '17 Yard Container',
+      duration: '5 days',
+      neighborhood: 'Cardiff-by-the-Sea'
+    }
+  ],
+  'national-city': [
+    {
+      title: 'Downtown Business District Renovation',
+      type: 'Commercial',
+      description: 'Retail storefront renovation with efficient debris removal in busy downtown area.',
+      containerSize: '17 Yard Container',
+      duration: '1 week',
+      neighborhood: 'Downtown National City'
+    },
+    {
+      title: 'Paradise Hills Home Improvement',
+      type: 'Residential',
+      description: 'Kitchen and bathroom remodel with driveway-friendly container placement.',
+      containerSize: '17 Yard Container',
+      duration: '1 week',
+      neighborhood: 'Paradise Hills'
+    }
+  ],
+  'la-mesa': [
+    {
+      title: 'Village District Restaurant Remodel',
+      type: 'Commercial',
+      description: 'Complete restaurant renovation with coordinated delivery to match construction schedule.',
+      containerSize: '21 Yard Container',
+      duration: '2 weeks',
+      neighborhood: 'Downtown La Mesa'
+    },
+    {
+      title: 'Mount Helix Estate Cleanout',
+      type: 'Residential',
+      description: 'Large estate cleanout with hillside delivery and multiple container swaps.',
+      containerSize: '21 Yard Container',
+      duration: '1 week',
+      neighborhood: 'Mount Helix'
+    }
+  ],
+  'poway': [
+    {
+      title: 'Equestrian Property Cleanup',
+      type: 'Residential',
+      description: 'Barn renovation and property cleanup on rural equestrian estate.',
+      containerSize: '21 Yard Container',
+      duration: '2 weeks',
+      neighborhood: 'Old Poway'
+    },
+    {
+      title: 'Green Valley Home Addition',
+      type: 'Residential',
+      description: 'Room addition with construction debris and landscaping waste removal.',
+      containerSize: '21 Yard Container',
+      duration: '3 weeks',
+      neighborhood: 'Green Valley'
+    }
+  ],
+  'santee': [
+    {
+      title: 'Fanita Ranch New Development',
+      type: 'Construction',
+      description: 'New home construction support with regular debris removal and flexible scheduling.',
+      containerSize: '21 Yard Container',
+      duration: '4 weeks',
+      neighborhood: 'Fanita Ranch'
+    },
+    {
+      title: 'Carlton Hills Kitchen Remodel',
+      type: 'Residential',
+      description: 'Complete kitchen renovation with cabinet and flooring removal.',
+      containerSize: '17 Yard Container',
+      duration: '1 week',
+      neighborhood: 'Carlton Hills'
+    }
+  ],
+  'valley-center': [
+    {
+      title: 'Avocado Grove Property Cleanup',
+      type: 'Residential',
+      description: 'Agricultural property cleanup with debris removal from grove maintenance.',
+      containerSize: '21 Yard Container',
+      duration: '1 week',
+      neighborhood: 'Valley Center'
+    },
+    {
+      title: 'Rural Home Renovation',
+      type: 'Residential',
+      description: 'Complete home renovation on rural property with specialized delivery access.',
+      containerSize: '21 Yard Container',
+      duration: '3 weeks',
+      neighborhood: 'Woods Valley'
+    }
+  ],
+  'ramona': [
+    {
+      title: 'Winery Construction Project',
+      type: 'Commercial',
+      description: 'New winery tasting room construction with ongoing debris management.',
+      containerSize: '21 Yard Container',
+      duration: '4 weeks',
+      neighborhood: 'Downtown Ramona'
+    },
+    {
+      title: 'Country Estates Home Remodel',
+      type: 'Residential',
+      description: 'Whole-home renovation on large rural property with flexible delivery schedule.',
+      containerSize: '21 Yard Container',
+      duration: '3 weeks',
+      neighborhood: 'San Diego Country Estates'
+    }
+  ]
+}
+
+export function getProjectsByCity(citySlug: string): Project[] {
+  return projectsByCity[citySlug] || []
 }
