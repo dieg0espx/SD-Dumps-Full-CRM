@@ -5,11 +5,13 @@ import Image from 'next/image'
 import { Phone, Menu, X, User, ChevronRight, Sparkles, Home, Info, Wrench, MapPin, Mail, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { cities } from '@/lib/cities'
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [serviceAreasDropdownOpen, setServiceAreasDropdownOpen] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -117,13 +119,65 @@ export default function Header() {
             <nav className="hidden lg:flex items-center absolute left-1/2 -translate-x-1/2">
               <div className="flex items-center bg-gray-100/80 rounded-full p-1">
                 {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="relative px-3.5 py-1.5 text-gray-600 hover:text-gray-900 transition-colors font-medium text-sm rounded-full hover:bg-white hover:shadow-sm"
-                  >
-                    {link.label}
-                  </Link>
+                  link.href === '/service-areas' ? (
+                    <div
+                      key={link.href}
+                      className="relative"
+                      onMouseEnter={() => setServiceAreasDropdownOpen(true)}
+                      onMouseLeave={() => setServiceAreasDropdownOpen(false)}
+                    >
+                      <Link
+                        href={link.href}
+                        className="relative px-3.5 py-1.5 text-gray-600 hover:text-gray-900 transition-colors font-medium text-sm rounded-full hover:bg-white hover:shadow-sm flex items-center gap-1"
+                      >
+                        {link.label}
+                        <ChevronRight className={`w-3.5 h-3.5 transition-transform ${serviceAreasDropdownOpen ? 'rotate-90' : 'rotate-0'}`} />
+                      </Link>
+
+                      {/* Dropdown Menu */}
+                      <div className={`absolute top-full left-0 mt-2 w-[500px] bg-white rounded-2xl shadow-2xl border border-gray-100 transition-all duration-200 ${
+                        serviceAreasDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2 pointer-events-none'
+                      }`}>
+                        <div className="p-4">
+                          <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+                            <MapPin className="w-4 h-4 text-main" />
+                            <h3 className="font-semibold text-gray-900 text-sm">Service Areas</h3>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto">
+                            {cities.map((city) => (
+                              <Link
+                                key={city.slug}
+                                href={`/service-areas/${city.slug}`}
+                                className="group flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-main hover:bg-main/5 rounded-lg transition-all text-sm"
+                                onClick={() => setServiceAreasDropdownOpen(false)}
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-main transition-colors" />
+                                <span className="font-medium">{city.name}</span>
+                              </Link>
+                            ))}
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <Link
+                              href="/service-areas"
+                              className="flex items-center justify-center gap-1 text-main hover:text-main/80 font-semibold text-sm transition-colors"
+                              onClick={() => setServiceAreasDropdownOpen(false)}
+                            >
+                              <span>View All Service Areas</span>
+                              <ArrowRight className="w-4 h-4" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="relative px-3.5 py-1.5 text-gray-600 hover:text-gray-900 transition-colors font-medium text-sm rounded-full hover:bg-white hover:shadow-sm"
+                    >
+                      {link.label}
+                    </Link>
+                  )
                 ))}
               </div>
             </nav>

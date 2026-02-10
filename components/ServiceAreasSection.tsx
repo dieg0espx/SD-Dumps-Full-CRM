@@ -41,7 +41,6 @@ export default function ServiceAreasSection() {
                   <h3 className="font-semibold text-gray-900 group-hover:text-main transition-colors text-sm sm:text-base truncate">
                     {city.name}
                   </h3>
-                  <p className="text-xs text-gray-500 hidden sm:block">{city.population} residents</p>
                 </div>
               </div>
             </Link>
