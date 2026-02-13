@@ -16,8 +16,12 @@ import { Label } from '@/components/ui/label'
 import { CreditCard, Lock, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
-const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
-  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
+const stripeKeyMode = stripePublishableKey.startsWith('pk_test_') ? 'TEST' : stripePublishableKey.startsWith('pk_live_') ? 'LIVE' : 'UNKNOWN'
+console.log('🔑 [Stripe] Client publishable key mode:', stripeKeyMode, '| Key prefix:', stripePublishableKey.slice(0, 12) + '...')
+
+const stripePromise = stripePublishableKey
+  ? loadStripe(stripePublishableKey)
   : null
 
 const cardElementOptions = {
@@ -130,6 +134,7 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError, allow
         }
         finalBookingId = booking.id
         console.log('✅ [Stripe] Booking created:', finalBookingId)
+
       }
 
       // Create Setup Intent (to save card, not charge)
@@ -156,32 +161,69 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError, allow
         throw new Error(errorData.error || 'Failed to create setup intent')
       }
 
-      const { clientSecret, error: apiError } = await response.json()
+      const { clientSecret, customerId, error: apiError } = await response.json()
 
       if (apiError) {
         console.error('❌ [Stripe] API returned error:', apiError)
         throw new Error(apiError)
       }
 
-      console.log('✅ [Stripe] Setup intent created, confirming card setup...')
+      if (!clientSecret) {
+        console.error('❌ [Stripe] No client secret returned from API')
+        throw new Error('Failed to initialize payment. Please try again.')
+      }
+
+      // Log SetupIntent ID from client secret for debugging (format: seti_xxx_secret_yyy)
+      const setupIntentId = clientSecret.split('_secret_')[0]
+      console.log('✅ [Stripe] Setup intent created, ID:', setupIntentId)
+      console.log('🔑 [Stripe] Client key mode:', stripeKeyMode, '| Confirming card setup...')
 
       // Get the card element
       const cardNumberElement = elements.getElement(CardNumberElement)
-      
+
       if (!cardNumberElement) {
         console.error('❌ [Stripe] Card element not found')
         throw new Error('Card information not properly loaded. Please refresh and try again.')
       }
 
       // Confirm card setup (saves card, doesn't charge)
-      const { error: stripeError, setupIntent } = await stripe.confirmCardSetup(
+      let { error: stripeError, setupIntent } = await stripe.confirmCardSetup(
         clientSecret,
         {
           payment_method: {
             card: cardNumberElement,
           },
         }
-      )
+      ) as { error: any; setupIntent: any }
+
+      // If SetupIntent not found (expired or key mismatch), retry with a fresh one
+      if (stripeError && (stripeError.code === 'resource_missing' || stripeError.message?.includes('No such setupintent'))) {
+        console.warn('⚠️ [Stripe] SetupIntent not found, retrying with a fresh one...')
+        const retryResponse = await fetch('/api/setup-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            allowGuest,
+            guest: allowGuest ? {
+              name: (bookingData.guest_full_name || ''),
+              email: (bookingData.guest_email || ''),
+              phone: (bookingData.phone || ''),
+            } : null,
+          }),
+        })
+
+        if (retryResponse.ok) {
+          const retryData = await retryResponse.json()
+          if (retryData.clientSecret) {
+            console.log('🔵 [Stripe] Retrying card setup with fresh SetupIntent...')
+            const retryResult = await stripe.confirmCardSetup(retryData.clientSecret, {
+              payment_method: { card: cardNumberElement },
+            })
+            stripeError = retryResult.error
+            setupIntent = retryResult.setupIntent
+          }
+        }
+      }
 
       if (stripeError) {
         console.error('❌ [Stripe] Card setup failed:', stripeError)
@@ -194,6 +236,10 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError, allow
           })
           .eq('id', finalBookingId)
 
+        // Show user-friendly error messages
+        if (stripeError.code === 'resource_missing' || stripeError.message?.includes('No such setupintent')) {
+          throw new Error('Payment session expired. Please refresh the page and try again.')
+        }
         throw new Error(stripeError.message || 'Card setup failed')
       }
 
@@ -218,6 +264,37 @@ function PaymentForm({ amount, bookingId, bookingData, onSuccess, onError, allow
           throw new Error('Failed to save payment method')
         }
         console.log('✅ [Stripe] Payment method saved to booking')
+
+        // Save guest contact info via server API (client-side Supabase can't insert due to RLS)
+        if (allowGuest) {
+          console.log('🔵 [Stripe] Saving guest contact info via API...', {
+            bookingId: finalBookingId,
+            name: bookingData.guest_full_name,
+            email: bookingData.guest_email,
+            phone: bookingData.phone,
+          })
+          try {
+            const guestRes = await fetch('/api/save-guest-info', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                bookingId: finalBookingId,
+                customerName: bookingData.guest_full_name || 'Guest',
+                customerEmail: bookingData.guest_email || '',
+                customerPhone: bookingData.phone || '',
+                customerAddress: bookingData.customer_address || '',
+              }),
+            })
+            if (guestRes.ok) {
+              console.log('✅ [Stripe] Guest contact info saved')
+            } else {
+              const guestErr = await guestRes.json()
+              console.error('❌ [Stripe] Failed to save guest info:', guestErr)
+            }
+          } catch (guestErr) {
+            console.error('❌ [Stripe] Failed to save guest info:', guestErr)
+          }
+        }
 
         // Fetch the updated booking data
         console.log('🔵 [Stripe] Fetching updated booking data...')

@@ -1428,9 +1428,15 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                       <div>
                         <span className="text-xs sm:text-sm font-semibold text-green-800 block mb-1">Billing Address:</span>
                         <div className="text-gray-700 text-xs sm:text-sm lg:text-base break-words">
-                          {streetAddress}
-                          <br />
-                          {city}, {state} {zipCode}
+                          {guestMode ? (
+                            <span className="text-gray-400 italic">Not Applicable</span>
+                          ) : (
+                            <>
+                              {streetAddress}
+                              <br />
+                              {city}, {state} {zipCode}
+                            </>
+                          )}
                         </div>
                       </div>
                       {serviceType === "delivery" && (
@@ -1779,7 +1785,7 @@ export function BookingForm({ user, guestMode = false, guestInfo, initialContain
                               start_date: startDate?.toISOString(),
                               end_date: endDate?.toISOString(),
                               service_type: "delivery",
-                              customer_address: useProfileAddress ? `${profile?.street_address || ''}, ${profile?.city || ''}, ${profile?.state || ''} ${profile?.zip_code || ''}` : `${streetAddress}, ${city}, ${state} ${zipCode}`,
+                              customer_address: useProfileAddress ? `${profile?.street_address || ''}, ${profile?.city || ''}, ${profile?.state || ''} ${profile?.zip_code || ''}` : (streetAddress ? `${streetAddress}, ${city}, ${state} ${zipCode}` : `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`),
                               delivery_address: `${deliveryStreetAddress}, ${deliveryCity}, ${deliveryState} ${deliveryZipCode}`,
                               total_amount: totalAmount,
                               pickup_time: pickupTime,
