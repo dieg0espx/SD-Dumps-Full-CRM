@@ -18,7 +18,6 @@ import { createClient } from '@/lib/supabase/client'
 
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
 const stripeKeyMode = stripePublishableKey.startsWith('pk_test_') ? 'TEST' : stripePublishableKey.startsWith('pk_live_') ? 'LIVE' : 'UNKNOWN'
-console.log('🔑 [Stripe] Client publishable key mode:', stripeKeyMode, '| Key prefix:', stripePublishableKey.slice(0, 12) + '...')
 
 const stripePromise = stripePublishableKey
   ? loadStripe(stripePublishableKey)

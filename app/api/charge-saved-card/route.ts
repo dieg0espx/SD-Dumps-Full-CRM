@@ -14,6 +14,12 @@ export async function POST(request: NextRequest) {
   try {
     const { amount, paymentMethodId, bookingId, currency = 'usd' } = await request.json()
 
+    // Check if TEST mode is enabled at the start
+    const isTestMode = process.env.TEST === 'true'
+    if (isTestMode) {
+      console.log('⚠️⚠️⚠️ TEST MODE IS ON - Only $1.00 will be charged ⚠️⚠️⚠️')
+    }
+
     if (!amount || !paymentMethodId || !bookingId) {
       return NextResponse.json(
         { error: 'Amount, payment method ID, and booking ID are required' },
@@ -86,10 +92,6 @@ export async function POST(request: NextRequest) {
     // Check if TEST mode is enabled
     const isTestMode = process.env.TEST === 'true'
     const chargeAmount = isTestMode ? 100 : Math.round(amount * 100) // $1 in test mode, full amount otherwise
-
-    if (isTestMode) {
-      console.log('⚠️ [Charge Saved Card] TEST MODE: Charging $1.00 instead of $' + amount)
-    }
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: chargeAmount, // Convert to cents

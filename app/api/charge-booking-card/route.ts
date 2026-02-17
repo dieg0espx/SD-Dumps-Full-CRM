@@ -15,7 +15,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: NextRequest) {
   try {
     const { bookingId, amount, description, isInitialCharge = false, fees = [] } = await request.json()
-    
+
+    // Check if TEST mode is enabled at the start
+    const isTestMode = process.env.TEST === 'true'
+    if (isTestMode) {
+      console.log('⚠️⚠️⚠️ TEST MODE IS ON - Only $1.00 will be charged ⚠️⚠️⚠️')
+    }
+
     console.log('🔵 [Charge Booking Card] Request:', { bookingId, amount, description, isInitialCharge, fees })
     
     // Validate inputs
@@ -130,10 +136,6 @@ export async function POST(request: NextRequest) {
     // Check if TEST mode is enabled
     const isTestMode = process.env.TEST === 'true'
     const chargeAmount = isTestMode ? 100 : Math.round(amount * 100) // $1 in test mode, full amount otherwise
-
-    if (isTestMode) {
-      console.log('⚠️ [Charge Booking Card] TEST MODE: Charging $1.00 instead of $' + amount)
-    }
 
     // Create a payment intent using the saved payment method
     const paymentIntent = await stripe.paymentIntents.create({
