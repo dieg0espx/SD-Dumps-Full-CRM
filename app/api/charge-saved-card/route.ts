@@ -89,8 +89,7 @@ export async function POST(request: NextRequest) {
     const containerTypeName = booking.container_types?.name || booking.container_types?.size || 'Container'
     const rentalPeriod = `${booking.start_date} to ${booking.end_date}`
 
-    // Check if TEST mode is enabled
-    const isTestMode = process.env.TEST === 'true'
+    // Use TEST mode check from top of function
     const chargeAmount = isTestMode ? 100 : Math.round(amount * 100) // $1 in test mode, full amount otherwise
 
     const paymentIntent = await stripe.paymentIntents.create({

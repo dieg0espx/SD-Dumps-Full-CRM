@@ -133,8 +133,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🔵 [Charge Booking Card] Creating payment intent...')
 
-    // Check if TEST mode is enabled
-    const isTestMode = process.env.TEST === 'true'
+    // Use TEST mode check from top of function
     const chargeAmount = isTestMode ? 100 : Math.round(amount * 100) // $1 in test mode, full amount otherwise
 
     // Create a payment intent using the saved payment method
