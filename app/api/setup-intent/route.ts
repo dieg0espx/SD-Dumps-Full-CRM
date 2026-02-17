@@ -2,24 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.error('❌ [Setup Intent] Missing STRIPE_SECRET_KEY environment variable')
-}
-
-// Detect Stripe key mode mismatch between server and client
-const serverKey = process.env.STRIPE_SECRET_KEY || ''
-const clientKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
-const serverIsTest = serverKey.startsWith('sk_test_')
-const clientIsTest = clientKey.startsWith('pk_test_')
-const serverIsLive = serverKey.startsWith('sk_live_')
-const clientIsLive = clientKey.startsWith('pk_live_')
-
-if ((serverIsTest && clientIsLive) || (serverIsLive && clientIsTest)) {
-  console.error('❌ [Setup Intent] STRIPE KEY MODE MISMATCH! Server key is', serverIsTest ? 'TEST' : 'LIVE', 'but client key is', clientIsTest ? 'TEST' : 'LIVE')
-}
-
-// Use account default API version to avoid type mismatch errors during build
-const stripe = new Stripe(serverKey)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-08-27.basil',
+})
 
 /**
  * POST: Create a Setup Intent to save a payment method for future use
@@ -27,15 +12,6 @@ const stripe = new Stripe(serverKey)
  */
 export async function POST(request: NextRequest) {
   try {
-    // Fail fast if keys are mismatched
-    if ((serverIsTest && clientIsLive) || (serverIsLive && clientIsTest)) {
-      console.error('❌ [Setup Intent] Cannot create SetupIntent: server/client Stripe key mode mismatch')
-      return NextResponse.json(
-        { error: 'Payment system configuration error. Please contact support.' },
-        { status: 500 }
-      )
-    }
-
     console.log('🔵 [Setup Intent] Creating Setup Intent...')
 
     // Parse body for optional guest data
@@ -133,18 +109,7 @@ export async function POST(request: NextRequest) {
       metadata: user ? { user_id: user.id } : { guest: 'true' },
     })
 
-    console.log('✅ [Setup Intent] Created Setup Intent:', setupIntent.id)
-    console.log('📦 [Setup Intent] Status:', setupIntent.status)
-    console.log('📦 [Setup Intent] Server key mode:', serverIsTest ? 'TEST' : serverIsLive ? 'LIVE' : 'UNKNOWN')
-    console.log('📦 [Setup Intent] Client key mode:', clientIsTest ? 'TEST' : clientIsLive ? 'LIVE' : 'UNKNOWN')
-
-    // Verify the SetupIntent exists immediately after creation
-    try {
-      const verified = await stripe.setupIntents.retrieve(setupIntent.id)
-      console.log('✅ [Setup Intent] Verified SetupIntent exists:', verified.id, 'status:', verified.status)
-    } catch (verifyError: any) {
-      console.error('❌ [Setup Intent] CRITICAL: SetupIntent was created but cannot be retrieved!', verifyError.message)
-    }
+    console.log('✅ [Setup Intent] Created Setup Intent:', setupIntent.id, 'Status:', setupIntent.status)
 
     return NextResponse.json({
       clientSecret: setupIntent.client_secret,
