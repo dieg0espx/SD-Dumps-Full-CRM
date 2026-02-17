@@ -127,9 +127,17 @@ export async function POST(request: NextRequest) {
 
     console.log('🔵 [Charge Booking Card] Creating payment intent...')
 
+    // Check if TEST mode is enabled
+    const isTestMode = process.env.TEST === 'true'
+    const chargeAmount = isTestMode ? 100 : Math.round(amount * 100) // $1 in test mode, full amount otherwise
+
+    if (isTestMode) {
+      console.log('⚠️ [Charge Booking Card] TEST MODE: Charging $1.00 instead of $' + amount)
+    }
+
     // Create a payment intent using the saved payment method
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: chargeAmount, // Convert to cents
       currency: 'usd',
       customer: customerId,
       payment_method: booking.payment_method_id,
